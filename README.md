@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Parrot
 
-## Getting Started
+Parrot is a Next.js application with local PostgreSQL development support through Docker Compose.
 
-First, run the development server:
+## Local Development
+
+### Bootstrap the environment
+
+Run the following from the repository root:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+make bootstrap
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This target will:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- install project dependencies with `pnpm`
+- start PostgreSQL using [docker/docker-compose.yml](docker/docker-compose.yml)
+- append `DATABASE_URL` to `.env` if it is missing
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The generated local database connection string is:
 
-## Learn More
+```bash
+postgresql://parrot:parrot@localhost:5432/parrot?schema=public
+```
 
-To learn more about Next.js, take a look at the following resources:
+### Start the application
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+After bootstrap finishes, run:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm dev
+```
 
-## Deploy on Vercel
+The app will be available at [http://localhost:3000](http://localhost:3000).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Useful Commands
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+make bootstrap  # install deps, configure .env, and start postgres
+make dev-up     # start postgres only
+make dev-down   # stop postgres
+pnpm dev        # start the Next.js dev server
+```
+
+## PostgreSQL Service
+
+The local database service is defined in [docker/docker-compose.yml](docker/docker-compose.yml) with these defaults:
+
+- image: `postgres:16-alpine`
+- host port: `5432`
+- database: `parrot`
+- username: `parrot`
+- password: `parrot`
+
+Data is persisted in the Docker volume `postgres_data`.

@@ -12,7 +12,10 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.11.2",
     "@base-ui/react": "^1.5.0",
+    "@prisma/client": "^7.8.0",
+    "@prisma/extension-accelerate": "^3.0.1",
     "@t3-oss/env-nextjs": "^0.13.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -50,6 +53,7 @@
     "eslint-plugin-simple-import-sort": "^13.0.0",
     "eslint-plugin-unused-imports": "^4.4.1",
     "prettier": "^3.6.2",
+    "prisma": "^7.8.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
