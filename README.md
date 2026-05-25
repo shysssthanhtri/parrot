@@ -29,10 +29,13 @@ postgresql://parrot:parrot@localhost:5432/parrot?schema=public
 After bootstrap finishes, run:
 
 ```bash
+make migrate-deploy
 pnpm dev
 ```
 
 The app will be available at [http://localhost:3000](http://localhost:3000).
+
+`make migrate-deploy` applies the Prisma migrations in [prisma/migrations](prisma/migrations) to the database configured by `DATABASE_URL`.
 
 ## Useful Commands
 
@@ -40,6 +43,7 @@ The app will be available at [http://localhost:3000](http://localhost:3000).
 make bootstrap  # install deps, configure .env, and start postgres
 make dev-up     # start postgres only
 make dev-down   # stop postgres
+make migrate-deploy  # apply Prisma migrations
 pnpm dev        # start the Next.js dev server
 ```
 
