@@ -10,4 +10,8 @@ export const ROUTES = {
     SPEECHES: `${ROOT_ROUTES.CMS}/speeches`,
     SETTINGS: `${ROOT_ROUTES.CMS}/settings`,
   },
+  PUBLIC: {
+    SIGNIN: "/api/auth/signin",
+    SIGNOUT: "/api/auth/signout",
+  },
 } as const;

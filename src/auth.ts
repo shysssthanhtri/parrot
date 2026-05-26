@@ -5,7 +5,7 @@ import Google from "next-auth/providers/google";
 
 import { prisma } from "@/prisma";
 
-import { ROOT_ROUTES } from "./app/configs/routes";
+import { ROOT_ROUTES, ROUTES } from "./app/configs/routes";
 import { env } from "./lib/env";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -19,7 +19,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return true;
       }
 
-      return NextResponse.redirect(new URL("/", request.nextUrl));
+      return NextResponse.redirect(
+        new URL(ROUTES.PUBLIC.SIGNIN, request.nextUrl)
+      );
     },
   },
   providers: [
