@@ -27,6 +27,8 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 
+import { UserButton } from "./user-button";
+
 export const CMSSidebar = () => {
   const pathname = usePathname();
 
@@ -108,7 +110,10 @@ export const CMSSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>Footer</SidebarFooter>
+
+      <SidebarFooter className="mb-2">
+        <UserButton />
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );
