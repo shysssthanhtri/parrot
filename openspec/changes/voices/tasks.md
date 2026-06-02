@@ -13,9 +13,9 @@
 
 ## 3. tRPC voices API
 
-- [ ] 3.1 Implement `voices.list` and `voices.getById` in `src/trpc/routers/voices.ts`
-- [ ] 3.2 Mount `voicesRouter` on `src/trpc/routers/_app.ts`
-- [ ] 3.3 Wire real session/user in `createTRPCContext` (replace stub)
+- [x] 3.1 Implement `voices.list` and `voices.getById` in `src/trpc/routers/voices.ts`
+- [x] 3.2 Mount `voicesRouter` on `src/trpc/routers/_app.ts`
+- [x] 3.3 Wire real session/user in `createTRPCContext` (replace stub)
 
 ## 4. CMS routes and list page
 

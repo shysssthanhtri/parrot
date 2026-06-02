@@ -10,6 +10,10 @@ import { env } from "./lib/env";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
+    session({ session, user }) {
+      session.user.id = user.id;
+      return session;
+    },
     authorized({ auth, request }) {
       if (!request.nextUrl.pathname.startsWith(ROOT_ROUTES.CMS)) {
         return true;
