@@ -15,29 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      AUTH_SECRET: ci-auth-secret
-      AUTH_GOOGLE_ID: ci-google-id
-      AUTH_GOOGLE_SECRET: ci-google-secret
-      DATABASE_URL: postgresql://parrot:parrot@localhost:5432/parrot?schema=public
-      R2_ACCOUNT_ID: ci-r2-account
-      R2_ACCESS_KEY_ID: ci-r2-access-key
-      R2_SECRET_ACCESS_KEY: ci-r2-secret-key
-      R2_BUCKET_NAME: ci-r2-bucket
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: parrot
-          POSTGRES_PASSWORD: parrot
-          POSTGRES_DB: parrot
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+      SKIP_ENV_VALIDATION: true
 
     steps:
       - name: Checkout
@@ -51,7 +29,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
 
       - name: Install dependencies
