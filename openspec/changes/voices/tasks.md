@@ -25,9 +25,9 @@
 
 ## 5. CMS detail page
 
-- [ ] 5.1 Create `src/app/(cms)/cms/voices/[voiceId]/page.tsx` with read-only metadata
-- [ ] 5.2 Handle missing voice (not found UI)
-- [ ] 5.3 Show empty state when `r2ObjectKey` is null (no player)
+- [x] 5.1 Create `src/app/(cms)/cms/voices/[voiceId]/page.tsx` with read-only metadata
+- [x] 5.2 Handle missing voice (not found UI)
+- [x] 5.3 Show empty state when `r2ObjectKey` is null (no player)
 
 ## 6. Audio preview
 
