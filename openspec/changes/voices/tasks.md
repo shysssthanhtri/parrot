@@ -31,5 +31,5 @@
 
 ## 6. Audio preview
 
-- [ ] 6.1 Add server-side presigned URL for detail when `r2ObjectKey` is set
-- [ ] 6.2 Render `<audio controls>` on detail page with presigned `src`
+- [x] 6.1 Add server-side presigned URL for detail when `r2ObjectKey` is set
+- [x] 6.2 Render `<audio controls>` on detail page with presigned `src`

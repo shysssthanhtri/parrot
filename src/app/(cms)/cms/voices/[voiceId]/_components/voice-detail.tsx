@@ -28,6 +28,7 @@ type VoiceDetailProps = {
     createdAt: Date;
     updatedAt: Date;
   };
+  audioUrl: string | null;
 };
 
 function formatTimestamp(date: Date) {
@@ -37,13 +38,7 @@ function formatTimestamp(date: Date) {
   }).format(date);
 }
 
-function MetadataField({
-  label,
-  value,
-}: {
-  label: string;
-  value: ReactNode;
-}) {
+function MetadataField({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="grid gap-1">
       <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
@@ -52,7 +47,7 @@ function MetadataField({
   );
 }
 
-export function VoiceDetail({ voice }: VoiceDetailProps) {
+export function VoiceDetail({ voice, audioUrl }: VoiceDetailProps) {
   return (
     <div className="flex flex-col gap-6">
       <Card>
@@ -93,7 +88,26 @@ export function VoiceDetail({ voice }: VoiceDetailProps) {
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
-      ) : null}
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Audio preview</CardTitle>
+            <CardDescription>
+              Preview the voice sample stored for this entry.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <audio
+              controls
+              src={audioUrl ?? undefined}
+              preload="metadata"
+              className="w-full"
+            >
+              Your browser does not support the audio element.
+            </audio>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
