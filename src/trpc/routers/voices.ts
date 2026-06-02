@@ -8,7 +8,7 @@ import { authProcedure, createTRPCRouter } from "../init";
 export const voicesRouter = createTRPCRouter({
   list: authProcedure.query(async () => {
     return prisma.voice.findMany({
-      orderBy: { name: "asc" },
+      orderBy: { createdAt: "desc" },
     });
   }),
 

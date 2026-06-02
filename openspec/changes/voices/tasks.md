@@ -19,9 +19,9 @@
 
 ## 4. CMS routes and list page
 
-- [ ] 4.1 Add `voiceDetail(id)` to `src/app/configs/routes.ts`
-- [ ] 4.2 Create `src/app/(cms)/cms/voices/page.tsx` with shadcn table listing all voices
-- [ ] 4.3 Make table rows navigate to `/cms/voices/[voiceId]`
+- [x] 4.1 Add `voiceDetail(id)` to `src/app/configs/routes.ts`
+- [x] 4.2 Create `src/app/(cms)/cms/voices/page.tsx` with shadcn table listing all voices
+- [x] 4.3 Make table rows navigate to `/cms/voices/[voiceId]`
 
 ## 5. CMS detail page
 

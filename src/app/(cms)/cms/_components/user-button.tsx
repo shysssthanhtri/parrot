@@ -14,8 +14,6 @@ export const UserButton = () => {
   const user = session?.user;
   if (!user) return null;
 
-  console.log(user);
-
   return (
     <SidebarMenu>
       <SidebarMenuItem>

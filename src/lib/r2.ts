@@ -1,3 +1,8 @@
 import "server-only";
 
-export { getPresignedGetUrl, uploadObject } from "./r2-client";
+export {
+  getAudioUrl,
+  getPresignedGetUrl,
+  getStorageDriver,
+  uploadObject,
+} from "./storage";

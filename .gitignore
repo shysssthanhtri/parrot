@@ -20,6 +20,9 @@
 # production
 /build
 
+# local object storage (STORAGE_DRIVER=local uploads)
+.local-storage/
+
 # misc
 .DS_Store
 *.pem
