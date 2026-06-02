@@ -51,6 +51,17 @@ Voice audio files are stored in Cloudflare R2 via the AWS S3 SDK. Copy [.env.exa
 
 R2 helpers live in [src/lib/r2.ts](src/lib/r2.ts) (`uploadObject`, `getPresignedGetUrl`).
 
+After R2 and the database are configured, seed system voices from [data/system-voices](data/system-voices):
+
+```bash
+make migrate-deploy
+pnpm prisma db seed
+```
+
+Use **R2 S3 API credentials** (Access Key ID + Secret Access Key from the R2 API token page), not a Cloudflare `cfat_` account API token.
+
+If seed fails with an XML/HTML parse error or HTTP 403, check that your network allows HTTPS to `*.r2.cloudflarestorage.com`. Corporate proxies (e.g. Zscaler) often block this endpoint until it is allowlisted.
+
 ## Useful Commands
 
 ```bash
@@ -59,6 +70,7 @@ make dev-up     # start postgres only
 make dev-down   # stop postgres
 make migrate-deploy  # apply Prisma migrations
 pnpm dev        # start the Next.js dev server
+pnpm prisma db seed  # upload system WAVs to R2 and upsert voice rows
 ```
 
 ## PostgreSQL Service

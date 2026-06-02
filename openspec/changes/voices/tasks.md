@@ -7,9 +7,9 @@
 
 ## 2. Database and seed
 
-- [ ] 2.1 Add `@@unique([name])` on `Voice` if adopting name-based upsert (migration)
-- [ ] 2.2 Implement `scripts/seed-system-voices.ts`: read `./data/system-voices/*.wav`, upload to R2, upsert by `name` with `userId: null` and `language: en-US`
-- [ ] 2.3 Add package script to run seed (e.g. `pnpm seed:voices`)
+- [x] 2.1 Voice schema (no unique on `name`; seed uses findFirst by name + `userId: null`)
+- [x] 2.2 Implement `scripts/seed-system-voices.ts`: read `./data/system-voices/*.wav`, upload to R2, upsert by `name` with `userId: null` and `language: en-US`
+- [x] 2.3 Configure Prisma seed (`prisma db seed` via `prisma.config.ts`)
 
 ## 3. tRPC voices API
 

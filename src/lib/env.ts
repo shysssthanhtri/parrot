@@ -17,5 +17,8 @@ export const env = createEnv({
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 });
 
-export const getR2Endpoint = () =>
-  env.R2_ENDPOINT ?? `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+export const getR2Endpoint = () => {
+  const endpoint =
+    env.R2_ENDPOINT ?? `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+  return endpoint.replace(/\/$/, "");
+};
