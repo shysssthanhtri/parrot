@@ -14,11 +14,21 @@ function formatAudioTime(seconds: number) {
   return `${minutes}:${secs.toString().padStart(2, "0")}`;
 }
 
+/** SSR-safe defaults; match `:root` in globals.css until client theme is read. */
+const DEFAULT_WAVE_COLORS = {
+  waveColor: "oklch(0.601 0 0)",
+  progressColor: "oklch(0.165 0 0)",
+} as const;
+
 function readThemeWaveColors() {
   const style = getComputedStyle(document.documentElement);
   return {
-    waveColor: style.getPropertyValue("--muted-foreground").trim(),
-    progressColor: style.getPropertyValue("--primary").trim(),
+    waveColor:
+      style.getPropertyValue("--muted-foreground").trim() ||
+      DEFAULT_WAVE_COLORS.waveColor,
+    progressColor:
+      style.getPropertyValue("--primary").trim() ||
+      DEFAULT_WAVE_COLORS.progressColor,
   };
 }
 
@@ -28,7 +38,11 @@ type VoiceAudioPreviewProps = {
 
 export function VoiceAudioPreview({ audioUrl }: VoiceAudioPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [themeColors] = useState(readThemeWaveColors);
+  const [themeColors] = useState(() =>
+    typeof document !== "undefined"
+      ? readThemeWaveColors()
+      : DEFAULT_WAVE_COLORS
+  );
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,6 +58,15 @@ export function VoiceAudioPreview({ audioUrl }: VoiceAudioPreviewProps) {
     barGap: 1,
     barRadius: 2,
   });
+
+  useEffect(() => {
+    if (!wavesurfer) return;
+    wavesurfer.setOptions({
+      waveColor: themeColors.waveColor,
+      progressColor: themeColors.progressColor,
+      cursorColor: themeColors.progressColor,
+    });
+  }, [wavesurfer, themeColors]);
 
   useEffect(() => {
     if (!wavesurfer) return;
@@ -76,7 +99,7 @@ export function VoiceAudioPreview({ audioUrl }: VoiceAudioPreviewProps) {
       <div className="relative min-h-[88px] w-full">
         <div
           ref={containerRef}
-          className="w-full cursor-pointer [&_*]:cursor-pointer"
+          className="w-full cursor-pointer **:cursor-pointer"
         />
         {isLoading ? (
           <div
