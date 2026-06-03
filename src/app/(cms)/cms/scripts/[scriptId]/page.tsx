@@ -4,10 +4,7 @@ import { notFound } from "next/navigation";
 import { createCallerFactory, createTRPCContext } from "@/trpc/init";
 import { appRouter } from "@/trpc/routers/_app";
 
-import {
-  ScriptForm,
-  ScriptFormBackLink,
-} from "../_components/script-form";
+import { ScriptForm, ScriptFormBackLink } from "../_components/script-form";
 
 const createCaller = createCallerFactory(appRouter);
 

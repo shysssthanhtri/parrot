@@ -1,7 +1,4 @@
-import {
-  ScriptForm,
-  ScriptFormBackLink,
-} from "../_components/script-form";
+import { ScriptForm, ScriptFormBackLink } from "../_components/script-form";
 
 export default function NewScriptPage() {
   return (
