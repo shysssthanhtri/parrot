@@ -1,4 +1,4 @@
-name: Seed database
+name: Database Migrations
 
 on:
   workflow_dispatch:
@@ -36,6 +36,3 @@ jobs:
 
       - name: Apply database migrations
         run: pnpm prisma migrate deploy
-
-      - name: Seed database
-        run: pnpm prisma db seed
