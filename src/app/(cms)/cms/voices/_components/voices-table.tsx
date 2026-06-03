@@ -54,6 +54,7 @@ export function VoicesTable({ voices }: VoicesTableProps) {
               <Link
                 href={ROUTES.CMS.VOICE_DETAIL(voice.id)}
                 className="hover:underline underline-offset-4"
+                prefetch={false}
               >
                 {voice.name}
               </Link>
