@@ -18,6 +18,8 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 
+import { VoiceAudioPreview } from "./voice-audio-preview";
+
 type VoiceDetailProps = {
   voice: {
     id: string;
@@ -97,14 +99,13 @@ export function VoiceDetail({ voice, audioUrl }: VoiceDetailProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <audio
-              controls
-              src={audioUrl ?? undefined}
-              preload="metadata"
-              className="w-full"
-            >
-              Your browser does not support the audio element.
-            </audio>
+            {audioUrl ? (
+              <VoiceAudioPreview audioUrl={audioUrl} />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Preview URL is unavailable. Refresh the page to try again.
+              </p>
+            )}
           </CardContent>
         </Card>
       )}
