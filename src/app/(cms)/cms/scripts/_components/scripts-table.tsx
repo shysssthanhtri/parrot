@@ -63,6 +63,7 @@ export function ScriptsTable({ scripts }: ScriptsTableProps) {
               <Link
                 href={ROUTES.CMS.SCRIPT_DETAIL(script.id)}
                 className="hover:underline underline-offset-4"
+                prefetch={false}
               >
                 {script.title}
               </Link>
