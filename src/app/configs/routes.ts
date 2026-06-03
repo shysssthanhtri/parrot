@@ -8,6 +8,8 @@ export const ROUTES = {
     VOICES: `${ROOT_ROUTES.CMS}/voices`,
     VOICE_DETAIL: (id: string) => `${ROOT_ROUTES.CMS}/voices/${id}`,
     SCRIPTS: `${ROOT_ROUTES.CMS}/scripts`,
+    SCRIPT_NEW: `${ROOT_ROUTES.CMS}/scripts/new`,
+    SCRIPT_DETAIL: (id: string) => `${ROOT_ROUTES.CMS}/scripts/${id}`,
     SPEECHES: `${ROOT_ROUTES.CMS}/speeches`,
     SETTINGS: `${ROOT_ROUTES.CMS}/settings`,
   },

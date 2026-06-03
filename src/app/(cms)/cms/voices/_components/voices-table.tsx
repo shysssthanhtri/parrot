@@ -1,6 +1,4 @@
-"use client";
-
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { ROUTES } from "@/app/configs/routes";
 import {
@@ -35,8 +33,6 @@ type VoicesTableProps = {
 };
 
 export function VoicesTable({ voices }: VoicesTableProps) {
-  const router = useRouter();
-
   if (voices.length === 0) {
     return <p className="text-sm text-muted-foreground">No voices yet.</p>;
   }
@@ -53,12 +49,15 @@ export function VoicesTable({ voices }: VoicesTableProps) {
       </TableHeader>
       <TableBody>
         {voices.map((voice) => (
-          <TableRow
-            key={voice.id}
-            className="cursor-pointer"
-            onClick={() => router.push(ROUTES.CMS.VOICE_DETAIL(voice.id))}
-          >
-            <TableCell className="font-medium">{voice.name}</TableCell>
+          <TableRow key={voice.id}>
+            <TableCell className="font-medium">
+              <Link
+                href={ROUTES.CMS.VOICE_DETAIL(voice.id)}
+                className="hover:underline underline-offset-4"
+              >
+                {voice.name}
+              </Link>
+            </TableCell>
             <TableCell>{voice.language}</TableCell>
             <TableCell className="max-w-md truncate text-muted-foreground">
               {descriptionSnippet(voice.description)}

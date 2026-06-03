@@ -19,6 +19,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   voices    Voice[]
+  scripts   Script[]
 }
 
 model Account {
@@ -68,6 +69,19 @@ model Voice {
   language    String  @default("en-US")
   r2ObjectKey String?
   userId      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model Script {
+  id String @id @default(cuid())
+
+  title   String
+  content String @db.Text
+  userId  String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
