@@ -4,7 +4,7 @@ export const ROOT_ROUTES = {
 
 export const ROUTES = {
   CMS: {
-    DASHBOARD: ROOT_ROUTES.CMS,
+    DASHBOARD: `${ROOT_ROUTES.CMS}/dashboard`,
     VOICES: `${ROOT_ROUTES.CMS}/voices`,
     VOICE_DETAIL: (id: string) => `${ROOT_ROUTES.CMS}/voices/${id}`,
     SCRIPTS: `${ROOT_ROUTES.CMS}/scripts`,
