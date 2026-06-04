@@ -1,8 +1,11 @@
 # cms-voices Specification
 
 ## Purpose
+
 TBD - created by archiving change voices. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: CMS voices list page
 
 The CMS SHALL provide a page at `/cms/voices` that displays all voices in a shadcn table with columns appropriate for browsing (at minimum: name, language, description snippet, updated date). The page SHALL be behind existing CMS authentication.
@@ -49,3 +52,16 @@ When the voice has `r2ObjectKey` set, the detail page SHALL render a waveform-ba
 - **WHEN** user views detail for a voice without `r2ObjectKey`
 - **THEN** metadata is shown and no audio player is offered (or a non-blocking empty message)
 
+### Requirement: Loading UI on voices list page
+
+While the voices list page is loading (server data fetch in progress), the CMS SHALL display a loading UI at `/cms/voices` that matches the list page layout: page heading area and a table skeleton with columns for name, language, description, and updated date. The loading UI SHALL appear without requiring authentication changes and SHALL be replaced by the full page once data is ready.
+
+#### Scenario: Loading state during navigation
+
+- **WHEN** an authenticated user navigates to `/cms/voices` and the page content is not yet ready
+- **THEN** a skeleton loading UI is shown with a table-shaped placeholder matching the voices list columns
+
+#### Scenario: Loading resolves to list
+
+- **WHEN** voice data finishes loading on `/cms/voices`
+- **THEN** the loading UI is replaced by the voices table (or empty state)
