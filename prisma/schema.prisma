@@ -18,8 +18,9 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  voices    Voice[]
-  scripts   Script[]
+  voices            Voice[]
+  scripts           Script[]
+  scriptGenerations ScriptGeneration[]
 }
 
 model Account {
@@ -87,5 +88,26 @@ model Script {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user             User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  scriptGeneration ScriptGeneration?
+}
+
+model ScriptGeneration {
+  id String @id @default(cuid())
+
+  prompt           String  @db.Text
+  length           String
+  language         String
+  generatedTitle   String?
+  generatedContent String? @db.Text
+  status           String
+  errorMessage     String?
+  model            String
+  userId           String?
+  scriptId         String? @unique
+
+  createdAt DateTime @default(now())
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  script Script? @relation(fields: [scriptId], references: [id], onDelete: SetNull)
 }

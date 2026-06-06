@@ -32,6 +32,8 @@ import {
 } from "@/lib/script-languages";
 import { useTRPC } from "@/trpc/client";
 
+import { ScriptGenerateDialog } from "./script-generate-dialog";
+
 type ScriptFormValues = {
   title: string;
   content: string;
@@ -63,6 +65,8 @@ export function ScriptForm(props: ScriptFormProps) {
   const [language, setLanguage] = useState<ScriptLanguageCode>(
     initialValues.language
   );
+  const [generationId, setGenerationId] = useState<string | null>(null);
+  const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
 
   const createMutation = useMutation(
     trpc.scripts.create.mutationOptions({
@@ -101,7 +105,10 @@ export function ScriptForm(props: ScriptFormProps) {
     };
 
     if (props.mode === "create") {
-      createMutation.mutate(payload);
+      createMutation.mutate({
+        ...payload,
+        ...(generationId ? { generationId } : {}),
+      });
       return;
     }
 
@@ -157,7 +164,19 @@ export function ScriptForm(props: ScriptFormProps) {
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="script-content">Content</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="script-content">Content</Label>
+              {props.mode === "create" ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setGenerateDialogOpen(true)}
+                >
+                  Generate with AI
+                </Button>
+              ) : null}
+            </div>
             <Textarea
               id="script-content"
               name="content"
@@ -177,6 +196,18 @@ export function ScriptForm(props: ScriptFormProps) {
             </Button>
           </div>
         </form>
+        {props.mode === "create" ? (
+          <ScriptGenerateDialog
+            open={generateDialogOpen}
+            onOpenChange={setGenerateDialogOpen}
+            language={language}
+            onGenerated={(draft) => {
+              setTitle(draft.title);
+              setContent(draft.content);
+              setGenerationId(draft.generationId);
+            }}
+          />
+        ) : null}
       </CardContent>
     </Card>
   );

@@ -19,6 +19,28 @@ const scriptFieldsSchema = z.object({
   language: scriptLanguageSchema.default(DEFAULT_SCRIPT_LANGUAGE),
 });
 
+const scriptCreateSchema = scriptFieldsSchema.extend({
+  generationId: z.string().optional(),
+});
+
+async function assertValidGenerationLink(generationId: string, userId: string) {
+  const generation = await prisma.scriptGeneration.findUnique({
+    where: { id: generationId },
+  });
+
+  if (
+    !generation ||
+    generation.userId !== userId ||
+    generation.status !== "success" ||
+    generation.scriptId !== null
+  ) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Invalid generation link",
+    });
+  }
+}
+
 export const scriptsRouter = createTRPCRouter({
   list: authProcedure.query(async () => {
     return prisma.script.findMany({
@@ -44,15 +66,32 @@ export const scriptsRouter = createTRPCRouter({
     }),
 
   create: authProcedure
-    .input(scriptFieldsSchema)
+    .input(scriptCreateSchema)
     .mutation(async ({ input, ctx }) => {
-      return prisma.script.create({
-        data: {
-          title: input.title,
-          content: input.content,
-          language: input.language,
-          userId: ctx.userId,
-        },
+      const { generationId, ...fields } = input;
+
+      if (generationId) {
+        await assertValidGenerationLink(generationId, ctx.userId);
+      }
+
+      return prisma.$transaction(async (tx) => {
+        const script = await tx.script.create({
+          data: {
+            title: fields.title,
+            content: fields.content,
+            language: fields.language,
+            userId: ctx.userId,
+          },
+        });
+
+        if (generationId) {
+          await tx.scriptGeneration.update({
+            where: { id: generationId },
+            data: { scriptId: script.id },
+          });
+        }
+
+        return script;
       });
     }),
 
