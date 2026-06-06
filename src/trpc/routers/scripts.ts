@@ -1,13 +1,22 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import {
+  DEFAULT_SCRIPT_LANGUAGE,
+  SCRIPT_LANGUAGE_CODES,
+} from "@/lib/script-languages";
 import { prisma } from "@/prisma";
 
 import { authProcedure, createTRPCRouter } from "../init";
 
+const scriptLanguageSchema = z.enum(SCRIPT_LANGUAGE_CODES, {
+  message: "Unsupported language",
+});
+
 const scriptFieldsSchema = z.object({
   title: z.string().trim().min(1, "Title is required"),
   content: z.string().trim().min(1, "Content is required"),
+  language: scriptLanguageSchema.default(DEFAULT_SCRIPT_LANGUAGE),
 });
 
 export const scriptsRouter = createTRPCRouter({
@@ -41,6 +50,7 @@ export const scriptsRouter = createTRPCRouter({
         data: {
           title: input.title,
           content: input.content,
+          language: input.language,
           userId: ctx.userId,
         },
       });
@@ -65,6 +75,7 @@ export const scriptsRouter = createTRPCRouter({
         data: {
           title: input.title,
           content: input.content,
+          language: input.language,
         },
       });
     }),

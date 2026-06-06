@@ -79,9 +79,10 @@ model Voice {
 model Script {
   id String @id @default(cuid())
 
-  title   String
-  content String @db.Text
-  userId  String?
+  title    String
+  content  String @db.Text
+  language String @default("en-US")
+  userId   String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

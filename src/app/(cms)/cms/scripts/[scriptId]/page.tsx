@@ -1,6 +1,10 @@
 import { TRPCError } from "@trpc/server";
 import { notFound } from "next/navigation";
 
+import {
+  DEFAULT_SCRIPT_LANGUAGE,
+  type ScriptLanguageCode,
+} from "@/lib/script-languages";
 import { createCallerFactory, createTRPCContext } from "@/trpc/init";
 import { appRouter } from "@/trpc/routers/_app";
 
@@ -38,6 +42,8 @@ export default async function ScriptDetailPage({
         defaultValues={{
           title: script.title,
           content: script.content,
+          language:
+            (script.language as ScriptLanguageCode) ?? DEFAULT_SCRIPT_LANGUAGE,
         }}
       />
     </div>

@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getScriptLanguageLabel } from "@/lib/script-languages";
 type VoiceRow = {
   id: string;
   name: string;
@@ -59,7 +60,7 @@ export function VoicesTable({ voices }: VoicesTableProps) {
                 {voice.name}
               </Link>
             </TableCell>
-            <TableCell>{voice.language}</TableCell>
+            <TableCell>{getScriptLanguageLabel(voice.language)}</TableCell>
             <TableCell className="max-w-md truncate text-muted-foreground">
               {descriptionSnippet(voice.description)}
             </TableCell>

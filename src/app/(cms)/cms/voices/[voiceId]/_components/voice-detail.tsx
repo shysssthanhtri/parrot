@@ -17,6 +17,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { getScriptLanguageLabel } from "@/lib/script-languages";
 
 import { VoiceAudioPreview } from "./voice-audio-preview";
 
@@ -60,7 +61,10 @@ export function VoiceDetail({ voice, audioUrl }: VoiceDetailProps) {
         <CardContent>
           <dl className="grid gap-4 sm:grid-cols-2">
             <MetadataField label="Name" value={voice.name} />
-            <MetadataField label="Language" value={voice.language} />
+            <MetadataField
+              label="Language"
+              value={getScriptLanguageLabel(voice.language)}
+            />
             <MetadataField
               label="Description"
               value={voice.description ?? "—"}

@@ -17,12 +17,25 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  DEFAULT_SCRIPT_LANGUAGE,
+  SCRIPT_LANGUAGES,
+  type ScriptLanguageCode,
+} from "@/lib/script-languages";
 import { useTRPC } from "@/trpc/client";
 
 type ScriptFormValues = {
   title: string;
   content: string;
+  language: ScriptLanguageCode;
 };
 
 type ScriptFormProps =
@@ -39,10 +52,17 @@ type ScriptFormProps =
 export function ScriptForm(props: ScriptFormProps) {
   const router = useRouter();
   const trpc = useTRPC();
-  const initialValues = props.defaultValues ?? { title: "", content: "" };
+  const initialValues = props.defaultValues ?? {
+    title: "",
+    content: "",
+    language: DEFAULT_SCRIPT_LANGUAGE,
+  };
 
   const [title, setTitle] = useState(initialValues.title);
   const [content, setContent] = useState(initialValues.content);
+  const [language, setLanguage] = useState<ScriptLanguageCode>(
+    initialValues.language
+  );
 
   const createMutation = useMutation(
     trpc.scripts.create.mutationOptions({
@@ -77,6 +97,7 @@ export function ScriptForm(props: ScriptFormProps) {
     const payload = {
       title: title.trim(),
       content: content.trim(),
+      language,
     };
 
     if (props.mode === "create") {
@@ -98,8 +119,8 @@ export function ScriptForm(props: ScriptFormProps) {
         </CardTitle>
         <CardDescription>
           {props.mode === "create"
-            ? "Add a title and the script text learners will shadow."
-            : "Update the title or script text, then save."}
+            ? "Add a title, language, and the script text learners will shadow."
+            : "Update the title, language, or script text, then save."}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -114,6 +135,26 @@ export function ScriptForm(props: ScriptFormProps) {
               placeholder="e.g. Morning routine"
               required
             />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="script-language">Language</Label>
+            <Select
+              value={language}
+              onValueChange={(value) =>
+                setLanguage(value as ScriptLanguageCode)
+              }
+            >
+              <SelectTrigger id="script-language" className="w-full">
+                <SelectValue placeholder="Select a language" />
+              </SelectTrigger>
+              <SelectContent>
+                {SCRIPT_LANGUAGES.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="script-content">Content</Label>

@@ -1,10 +1,4 @@
-# scripts Specification
-
-## Purpose
-
-TBD - created by archiving change scripts. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Script metadata model
 
@@ -14,24 +8,6 @@ The system SHALL persist script metadata in PostgreSQL using a Prisma `Script` m
 
 - **WHEN** a script row exists with `title`, `content`, and `language` set
 - **THEN** the script is valid and listable
-
-### Requirement: Scripts list API
-
-The system SHALL expose a tRPC `scripts.list` query that returns all scripts ordered for CMS display (e.g. by `updatedAt` descending).
-
-#### Scenario: List all scripts
-
-- **WHEN** an authenticated CMS client calls `scripts.list`
-- **THEN** all script rows are returned
-
-### Requirement: Script detail API
-
-The system SHALL expose a tRPC `scripts.getById` query that returns a single script by `id` or reports not found.
-
-#### Scenario: Unknown script id
-
-- **WHEN** `scripts.getById` is called with a non-existent id
-- **THEN** the procedure returns a not-found error
 
 ### Requirement: Script create API
 

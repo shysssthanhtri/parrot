@@ -1,10 +1,4 @@
-# cms-scripts Specification
-
-## Purpose
-
-TBD - created by archiving change scripts. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: CMS scripts list page
 
@@ -14,24 +8,6 @@ The CMS SHALL provide a page at `/cms/scripts` that displays all scripts in a sh
 
 - **WHEN** an authenticated user navigates to `/cms/scripts`
 - **THEN** a table of all scripts is shown including a language column with a readable label for each row
-
-### Requirement: New script entry from list
-
-The CMS scripts list page SHALL provide a control (e.g. **New script** button) that navigates to `/cms/scripts/new`.
-
-#### Scenario: Open create page
-
-- **WHEN** user clicks the new-script control on the list page
-- **THEN** the app navigates to `/cms/scripts/new`
-
-### Requirement: Navigate to script detail from list
-
-The CMS SHALL allow clicking a script table row to navigate to `/cms/scripts/{scriptId}`.
-
-#### Scenario: Row click opens detail
-
-- **WHEN** user clicks a script row in the list table
-- **THEN** the app navigates to the detail page for that script's id
 
 ### Requirement: CMS script create page
 
