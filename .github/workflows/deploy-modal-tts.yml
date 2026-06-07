@@ -4,7 +4,7 @@ on:
   # push:
   #   branches: [main]
   #   paths:
-  #     - "modal/**"          # adjust to your TTS app path
+  #     - "modal/**"
   #     - ".github/workflows/deploy-modal-tts.yml"
   workflow_dispatch:
 
@@ -14,7 +14,8 @@ jobs:
     env:
       MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
       MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
-      # MODAL_ENVIRONMENT: production   # optional, if you use environments
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
 
     steps:
       - uses: actions/checkout@v4
@@ -26,8 +27,5 @@ jobs:
       - name: Install Modal
         run: pip install modal
 
-      # - name: Deploy TTS app
-      #   run: modal deploy -m your_package.tts_app   # your entrypoint
-
-      - name: Run sample app
-        run: modal run modal/get_started.py
+      - name: Deploy Chatterbox TTS app
+        run: modal deploy modal/chatterbox_tts.py
