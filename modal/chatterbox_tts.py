@@ -6,9 +6,13 @@ import modal
 
 # Modal secrets: run the "Setup Modal Secrets" GitHub Action once (or when
 # credentials rotate). It syncs GitHub secrets → Modal:
-#   cloudflare-r2        (R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY)
+#   cloudflare-r2        (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+#                         R2_ACCOUNT_ID, R2_BUCKET_NAME)
 #   hf-token             (HF_TOKEN)
 #   chatterbox-api-key   (CHATTERBOX_API_KEY)
+#
+# Deploy also needs R2_ACCOUNT_ID and R2_BUCKET_NAME in the environment
+# (see deploy-modal-tts.yml) to configure the CloudBucketMount endpoint.
 #
 # Local test (from repo root, with R2_* vars exported from .env):
 # modal run modal/chatterbox_tts.py \
