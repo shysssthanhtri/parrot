@@ -1,0 +1,33 @@
+name: Deploy TTS to Modal
+
+on:
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - "modal/**"          # adjust to your TTS app path
+  #     - ".github/workflows/deploy-modal-tts.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+      MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+      # MODAL_ENVIRONMENT: production   # optional, if you use environments
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Modal
+        run: pip install modal
+
+      # - name: Deploy TTS app
+      #   run: modal deploy -m your_package.tts_app   # your entrypoint
+
+      - name: Run sample app
+        run: modal run modal/get_started.py
