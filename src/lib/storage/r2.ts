@@ -1,5 +1,6 @@
 import {
   GetObjectCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -88,4 +89,48 @@ export const getR2PresignedGetUrl = async (
     }),
     { expiresIn }
   );
+};
+
+export const getR2PresignedPutUrl = async (
+  key: string,
+  contentType: string,
+  expiresIn = PRESIGN_EXPIRES_IN_SECONDS
+) => {
+  const config = requireR2Config();
+
+  return getSignedUrl(
+    getR2Client(),
+    new PutObjectCommand({
+      Bucket: config.R2_BUCKET_NAME,
+      Key: key,
+      ContentType: contentType,
+    }),
+    { expiresIn }
+  );
+};
+
+export const r2ObjectExists = async (key: string) => {
+  const config = requireR2Config();
+
+  try {
+    await getR2Client().send(
+      new HeadObjectCommand({
+        Bucket: config.R2_BUCKET_NAME,
+        Key: key,
+      })
+    );
+    return true;
+  } catch (error) {
+    const statusCode = (error as { $metadata?: { httpStatusCode?: number } })
+      .$metadata?.httpStatusCode;
+
+    if (
+      (error as { name?: string }).name === "NotFound" ||
+      statusCode === 404
+    ) {
+      return false;
+    }
+
+    throw toR2Error(error);
+  }
 };

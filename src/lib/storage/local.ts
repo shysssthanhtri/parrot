@@ -76,3 +76,8 @@ export const uploadLocalObject = async (
 
 export const getLocalAudioUrl = (key: string) =>
   `/api/storage/${key.split("/").map(encodeURIComponent).join("/")}`;
+
+export const localObjectExists = async (key: string) => {
+  const filePath = await resolveLocalObjectPath(key);
+  return filePath !== null;
+};

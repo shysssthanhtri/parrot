@@ -71,6 +71,23 @@ To test against R2 locally, set `STORAGE_DRIVER=r2` and configure the R2 variabl
 
 Use **R2 S3 API credentials** (Access Key ID + Secret Access Key from the R2 API token page), not a Cloudflare `cfat_` account API token.
 
+When saving speeches with `STORAGE_DRIVER=r2`, the CMS uploads preview audio directly to R2 via presigned PUT URLs. Configure bucket CORS to allow `PUT` from your CMS origin (e.g. `http://localhost:3000` in development), for example:
+
+```json
+[
+  {
+    "AllowedOrigins": [
+      "http://localhost:3000",
+      "https://your-production-domain"
+    ],
+    "AllowedMethods": ["GET", "PUT"],
+    "AllowedHeaders": ["Content-Type"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
 If seed fails with an XML/HTML parse error or HTTP 403, check that your network allows HTTPS to `*.r2.cloudflarestorage.com`. Corporate proxies (e.g. Zscaler) often block this endpoint until it is allowlisted.
 
 ### OpenAPI clients

@@ -12,7 +12,13 @@ import {
   type SpeechTtsParams,
   toChatterboxTtsParams,
 } from "@/lib/speech-sliders";
-import { getAudioUrl, uploadObject } from "@/lib/storage";
+import {
+  getAudioUrl,
+  getSpeechUploadUrl,
+  objectExists,
+  speechObjectKeyForId,
+  speechObjectKeyMatchesId,
+} from "@/lib/storage";
 import { prisma } from "@/prisma";
 
 import { authProcedure, createTRPCRouter } from "../init";
@@ -39,7 +45,8 @@ const speechGenerationInputSchema = speechTtsParamsSchema.extend({
 });
 
 const speechCreateInputSchema = speechGenerationInputSchema.extend({
-  audioBase64: z.string().min(1).optional(),
+  id: z.string().uuid(),
+  r2ObjectKey: z.string().min(1),
 });
 
 type SpeechGenerationInput = z.infer<typeof speechGenerationInputSchema>;
@@ -114,38 +121,6 @@ function toSpeechTtsParams(input: SpeechGenerationInput): SpeechTtsParams {
   };
 }
 
-function decodePreviewAudio(audioBase64: string): Buffer {
-  const audio = Buffer.from(audioBase64, "base64");
-
-  if (audio.byteLength === 0) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "Preview audio is empty",
-    });
-  }
-
-  if (audio.subarray(0, 4).toString() !== "RIFF") {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "Preview audio must be WAV",
-    });
-  }
-
-  return audio;
-}
-
-async function resolveSpeechAudio(
-  input: z.infer<typeof speechCreateInputSchema>,
-  voice: { r2ObjectKey: string },
-  script: { content: string }
-): Promise<Buffer> {
-  if (input.audioBase64) {
-    return decodePreviewAudio(input.audioBase64);
-  }
-
-  return generateSpeechAudio(voice, script, toSpeechTtsParams(input));
-}
-
 export const speechesRouter = createTRPCRouter({
   list: authProcedure.query(async () => {
     return prisma.speech.findMany({
@@ -180,6 +155,14 @@ export const speechesRouter = createTRPCRouter({
       return { ...speech, audioUrl };
     }),
 
+  getUploadUrl: authProcedure.mutation(async () => {
+    const id = randomUUID();
+    const r2ObjectKey = speechObjectKeyForId(id);
+    const { uploadUrl, method } = await getSpeechUploadUrl(r2ObjectKey);
+
+    return { id, r2ObjectKey, uploadUrl, method };
+  }),
+
   generatePreview: authProcedure
     .input(speechGenerationInputSchema)
     .mutation(async ({ input }) => {
@@ -196,17 +179,25 @@ export const speechesRouter = createTRPCRouter({
   create: authProcedure
     .input(speechCreateInputSchema)
     .mutation(async ({ input, ctx }) => {
-      const { voice, script } = await loadValidatedSpeechInputs(input);
-      const audio = await resolveSpeechAudio(input, voice, script);
+      if (!speechObjectKeyMatchesId(input.id, input.r2ObjectKey)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid storage key for speech id",
+        });
+      }
 
-      const id = randomUUID();
-      const r2ObjectKey = `speeches/${id}.wav`;
+      await loadValidatedSpeechInputs(input);
 
-      await uploadObject(r2ObjectKey, audio, "audio/wav");
+      if (!(await objectExists(input.r2ObjectKey))) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Speech audio not found in storage",
+        });
+      }
 
       return prisma.speech.create({
         data: {
-          id,
+          id: input.id,
           voiceId: input.voiceId,
           scriptId: input.scriptId,
           language: input.language,
@@ -215,7 +206,7 @@ export const speechesRouter = createTRPCRouter({
           topK: input.topK,
           repetitionPenalty: input.repetitionPenalty,
           normLoudness: input.normLoudness,
-          r2ObjectKey,
+          r2ObjectKey: input.r2ObjectKey,
           userId: ctx.userId,
         },
         include: {

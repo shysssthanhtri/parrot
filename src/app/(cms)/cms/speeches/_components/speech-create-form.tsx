@@ -32,6 +32,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { wavBase64ToBlob } from "@/lib/audio";
 import {
   DEFAULT_SCRIPT_LANGUAGE,
   SCRIPT_LANGUAGES,
@@ -100,6 +101,7 @@ export function SpeechCreateForm() {
     null
   );
   const [previewConfigKey, setPreviewConfigKey] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const voicesQuery = useQuery(trpc.voices.list.queryOptions());
   const scriptsQuery = useQuery(trpc.scripts.list.queryOptions());
@@ -143,16 +145,10 @@ export function SpeechCreateForm() {
     })
   );
 
-  const createMutation = useMutation(
-    trpc.speeches.create.mutationOptions({
-      onSuccess: (speech) => {
-        router.push(ROUTES.CMS.SPEECH_DETAIL(speech.id));
-      },
-      onError: (error) => {
-        toast.error(error.message || "Failed to save speech");
-      },
-    })
+  const getUploadUrlMutation = useMutation(
+    trpc.speeches.getUploadUrl.mutationOptions()
   );
+  const createMutation = useMutation(trpc.speeches.create.mutationOptions());
 
   function handleLanguageChange(value: ScriptLanguageCode) {
     setLanguage(value);
@@ -179,13 +175,38 @@ export function SpeechCreateForm() {
     });
   }
 
-  function handleSave() {
-    if (!currentInput || !canSave || !previewAudioBase64) return;
+  async function handleSave() {
+    if (!currentInput || !canSave || !previewAudioBase64 || isSaving) return;
 
-    createMutation.mutate({
-      ...currentInput,
-      audioBase64: previewAudioBase64,
-    });
+    setIsSaving(true);
+
+    try {
+      const uploadInfo = await getUploadUrlMutation.mutateAsync();
+      const uploadResponse = await fetch(uploadInfo.uploadUrl, {
+        method: uploadInfo.method,
+        headers: { "Content-Type": "audio/wav" },
+        body: wavBase64ToBlob(previewAudioBase64),
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload speech audio");
+      }
+
+      const speech = await createMutation.mutateAsync({
+        ...currentInput,
+        id: uploadInfo.id,
+        r2ObjectKey: uploadInfo.r2ObjectKey,
+      });
+
+      router.push(ROUTES.CMS.SPEECH_DETAIL(speech.id));
+      toast.success("Speech saved");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to save speech";
+      toast.error(message);
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   const previewAudioUrl = previewAudioBase64
@@ -355,9 +376,9 @@ export function SpeechCreateForm() {
           <Button
             type="button"
             onClick={handleSave}
-            disabled={!canSave || createMutation.isPending}
+            disabled={!canSave || isSaving}
           >
-            {createMutation.isPending ? "Saving…" : "Save"}
+            {isSaving ? "Saving…" : "Save"}
           </Button>
           <Button variant="ghost" asChild>
             <Link href={ROUTES.CMS.SPEECHES}>Cancel</Link>
