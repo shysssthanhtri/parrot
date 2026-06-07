@@ -1,0 +1,6 @@
+[
+  {
+    "input": "openapi/chatterbox.openapi.json",
+    "output": "src/lib/chatterbox/schema.d.ts"
+  }
+]

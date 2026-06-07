@@ -1,0 +1,125 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Parrot Chatterbox TTS API",
+    "description": "Text-to-speech with voice cloning",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/generate": {
+      "post": {
+        "summary": "Generate Speech",
+        "operationId": "generate_speech_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TTSRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} }, "audio/wav": {} }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        },
+        "security": [{ "ApiKeyAuth": [] }]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": { "$ref": "#/components/schemas/ValidationError" },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "TTSRequest": {
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "maxLength": 5000,
+            "minLength": 1,
+            "title": "Prompt"
+          },
+          "voice_key": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Voice Key",
+            "description": "R2 object key for the voice sample (e.g. system-voices/andy.wav)"
+          },
+          "temperature": {
+            "type": "number",
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Temperature",
+            "default": 0.8
+          },
+          "top_p": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Top P",
+            "default": 0.95
+          },
+          "top_k": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Top K",
+            "default": 1000
+          },
+          "repetition_penalty": {
+            "type": "number",
+            "maximum": 2.0,
+            "minimum": 1.0,
+            "title": "Repetition Penalty",
+            "default": 1.2
+          },
+          "norm_loudness": {
+            "type": "boolean",
+            "title": "Norm Loudness",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": ["prompt", "voice_key"],
+        "title": "TTSRequest",
+        "description": "Request model for text-to-speech generation."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": { "type": "string", "title": "Message" },
+          "type": { "type": "string", "title": "Error Type" }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": { "type": "apiKey", "in": "header", "name": "x-api-key" }
+    }
+  }
+}
