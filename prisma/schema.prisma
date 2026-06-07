@@ -21,6 +21,7 @@ model User {
   voices            Voice[]
   scripts           Script[]
   scriptGenerations ScriptGeneration[]
+  speeches          Speech[]
 }
 
 model Account {
@@ -74,7 +75,8 @@ model Voice {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  speeches Speech[]
 }
 
 model Script {
@@ -90,6 +92,7 @@ model Script {
 
   user             User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
   scriptGeneration ScriptGeneration?
+  speeches         Speech[]
 }
 
 model ScriptGeneration {
@@ -110,4 +113,26 @@ model ScriptGeneration {
 
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
   script Script? @relation(fields: [scriptId], references: [id], onDelete: SetNull)
+}
+
+model Speech {
+  id String @id @default(cuid())
+
+  voiceId             String
+  scriptId            String
+  language            String  @default("en-US")
+  temperature         Float   @default(0.8)
+  topP                Float   @default(0.95)
+  topK                Int     @default(1000)
+  repetitionPenalty   Float   @default(1.2)
+  normLoudness        Boolean @default(true)
+  r2ObjectKey         String
+  userId              String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  voice  Voice  @relation(fields: [voiceId], references: [id], onDelete: Restrict)
+  script Script @relation(fields: [scriptId], references: [id], onDelete: Restrict)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

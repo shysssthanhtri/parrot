@@ -11,6 +11,8 @@ export const ROUTES = {
     SCRIPT_NEW: `${ROOT_ROUTES.CMS}/scripts/new`,
     SCRIPT_DETAIL: (id: string) => `${ROOT_ROUTES.CMS}/scripts/${id}`,
     SPEECHES: `${ROOT_ROUTES.CMS}/speeches`,
+    SPEECH_NEW: `${ROOT_ROUTES.CMS}/speeches/new`,
+    SPEECH_DETAIL: (id: string) => `${ROOT_ROUTES.CMS}/speeches/${id}`,
     SETTINGS: `${ROOT_ROUTES.CMS}/settings`,
   },
   PUBLIC: {
