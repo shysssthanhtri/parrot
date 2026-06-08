@@ -9,11 +9,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatContentLength } from "@/lib/content-length";
 import { getScriptLanguageLabel } from "@/lib/script-languages";
 
 type SpeechRow = {
   id: string;
   language: string;
+  contentLength: number;
   updatedAt: Date;
   voice: { name: string };
   script: { title: string };
@@ -50,6 +52,7 @@ export function SpeechesTable({ speeches }: SpeechesTableProps) {
           <TableHead>Script</TableHead>
           <TableHead>Voice</TableHead>
           <TableHead>Language</TableHead>
+          <TableHead>Length</TableHead>
           <TableHead>Updated</TableHead>
         </TableRow>
       </TableHeader>
@@ -67,6 +70,9 @@ export function SpeechesTable({ speeches }: SpeechesTableProps) {
             </TableCell>
             <TableCell>{speech.voice.name}</TableCell>
             <TableCell>{getScriptLanguageLabel(speech.language)}</TableCell>
+            <TableCell className="tabular-nums text-muted-foreground">
+              {formatContentLength(speech.contentLength)}
+            </TableCell>
             <TableCell>{formatUpdatedAt(speech.updatedAt)}</TableCell>
           </TableRow>
         ))}

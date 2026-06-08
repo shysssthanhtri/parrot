@@ -186,7 +186,7 @@ export const speechesRouter = createTRPCRouter({
         });
       }
 
-      await loadValidatedSpeechInputs(input);
+      const { script } = await loadValidatedSpeechInputs(input);
 
       if (!(await objectExists(input.r2ObjectKey))) {
         throw new TRPCError({
@@ -200,6 +200,7 @@ export const speechesRouter = createTRPCRouter({
           id: input.id,
           voiceId: input.voiceId,
           scriptId: input.scriptId,
+          contentLength: script.content.length,
           language: input.language,
           temperature: input.temperature,
           topP: input.topP,

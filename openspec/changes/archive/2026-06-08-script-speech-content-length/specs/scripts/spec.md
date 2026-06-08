@@ -1,10 +1,4 @@
-# scripts Specification
-
-## Purpose
-
-TBD - created by archiving change scripts. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Script metadata model
 
@@ -14,24 +8,6 @@ The system SHALL persist script metadata in PostgreSQL using a Prisma `Script` m
 
 - **WHEN** a script row exists with `title`, `content`, `contentLength`, and `language` set
 - **THEN** the script is valid and listable
-
-### Requirement: Scripts list API
-
-The system SHALL expose a tRPC `scripts.list` query that returns all scripts ordered for CMS display (e.g. by `updatedAt` descending).
-
-#### Scenario: List all scripts
-
-- **WHEN** an authenticated CMS client calls `scripts.list`
-- **THEN** all script rows are returned
-
-### Requirement: Script detail API
-
-The system SHALL expose a tRPC `scripts.getById` query that returns a single script by `id` or reports not found.
-
-#### Scenario: Unknown script id
-
-- **WHEN** `scripts.getById` is called with a non-existent id
-- **THEN** the procedure returns a not-found error
 
 ### Requirement: Script create API
 
@@ -65,27 +41,3 @@ The system SHALL expose a tRPC `scripts.update` mutation that accepts `id`, `tit
 
 - **WHEN** `scripts.update` is called with a non-existent `id`
 - **THEN** the procedure returns a not-found error
-
-### Requirement: Script input validation
-
-`scripts.create` and `scripts.update` SHALL reject empty `title`, empty `content`, or unsupported `language` values with a validation error. Supported `language` values SHALL be: `en-US`, `vi-VN`, `zh-CN`, `ko-KR`, and `ja-JP`.
-
-#### Scenario: Empty title on create
-
-- **WHEN** `scripts.create` is called with blank `title`
-- **THEN** the procedure returns a validation error and no row is created
-
-#### Scenario: Empty content on update
-
-- **WHEN** `scripts.update` is called with blank `content`
-- **THEN** the procedure returns a validation error and the row is unchanged
-
-#### Scenario: Unsupported language on create
-
-- **WHEN** `scripts.create` is called with a `language` value not in the supported set
-- **THEN** the procedure returns a validation error and no row is created
-
-#### Scenario: Unsupported language on update
-
-- **WHEN** `scripts.update` is called with a `language` value not in the supported set
-- **THEN** the procedure returns a validation error and the row is unchanged

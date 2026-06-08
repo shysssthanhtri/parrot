@@ -79,6 +79,7 @@ export const scriptsRouter = createTRPCRouter({
           data: {
             title: fields.title,
             content: fields.content,
+            contentLength: fields.content.length,
             language: fields.language,
             userId: ctx.userId,
           },
@@ -114,6 +115,7 @@ export const scriptsRouter = createTRPCRouter({
         data: {
           title: input.title,
           content: input.content,
+          contentLength: input.content.length,
           language: input.language,
         },
       });

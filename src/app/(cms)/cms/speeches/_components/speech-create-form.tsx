@@ -33,6 +33,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { wavBase64ToBlob } from "@/lib/audio";
+import { formatContentLength } from "@/lib/content-length";
 import {
   DEFAULT_SCRIPT_LANGUAGE,
   SCRIPT_LANGUAGES,
@@ -299,7 +300,7 @@ export function SpeechCreateForm() {
               <SelectContent>
                 {filteredScripts.map((script) => (
                   <SelectItem key={script.id} value={script.id}>
-                    {script.title}
+                    {script.title} ({formatContentLength(script.contentLength)})
                   </SelectItem>
                 ))}
               </SelectContent>
