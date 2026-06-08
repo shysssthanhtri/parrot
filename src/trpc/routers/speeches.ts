@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 
-import { generateSpeech } from "@/lib/chatterbox/generate";
+import { generateLongSpeech } from "@/lib/chatterbox/generate";
 import {
   DEFAULT_SCRIPT_LANGUAGE,
   SCRIPT_LANGUAGE_CODES,
@@ -104,7 +104,7 @@ async function generateSpeechAudio(
   script: { content: string },
   params: SpeechTtsParams
 ) {
-  return generateSpeech({
+  return generateLongSpeech({
     prompt: script.content,
     voice_key: voice.r2ObjectKey,
     ...toChatterboxTtsParams(params),

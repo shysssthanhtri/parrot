@@ -1,2 +1,10 @@
 export { createChatterboxClient } from "./client";
-export { generateSpeech, type TTSRequest } from "./generate";
+export {
+  generateLongSpeech,
+  generateSpeech,
+  type TTSRequest,
+} from "./generate";
+export {
+  CHATTERBOX_PROMPT_MAX_CHARS,
+  splitTextForTts,
+} from "@/lib/speech-text-chunking";
