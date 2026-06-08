@@ -2,7 +2,8 @@
 
 import { useWavesurfer } from "@wavesurfer/react";
 import { ExternalLinkIcon, PauseIcon, PlayIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useTheme } from "next-themes";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,11 +39,13 @@ type VoiceAudioPreviewProps = {
 
 export function VoiceAudioPreview({ audioUrl }: VoiceAudioPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [themeColors] = useState(() =>
-    typeof document !== "undefined"
-      ? readThemeWaveColors()
-      : DEFAULT_WAVE_COLORS
-  );
+  const { resolvedTheme } = useTheme();
+  const themeColors = useMemo(() => {
+    if (typeof document === "undefined" || !resolvedTheme) {
+      return DEFAULT_WAVE_COLORS;
+    }
+    return readThemeWaveColors();
+  }, [resolvedTheme]);
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState<string | null>(null);
 

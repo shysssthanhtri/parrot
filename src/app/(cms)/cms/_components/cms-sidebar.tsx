@@ -63,7 +63,7 @@ export const CMSSidebar = () => {
     },
     {
       title: "Settings",
-      url: "/settings",
+      url: ROUTES.CMS.SETTINGS,
       icon: Settings,
     },
   ];
