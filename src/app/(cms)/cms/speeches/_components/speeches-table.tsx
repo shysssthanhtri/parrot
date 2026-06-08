@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 import { ROUTES } from "@/app/configs/routes";
 import {
@@ -31,8 +28,6 @@ type SpeechesTableProps = {
 };
 
 export function SpeechesTable({ speeches }: SpeechesTableProps) {
-  const router = useRouter();
-
   if (speeches.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -60,12 +55,16 @@ export function SpeechesTable({ speeches }: SpeechesTableProps) {
       </TableHeader>
       <TableBody>
         {speeches.map((speech) => (
-          <TableRow
-            key={speech.id}
-            className="cursor-pointer"
-            onClick={() => router.push(ROUTES.CMS.SPEECH_DETAIL(speech.id))}
-          >
-            <TableCell className="font-medium">{speech.script.title}</TableCell>
+          <TableRow key={speech.id}>
+            <TableCell className="font-medium">
+              <Link
+                href={ROUTES.CMS.SPEECH_DETAIL(speech.id)}
+                className="hover:underline underline-offset-4"
+                prefetch={false}
+              >
+                {speech.script.title}
+              </Link>
+            </TableCell>
             <TableCell>{speech.voice.name}</TableCell>
             <TableCell>{getScriptLanguageLabel(speech.language)}</TableCell>
             <TableCell>{formatUpdatedAt(speech.updatedAt)}</TableCell>
