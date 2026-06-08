@@ -82,10 +82,10 @@ export type SpeechTtsParams = {
 };
 
 export const DEFAULT_SPEECH_TTS_PARAMS: SpeechTtsParams = {
-  temperature: 0.8,
-  topP: 0.95,
+  temperature: 0.5,
+  topP: 0.9,
   topK: 1000,
-  repetitionPenalty: 1.2,
+  repetitionPenalty: 1.0,
   normLoudness: DEFAULT_NORM_LOUDNESS,
 };
 
