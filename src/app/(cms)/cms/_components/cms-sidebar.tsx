@@ -25,12 +25,20 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 import { UserButton } from "./user-button";
 
 export const CMSSidebar = () => {
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const closeMobileSidebar = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   const menuItems: MenuItem[] = [
     {
@@ -93,7 +101,11 @@ export const CMSSidebar = () => {
                     }
                   >
                     {item.url ? (
-                      <Link href={item.url} prefetch={false}>
+                      <Link
+                        href={item.url}
+                        prefetch={false}
+                        onClick={closeMobileSidebar}
+                      >
                         <item.icon />
                         <span>{item.title}</span>
                       </Link>
