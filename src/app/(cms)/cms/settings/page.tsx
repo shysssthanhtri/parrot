@@ -1,4 +1,4 @@
-import { ThemeSettings } from "./_components/theme-settings";
+import { SettingsTabs } from "./_components/settings-tabs";
 
 export default function SettingsPage() {
   return (
@@ -10,7 +10,7 @@ export default function SettingsPage() {
         </p>
       </div>
       <div className="max-w-xl">
-        <ThemeSettings />
+        <SettingsTabs />
       </div>
     </div>
   );
