@@ -21,7 +21,7 @@ import {
 } from "@/lib/storage";
 import { prisma } from "@/prisma";
 
-import { authProcedure, createTRPCRouter } from "../init";
+import { cmsProcedure, createTRPCRouter } from "../init";
 
 const scriptLanguageSchema = z.enum(SCRIPT_LANGUAGE_CODES, {
   message: "Unsupported language",
@@ -122,7 +122,7 @@ function toSpeechTtsParams(input: SpeechGenerationInput): SpeechTtsParams {
 }
 
 export const speechesRouter = createTRPCRouter({
-  list: authProcedure.query(async () => {
+  list: cmsProcedure.query(async () => {
     return prisma.speech.findMany({
       orderBy: { updatedAt: "desc" },
       include: {
@@ -132,7 +132,7 @@ export const speechesRouter = createTRPCRouter({
     });
   }),
 
-  getById: authProcedure
+  getById: cmsProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
       const speech = await prisma.speech.findUnique({
@@ -155,7 +155,7 @@ export const speechesRouter = createTRPCRouter({
       return { ...speech, audioUrl };
     }),
 
-  getUploadUrl: authProcedure.mutation(async () => {
+  getUploadUrl: cmsProcedure.mutation(async () => {
     const id = randomUUID();
     const r2ObjectKey = speechObjectKeyForId(id);
     const { uploadUrl, method } = await getSpeechUploadUrl(r2ObjectKey);
@@ -163,7 +163,7 @@ export const speechesRouter = createTRPCRouter({
     return { id, r2ObjectKey, uploadUrl, method };
   }),
 
-  generatePreview: authProcedure
+  generatePreview: cmsProcedure
     .input(speechGenerationInputSchema)
     .mutation(async ({ input }) => {
       const { voice, script } = await loadValidatedSpeechInputs(input);
@@ -176,7 +176,7 @@ export const speechesRouter = createTRPCRouter({
       return { audioBase64: audio.toString("base64") };
     }),
 
-  create: authProcedure
+  create: cmsProcedure
     .input(speechCreateInputSchema)
     .mutation(async ({ input, ctx }) => {
       if (!speechObjectKeyMatchesId(input.id, input.r2ObjectKey)) {

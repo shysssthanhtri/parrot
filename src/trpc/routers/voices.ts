@@ -3,16 +3,16 @@ import { z } from "zod";
 
 import { prisma } from "@/prisma";
 
-import { authProcedure, createTRPCRouter } from "../init";
+import { cmsProcedure, createTRPCRouter } from "../init";
 
 export const voicesRouter = createTRPCRouter({
-  list: authProcedure.query(async () => {
+  list: cmsProcedure.query(async () => {
     return prisma.voice.findMany({
       orderBy: { createdAt: "desc" },
     });
   }),
 
-  getById: authProcedure
+  getById: cmsProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
       const voice = await prisma.voice.findUnique({

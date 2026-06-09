@@ -15,6 +15,10 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  if (!session.user.isCmsUser) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const key = new URL(req.url).searchParams.get("key");
   if (!key || !isSpeechObjectKey(key)) {
     return NextResponse.json({ error: "Invalid key" }, { status: 400 });

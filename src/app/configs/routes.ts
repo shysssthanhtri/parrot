@@ -18,5 +18,6 @@ export const ROUTES = {
   PUBLIC: {
     SIGNIN: "/api/auth/signin",
     SIGNOUT: "/api/auth/signout",
+    FORBIDDEN: "/forbidden",
   },
 } as const;

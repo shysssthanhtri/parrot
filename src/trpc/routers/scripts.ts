@@ -7,7 +7,7 @@ import {
 } from "@/lib/script-languages";
 import { prisma } from "@/prisma";
 
-import { authProcedure, createTRPCRouter } from "../init";
+import { cmsProcedure, createTRPCRouter } from "../init";
 
 const scriptLanguageSchema = z.enum(SCRIPT_LANGUAGE_CODES, {
   message: "Unsupported language",
@@ -42,13 +42,13 @@ async function assertValidGenerationLink(generationId: string, userId: string) {
 }
 
 export const scriptsRouter = createTRPCRouter({
-  list: authProcedure.query(async () => {
+  list: cmsProcedure.query(async () => {
     return prisma.script.findMany({
       orderBy: { updatedAt: "desc" },
     });
   }),
 
-  getById: authProcedure
+  getById: cmsProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
       const script = await prisma.script.findUnique({
@@ -65,7 +65,7 @@ export const scriptsRouter = createTRPCRouter({
       return script;
     }),
 
-  create: authProcedure
+  create: cmsProcedure
     .input(scriptCreateSchema)
     .mutation(async ({ input, ctx }) => {
       const { generationId, ...fields } = input;
@@ -96,7 +96,7 @@ export const scriptsRouter = createTRPCRouter({
       });
     }),
 
-  update: authProcedure
+  update: cmsProcedure
     .input(scriptFieldsSchema.extend({ id: z.string() }))
     .mutation(async ({ input }) => {
       const existing = await prisma.script.findUnique({

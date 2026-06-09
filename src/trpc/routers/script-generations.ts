@@ -12,7 +12,7 @@ import {
 } from "@/lib/script-languages";
 import { prisma } from "@/prisma";
 
-import { authProcedure, createTRPCRouter } from "../init";
+import { cmsProcedure, createTRPCRouter } from "../init";
 
 const scriptLanguageSchema = z.enum(SCRIPT_LANGUAGE_CODES, {
   message: "Unsupported language",
@@ -39,13 +39,13 @@ function getUserSafeGenerationError(error: unknown): string {
 }
 
 export const scriptGenerationsRouter = createTRPCRouter({
-  list: authProcedure.query(async () => {
+  list: cmsProcedure.query(async () => {
     return prisma.scriptGeneration.findMany({
       orderBy: { createdAt: "desc" },
     });
   }),
 
-  generate: authProcedure
+  generate: cmsProcedure
     .input(generateInputSchema)
     .mutation(async ({ input, ctx }) => {
       try {

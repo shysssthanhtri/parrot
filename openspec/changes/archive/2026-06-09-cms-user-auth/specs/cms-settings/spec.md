@@ -1,10 +1,4 @@
-# cms-settings Specification
-
-## Purpose
-
-TBD - created by archiving change settings-page-tabs. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Settings page uses tabbed sections
 

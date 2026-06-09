@@ -4,6 +4,11 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
+      isCmsUser: boolean;
     } & DefaultSession["user"];
+  }
+
+  interface User {
+    isCmsUser: boolean;
   }
 }

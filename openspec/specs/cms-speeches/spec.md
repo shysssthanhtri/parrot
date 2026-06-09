@@ -8,11 +8,11 @@ TBD - created by archiving change speeches. Update Purpose after archive.
 
 ### Requirement: CMS speeches list page
 
-The CMS SHALL provide a page at `/cms/speeches` that displays all speeches in a shadcn table with columns appropriate for browsing (at minimum: script title, voice name, language label, length, updated date). The length column SHALL display the speech's stored `contentLength` formatted as a locale-aware integer with a "chars" suffix. The page SHALL be behind existing CMS authentication.
+The CMS SHALL provide a page at `/cms/speeches` that displays all speeches in a shadcn table with columns appropriate for browsing (at minimum: script title, voice name, language label, length, updated date). The length column SHALL display the speech's stored `contentLength` formatted as a locale-aware integer with a "chars" suffix. The page SHALL be accessible only to authenticated CMS users (`isCmsUser === true`).
 
 #### Scenario: View speeches table
 
-- **WHEN** an authenticated user navigates to `/cms/speeches`
+- **WHEN** an authenticated CMS user navigates to `/cms/speeches`
 - **THEN** a table of all speeches is shown including readable language labels and content length for each row
 
 ### Requirement: New speech entry from list
@@ -97,18 +97,8 @@ The CMS SHALL provide a read-only page at `/cms/speeches/[speechId]` showing spe
 
 #### Scenario: View speech metadata
 
-- **WHEN** an authenticated user opens `/cms/speeches/{id}` for an existing speech
+- **WHEN** an authenticated CMS user opens `/cms/speeches/{id}` for an existing speech
 - **THEN** script title, voice name, language, TTS settings, and timestamps are displayed
-
-#### Scenario: Preview saved speech
-
-- **WHEN** user views detail for a speech with stored audio
-- **THEN** a waveform player loads and plays the speech via the resolved storage URL
-
-#### Scenario: Speech not found
-
-- **WHEN** user opens `/cms/speeches/{id}` for a non-existent speech
-- **THEN** a not-found UI is shown
 
 ### Requirement: Loading UI on speeches list page
 
@@ -116,10 +106,5 @@ While the speeches list page is loading, the CMS SHALL display a loading UI at `
 
 #### Scenario: Loading state during navigation
 
-- **WHEN** an authenticated user navigates to `/cms/speeches` and the page content is not yet ready
+- **WHEN** an authenticated CMS user navigates to `/cms/speeches` and the page content is not yet ready
 - **THEN** a skeleton loading UI is shown with a table-shaped placeholder matching the speeches list columns
-
-#### Scenario: Loading resolves to list
-
-- **WHEN** speech data finishes loading on `/cms/speeches`
-- **THEN** the loading UI is replaced by the speeches table (or empty state)

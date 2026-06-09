@@ -12,6 +12,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     session({ session, user }) {
       session.user.id = user.id;
+      session.user.isCmsUser = user.isCmsUser;
       return session;
     },
     authorized({ auth, request }) {
@@ -19,13 +20,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return true;
       }
 
-      if (auth?.user) {
-        return true;
+      if (!auth?.user) {
+        return NextResponse.redirect(
+          new URL(ROUTES.PUBLIC.SIGNIN, request.nextUrl)
+        );
       }
 
-      return NextResponse.redirect(
-        new URL(ROUTES.PUBLIC.SIGNIN, request.nextUrl)
-      );
+      if (!auth.user.isCmsUser) {
+        return NextResponse.redirect(
+          new URL(ROUTES.PUBLIC.FORBIDDEN, request.nextUrl)
+        );
+      }
+
+      return true;
     },
   },
   providers: [

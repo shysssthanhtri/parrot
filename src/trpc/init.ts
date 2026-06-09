@@ -39,6 +39,14 @@ export const authProcedure = baseProcedure.use(async ({ next }) => {
   }
 
   return next({
-    ctx: { userId: session.user.id },
+    ctx: { userId: session.user.id, isCmsUser: session.user.isCmsUser },
   });
+});
+
+export const cmsProcedure = authProcedure.use(async ({ ctx, next }) => {
+  if (!ctx.isCmsUser) {
+    throw new TRPCError({ code: "FORBIDDEN" });
+  }
+
+  return next({ ctx });
 });
