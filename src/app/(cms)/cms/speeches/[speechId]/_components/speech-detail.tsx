@@ -2,7 +2,7 @@ import { VolumeXIcon } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { VoiceAudioPreview } from "@/app/(cms)/cms/voices/[voiceId]/_components/voice-audio-preview";
+import { SpeechScriptPlaybackPanel } from "@/app/(cms)/cms/speeches/_components/speech-script-playback-panel";
 import { ROUTES } from "@/app/configs/routes";
 import {
   Card,
@@ -19,6 +19,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { getScriptLanguageLabel } from "@/lib/script-languages";
+import type { SpeechScriptAlignment } from "@/lib/speech-script-alignment";
 import { NORM_LOUDNESS_CONTROL, SPEECH_SLIDERS } from "@/lib/speech-sliders";
 
 type SpeechDetailProps = {
@@ -37,7 +38,9 @@ type SpeechDetailProps = {
     };
     script: {
       title: string;
+      content: string;
     };
+    alignment: SpeechScriptAlignment | null;
   };
   audioUrl: string | null;
 };
@@ -119,7 +122,11 @@ export function SpeechDetail({ speech, audioUrl }: SpeechDetailProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <VoiceAudioPreview audioUrl={audioUrl} />
+            <SpeechScriptPlaybackPanel
+              audioUrl={audioUrl}
+              alignment={speech.alignment}
+              scriptContent={speech.script.content}
+            />
           </CardContent>
         </Card>
       )}

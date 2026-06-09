@@ -1,10 +1,4 @@
-# speeches Specification
-
-## Purpose
-
-TBD - created by archiving change speeches. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Speech metadata model
 
@@ -19,15 +13,6 @@ The system SHALL persist speech metadata in PostgreSQL using a Prisma `Speech` m
 
 - **WHEN** a speech is created with valid alignment from preview generation
 - **THEN** the row persists the alignment JSON for later detail and consumer use
-
-### Requirement: Speeches list API
-
-The system SHALL expose a tRPC `speeches.list` query that returns all speeches ordered for CMS display (by `updatedAt` descending), including voice name and script title for display.
-
-#### Scenario: List all speeches
-
-- **WHEN** an authenticated CMS client calls `speeches.list`
-- **THEN** all speech rows are returned with associated voice name and script title
 
 ### Requirement: Speech detail API
 
@@ -105,26 +90,3 @@ The system SHALL expose a tRPC `speeches.create` mutation that accepts `id`, `r2
 
 - **WHEN** `STORAGE_DRIVER` is `r2`, the client has uploaded via presigned PUT, and `speeches.create` succeeds
 - **THEN** the speech row references a key retrievable via presigned GET URL
-
-### Requirement: Speech TTS parameter validation
-
-`speeches.generatePreview` and `speeches.create` SHALL validate TTS parameters against the shared slider bounds: `temperature` 0–2, `topP` 0–1, `topK` 1–10000, `repetitionPenalty` 1–2, and `normLoudness` boolean.
-
-#### Scenario: Out-of-range temperature rejected
-
-- **WHEN** either mutation is called with `temperature` outside 0–2
-- **THEN** the procedure returns a validation error
-
-### Requirement: Speech upload URL API
-
-The system SHALL expose a tRPC `speeches.getUploadUrl` mutation that generates a new speech `id` (UUID), returns `r2ObjectKey` as `speeches/{id}.wav`, and returns a client-uploadable URL and HTTP method for uploading the WAV with `Content-Type: audio/wav`. When `STORAGE_DRIVER` is `r2`, the upload URL SHALL be a presigned PUT URL. When `STORAGE_DRIVER` is `local`, the upload URL SHALL target an authenticated local upload route that writes to the local storage driver. The procedure SHALL NOT create a speech database row.
-
-#### Scenario: Get upload URL for R2
-
-- **WHEN** an authenticated client calls `speeches.getUploadUrl` with `STORAGE_DRIVER` set to `r2`
-- **THEN** the response includes `id`, `r2ObjectKey` matching `speeches/{id}.wav`, a presigned PUT `uploadUrl`, and `method` `PUT`
-
-#### Scenario: Get upload URL for local storage
-
-- **WHEN** an authenticated client calls `speeches.getUploadUrl` with `STORAGE_DRIVER` set to `local`
-- **THEN** the response includes `id`, `r2ObjectKey`, a local `uploadUrl`, and `method` `PUT`

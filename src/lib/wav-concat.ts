@@ -107,6 +107,16 @@ function buildWav(format: WavFormat, pcmData: Buffer): Buffer {
 }
 
 /**
+ * Return the playback duration of a WAV buffer in integer milliseconds.
+ * Derived from PCM frame count and sample rate for sample-accurate timing.
+ */
+export function getWavDurationMs(buffer: Buffer): number {
+  const { format, pcmData } = parseWav(buffer);
+  const numFrames = pcmData.length / format.blockAlign;
+  return Math.round((numFrames / format.sampleRate) * 1000);
+}
+
+/**
  * Concatenate multiple WAV buffers with matching format into one playable file.
  */
 export function concatWavBuffers(buffers: Buffer[]): Buffer {

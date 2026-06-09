@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { VoiceAudioPreview } from "@/app/(cms)/cms/voices/[voiceId]/_components/voice-audio-preview";
+import { SpeechScriptPlaybackPanel } from "@/app/(cms)/cms/speeches/_components/speech-script-playback-panel";
 import { ROUTES } from "@/app/configs/routes";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +39,7 @@ import {
   SCRIPT_LANGUAGES,
   type ScriptLanguageCode,
 } from "@/lib/script-languages";
+import type { SpeechScriptAlignment } from "@/lib/speech-script-alignment";
 import {
   DEFAULT_SPEECH_TTS_PARAMS,
   NORM_LOUDNESS_CONTROL,
@@ -102,6 +103,8 @@ export function SpeechCreateForm() {
     null
   );
   const [previewConfigKey, setPreviewConfigKey] = useState<string | null>(null);
+  const [previewAlignment, setPreviewAlignment] =
+    useState<SpeechScriptAlignment | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const voicesQuery = useQuery(trpc.voices.list.queryOptions());
@@ -136,7 +139,10 @@ export function SpeechCreateForm() {
     currentConfigKey !== null &&
     previewConfigKey === currentConfigKey;
   const canGenerate = currentInput !== null;
-  const canSave = previewMatchesConfig && previewAudioBase64 !== null;
+  const canSave =
+    previewMatchesConfig &&
+    previewAudioBase64 !== null &&
+    previewAlignment !== null;
 
   const previewMutation = useMutation(
     trpc.speeches.generatePreview.mutationOptions({
@@ -156,11 +162,13 @@ export function SpeechCreateForm() {
     setVoiceId("");
     setScriptId("");
     setPreviewConfigKey(null);
+    setPreviewAlignment(null);
   }
 
   function updateTtsParam(id: SpeechSliderId, value: number) {
     setTtsParams((current) => ({ ...current, [id]: value }));
     setPreviewConfigKey(null);
+    setPreviewAlignment(null);
   }
 
   function handleGenerate() {
@@ -170,6 +178,7 @@ export function SpeechCreateForm() {
     previewMutation.mutate(input, {
       onSuccess: (result) => {
         setPreviewAudioBase64(result.audioBase64);
+        setPreviewAlignment(result.alignment);
         setPreviewConfigKey(buildConfigKey(input));
         toast.success("Preview generated");
       },
@@ -177,7 +186,15 @@ export function SpeechCreateForm() {
   }
 
   async function handleSave() {
-    if (!currentInput || !canSave || !previewAudioBase64 || isSaving) return;
+    if (
+      !currentInput ||
+      !canSave ||
+      !previewAudioBase64 ||
+      !previewAlignment ||
+      isSaving
+    ) {
+      return;
+    }
 
     setIsSaving(true);
 
@@ -197,6 +214,7 @@ export function SpeechCreateForm() {
         ...currentInput,
         id: uploadInfo.id,
         r2ObjectKey: uploadInfo.r2ObjectKey,
+        alignment: previewAlignment,
       });
 
       router.push(ROUTES.CMS.SPEECH_DETAIL(speech.id));
@@ -252,6 +270,7 @@ export function SpeechCreateForm() {
               onValueChange={(value) => {
                 setVoiceId(value);
                 setPreviewConfigKey(null);
+                setPreviewAlignment(null);
               }}
               disabled={!language || voicesQuery.isLoading}
             >
@@ -283,6 +302,7 @@ export function SpeechCreateForm() {
               onValueChange={(value) => {
                 setScriptId(value);
                 setPreviewConfigKey(null);
+                setPreviewAlignment(null);
               }}
               disabled={!language || scriptsQuery.isLoading}
             >
@@ -353,6 +373,7 @@ export function SpeechCreateForm() {
                   normLoudness: checked,
                 }));
                 setPreviewConfigKey(null);
+                setPreviewAlignment(null);
               }}
               aria-label={NORM_LOUDNESS_CONTROL.label}
             />
@@ -401,7 +422,10 @@ export function SpeechCreateForm() {
                   updated audio before saving.
                 </p>
               ) : null}
-              <VoiceAudioPreview audioUrl={previewAudioUrl} />
+              <SpeechScriptPlaybackPanel
+                audioUrl={previewAudioUrl}
+                alignment={previewAlignment}
+              />
             </CardContent>
           </Card>
         ) : null}

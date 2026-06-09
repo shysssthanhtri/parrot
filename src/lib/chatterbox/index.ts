@@ -2,6 +2,7 @@ export { createChatterboxClient } from "./client";
 export {
   generateLongSpeech,
   generateSpeech,
+  type LongSpeechResult,
   type TTSRequest,
 } from "./generate";
 export {

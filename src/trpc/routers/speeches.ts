@@ -2,11 +2,19 @@ import { TRPCError } from "@trpc/server";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 
-import { generateLongSpeech } from "@/lib/chatterbox/generate";
+import {
+  generateLongSpeech,
+  type LongSpeechResult,
+} from "@/lib/chatterbox/generate";
 import {
   DEFAULT_SCRIPT_LANGUAGE,
   SCRIPT_LANGUAGE_CODES,
 } from "@/lib/script-languages";
+import {
+  alignmentSegmentsMatchScriptChunks,
+  type SpeechScriptAlignment,
+  speechScriptAlignmentSchema,
+} from "@/lib/speech-script-alignment";
 import {
   SPEECH_SLIDERS,
   type SpeechTtsParams,
@@ -47,6 +55,7 @@ const speechGenerationInputSchema = speechTtsParamsSchema.extend({
 const speechCreateInputSchema = speechGenerationInputSchema.extend({
   id: z.string().uuid(),
   r2ObjectKey: z.string().min(1),
+  alignment: speechScriptAlignmentSchema,
 });
 
 type SpeechGenerationInput = z.infer<typeof speechGenerationInputSchema>;
@@ -103,7 +112,7 @@ async function generateSpeechAudio(
   voice: { r2ObjectKey: string },
   script: { content: string },
   params: SpeechTtsParams
-) {
+): Promise<LongSpeechResult> {
   return generateLongSpeech({
     prompt: script.content,
     voice_key: voice.r2ObjectKey,
@@ -119,6 +128,20 @@ function toSpeechTtsParams(input: SpeechGenerationInput): SpeechTtsParams {
     repetitionPenalty: input.repetitionPenalty,
     normLoudness: input.normLoudness,
   };
+}
+
+function validateAlignmentForScript(
+  alignment: SpeechScriptAlignment,
+  scriptContent: string
+): SpeechScriptAlignment {
+  if (!alignmentSegmentsMatchScriptChunks(alignment, scriptContent)) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Alignment segments do not match script content",
+    });
+  }
+
+  return alignment;
 }
 
 export const speechesRouter = createTRPCRouter({
@@ -152,7 +175,11 @@ export const speechesRouter = createTRPCRouter({
 
       const audioUrl = await getAudioUrl(speech.r2ObjectKey);
 
-      return { ...speech, audioUrl };
+      return {
+        ...speech,
+        alignment: speech.alignment as SpeechScriptAlignment | null,
+        audioUrl,
+      };
     }),
 
   getUploadUrl: cmsProcedure.mutation(async () => {
@@ -167,13 +194,13 @@ export const speechesRouter = createTRPCRouter({
     .input(speechGenerationInputSchema)
     .mutation(async ({ input }) => {
       const { voice, script } = await loadValidatedSpeechInputs(input);
-      const audio = await generateSpeechAudio(
+      const { audio, alignment } = await generateSpeechAudio(
         voice,
         script,
         toSpeechTtsParams(input)
       );
 
-      return { audioBase64: audio.toString("base64") };
+      return { audioBase64: audio.toString("base64"), alignment };
     }),
 
   create: cmsProcedure
@@ -195,6 +222,11 @@ export const speechesRouter = createTRPCRouter({
         });
       }
 
+      const alignment = validateAlignmentForScript(
+        input.alignment,
+        script.content
+      );
+
       return prisma.speech.create({
         data: {
           id: input.id,
@@ -208,6 +240,7 @@ export const speechesRouter = createTRPCRouter({
           repetitionPenalty: input.repetitionPenalty,
           normLoudness: input.normLoudness,
           r2ObjectKey: input.r2ObjectKey,
+          alignment,
           userId: ctx.userId,
         },
         include: {

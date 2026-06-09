@@ -35,10 +35,15 @@ function readThemeWaveColors() {
 
 type VoiceAudioPreviewProps = {
   audioUrl: string;
+  onTimeUpdate?: (currentTimeMs: number) => void;
 };
 
-export function VoiceAudioPreview({ audioUrl }: VoiceAudioPreviewProps) {
+export function VoiceAudioPreview({
+  audioUrl,
+  onTimeUpdate,
+}: VoiceAudioPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const onTimeUpdateRef = useRef(onTimeUpdate);
   const { resolvedTheme } = useTheme();
   const themeColors = useMemo(() => {
     if (typeof document === "undefined" || !resolvedTheme) {
@@ -48,6 +53,10 @@ export function VoiceAudioPreview({ audioUrl }: VoiceAudioPreviewProps) {
   }, [resolvedTheme]);
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    onTimeUpdateRef.current = onTimeUpdate;
+  }, [onTimeUpdate]);
 
   const { wavesurfer, isReady, isPlaying, currentTime } = useWavesurfer({
     container: containerRef,
@@ -77,13 +86,20 @@ export function VoiceAudioPreview({ audioUrl }: VoiceAudioPreviewProps) {
     const handleReady = () => {
       setDuration(wavesurfer.getDuration());
       setError(null);
+      onTimeUpdateRef.current?.(Math.round(wavesurfer.getCurrentTime() * 1000));
     };
     const handleError = () => {
       setError("Could not load the audio preview.");
     };
+    const handleTimeUpdate = () => {
+      onTimeUpdateRef.current?.(Math.round(wavesurfer.getCurrentTime() * 1000));
+    };
 
     wavesurfer.on("ready", handleReady);
     wavesurfer.on("error", handleError);
+    wavesurfer.on("timeupdate", handleTimeUpdate);
+    wavesurfer.on("seeking", handleTimeUpdate);
+    wavesurfer.on("interaction", handleTimeUpdate);
 
     if (wavesurfer.getDuration() > 0) {
       handleReady();
@@ -92,8 +108,15 @@ export function VoiceAudioPreview({ audioUrl }: VoiceAudioPreviewProps) {
     return () => {
       wavesurfer.un("ready", handleReady);
       wavesurfer.un("error", handleError);
+      wavesurfer.un("timeupdate", handleTimeUpdate);
+      wavesurfer.un("seeking", handleTimeUpdate);
+      wavesurfer.un("interaction", handleTimeUpdate);
     };
   }, [wavesurfer]);
+
+  useEffect(() => {
+    onTimeUpdateRef.current?.(Math.round(currentTime * 1000));
+  }, [currentTime]);
 
   const isLoading = !isReady && !error;
 

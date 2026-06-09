@@ -130,6 +130,7 @@ model Speech {
   repetitionPenalty   Float   @default(1.2)
   normLoudness        Boolean @default(true)
   r2ObjectKey         String
+  alignment           Json?
   userId              String
 
   createdAt DateTime @default(now())
