@@ -12,6 +12,7 @@
     "lint": "eslint && pnpm typecheck",
     "lint:fix": "eslint --fix",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
+    "test": "node --test --experimental-strip-types src/lib/**/*.test.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "generate:api": "node scripts/generate-openapi.mjs",

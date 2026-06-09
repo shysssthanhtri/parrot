@@ -52,7 +52,7 @@ The module SHALL NOT be importable from client components (use `server-only` or 
 
 ### Requirement: Generate speech helper
 
-The system SHALL provide server-side helpers to call `POST /generate` and return synthesized audio as a `Buffer` on HTTP 200 with `audio/wav` content type. A single-chunk helper SHALL accept one `TTSRequest` body. A long-text helper SHALL accept the same generation parameters plus a full `prompt` string, split the prompt into chunks within the API length limit, call `POST /generate` once per chunk in order, concatenate the WAV responses, and return one combined `Buffer`. On non-success responses from any chunk, the helper SHALL throw an error that includes the HTTP status and a safe summary of the response body when available.
+The system SHALL provide server-side helpers to call `POST /generate` and return synthesized audio as a `Buffer` on HTTP 200 with `audio/wav` content type. A single-chunk helper SHALL accept one `TTSRequest` body. A long-text helper SHALL accept the same generation parameters plus a full `prompt` string, split the prompt into chunks within the API length limit, call `POST /generate` once per chunk in order, concatenate the WAV responses with a configurable silence gap between consecutive chunks, and return one combined `Buffer`. On non-success responses from any chunk, the helper SHALL throw an error that includes the HTTP status and a safe summary of the response body when available.
 
 #### Scenario: Successful TTS generation
 
@@ -62,7 +62,12 @@ The system SHALL provide server-side helpers to call `POST /generate` and return
 #### Scenario: Successful long-text generation
 
 - **WHEN** the long-text helper is called with a prompt longer than one chunk and a valid `voice_key`
-- **THEN** the helper issues one `POST /generate` per chunk and returns a single concatenated WAV buffer
+- **THEN** the helper issues one `POST /generate` per chunk and returns a single concatenated WAV buffer with silence gaps between consecutive chunk audio
+
+#### Scenario: Single-chunk long-text helper
+
+- **WHEN** the long-text helper is called with a prompt that fits in one chunk
+- **THEN** the helper returns the chunk WAV without inserting inter-chunk silence
 
 #### Scenario: Invalid API key
 

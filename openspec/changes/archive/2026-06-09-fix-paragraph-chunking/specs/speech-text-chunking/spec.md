@@ -1,10 +1,4 @@
-# speech-text-chunking Specification
-
-## Purpose
-
-TBD - created by archiving change speech-text-chunking. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Script text chunking
 
@@ -44,22 +38,3 @@ The system SHALL provide a server-side utility that splits script text into orde
 
 - **WHEN** script content contains a single line break within the chunk window and no earlier paragraph break
 - **THEN** chunking breaks at the line boundary before breaking at sentence punctuation
-
-### Requirement: WAV buffer concatenation
-
-The system SHALL provide a server-side utility that concatenates multiple `audio/wav` buffers into a single valid WAV buffer. All input buffers MUST share the same sample rate, channel count, and bit depth; otherwise the utility SHALL throw an error. The output MUST be playable as a single continuous WAV file.
-
-#### Scenario: Concatenate compatible WAV segments
-
-- **WHEN** two or more WAV buffers with matching format are concatenated
-- **THEN** the result is a valid WAV whose duration equals the sum of input durations
-
-#### Scenario: Single buffer passthrough
-
-- **WHEN** concatenation is called with exactly one WAV buffer
-- **THEN** the utility returns that buffer unchanged
-
-#### Scenario: Incompatible formats rejected
-
-- **WHEN** input WAV buffers have mismatched sample rate or channel count
-- **THEN** the utility throws an error and does not return partial output

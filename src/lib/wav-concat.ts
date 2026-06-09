@@ -1,3 +1,6 @@
+/** Default silence inserted between consecutive TTS chunk WAVs when joining long speech. */
+export const CHUNK_JOIN_GAP_MS = 400;
+
 type WavFormat = {
   audioFormat: number;
   numChannels: number;
@@ -83,6 +86,11 @@ function formatsMatch(a: WavFormat, b: WavFormat): boolean {
   );
 }
 
+function createSilencePcm(format: WavFormat, gapMs: number): Buffer {
+  const numFrames = Math.round((format.sampleRate * gapMs) / 1000);
+  return Buffer.alloc(numFrames * format.blockAlign);
+}
+
 function buildWav(format: WavFormat, pcmData: Buffer): Buffer {
   const headerSize = 44;
   const riffChunkSize = headerSize - 8 + pcmData.length;
@@ -118,8 +126,9 @@ export function getWavDurationMs(buffer: Buffer): number {
 
 /**
  * Concatenate multiple WAV buffers with matching format into one playable file.
+ * When `gapMs > 0`, inserts zero-filled silence between consecutive chunks.
  */
-export function concatWavBuffers(buffers: Buffer[]): Buffer {
+export function concatWavBuffers(buffers: Buffer[], gapMs = 0): Buffer {
   if (buffers.length === 0) {
     throw new Error("Cannot concatenate an empty WAV buffer list");
   }
@@ -141,6 +150,14 @@ export function concatWavBuffers(buffers: Buffer[]): Buffer {
     }
   }
 
-  const pcmData = Buffer.concat(parsed.map((segment) => segment.pcmData));
-  return buildWav(firstFormat, pcmData);
+  const pcmParts: Buffer[] = [];
+
+  for (let index = 0; index < parsed.length; index += 1) {
+    pcmParts.push(parsed[index].pcmData);
+    if (gapMs > 0 && index < parsed.length - 1) {
+      pcmParts.push(createSilencePcm(firstFormat, gapMs));
+    }
+  }
+
+  return buildWav(firstFormat, Buffer.concat(pcmParts));
 }
