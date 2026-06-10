@@ -21,6 +21,7 @@ const scriptFieldsSchema = z.object({
 
 const scriptCreateSchema = scriptFieldsSchema.extend({
   generationId: z.string().optional(),
+  topicIds: z.array(z.string()).optional(),
 });
 
 async function assertValidGenerationLink(generationId: string, userId: string) {
@@ -45,6 +46,7 @@ export const scriptsRouter = createTRPCRouter({
   list: cmsProcedure.query(async () => {
     return prisma.script.findMany({
       orderBy: { updatedAt: "desc" },
+      include: { topics: true },
     });
   }),
 
@@ -53,6 +55,7 @@ export const scriptsRouter = createTRPCRouter({
     .query(async ({ input }) => {
       const script = await prisma.script.findUnique({
         where: { id: input.id },
+        include: { topics: true },
       });
 
       if (!script) {
@@ -68,7 +71,7 @@ export const scriptsRouter = createTRPCRouter({
   create: cmsProcedure
     .input(scriptCreateSchema)
     .mutation(async ({ input, ctx }) => {
-      const { generationId, ...fields } = input;
+      const { generationId, topicIds, ...fields } = input;
 
       if (generationId) {
         await assertValidGenerationLink(generationId, ctx.userId);
@@ -82,7 +85,13 @@ export const scriptsRouter = createTRPCRouter({
             contentLength: fields.content.length,
             language: fields.language,
             userId: ctx.userId,
+            ...(topicIds?.length && {
+              topics: {
+                connect: topicIds.map((id) => ({ id })),
+              },
+            }),
           },
+          include: { topics: true },
         });
 
         if (generationId) {
@@ -97,27 +106,40 @@ export const scriptsRouter = createTRPCRouter({
     }),
 
   update: cmsProcedure
-    .input(scriptFieldsSchema.extend({ id: z.string() }))
+    .input(
+      scriptFieldsSchema.extend({
+        id: z.string(),
+        topicIds: z.array(z.string()).optional(),
+      })
+    )
     .mutation(async ({ input }) => {
+      const { topicIds, ...fields } = input;
+
       const existing = await prisma.script.findUnique({
-        where: { id: input.id },
+        where: { id: fields.id },
       });
 
       if (!existing) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: `Script not found: ${input.id}`,
+          message: `Script not found: ${fields.id}`,
         });
       }
 
       return prisma.script.update({
-        where: { id: input.id },
+        where: { id: fields.id },
         data: {
-          title: input.title,
-          content: input.content,
-          contentLength: input.content.length,
-          language: input.language,
+          title: fields.title,
+          content: fields.content,
+          contentLength: fields.content.length,
+          language: fields.language,
+          ...(topicIds !== undefined && {
+            topics: {
+              set: topicIds.map((id) => ({ id })),
+            },
+          }),
         },
+        include: { topics: true },
       });
     }),
 });

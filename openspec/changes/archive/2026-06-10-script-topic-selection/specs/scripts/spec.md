@@ -1,42 +1,4 @@
-# scripts Specification
-
-## Purpose
-
-TBD - created by archiving change scripts. Update Purpose after archive.
-
-## Requirements
-
-### Requirement: Script metadata model
-
-The system SHALL persist script metadata in PostgreSQL using a Prisma `Script` model with fields: `id`, `title`, `content` (text body), `contentLength` (integer, non-null, character count of `content`), `language` (string, default `en-US`), optional `userId` (creator), `createdAt`, and `updatedAt`.
-
-#### Scenario: Script with minimal fields
-
-- **WHEN** a script row exists with `title`, `content`, `contentLength`, and `language` set
-- **THEN** the script is valid and listable
-
-### Requirement: Scripts list API
-
-The system SHALL expose a tRPC `scripts.list` query that returns all scripts ordered for CMS display (by `updatedAt` descending), including associated topics for each script.
-
-#### Scenario: List all scripts with topics
-
-- **WHEN** an authenticated CMS client calls `scripts.list`
-- **THEN** all script rows are returned with their associated topics included
-
-### Requirement: Script detail API
-
-The system SHALL expose a tRPC `scripts.getById` query that returns a single script by `id` including its associated topics, or reports not found.
-
-#### Scenario: Get script with topics
-
-- **WHEN** `scripts.getById` is called with a valid `id`
-- **THEN** the script is returned with its associated topics included
-
-#### Scenario: Unknown script id
-
-- **WHEN** `scripts.getById` is called with a non-existent id
-- **THEN** the procedure returns a not-found error
+## MODIFIED Requirements
 
 ### Requirement: Script create API
 
@@ -91,26 +53,25 @@ The system SHALL expose a tRPC `scripts.update` mutation that accepts `id`, `tit
 - **WHEN** `scripts.update` is called with `topicIds` as an empty array
 - **THEN** all topic associations for the script are removed
 
-### Requirement: Script input validation
+### Requirement: Scripts list API
 
-`scripts.create` and `scripts.update` SHALL reject empty `title`, empty `content`, or unsupported `language` values with a validation error. Supported `language` values SHALL be: `en-US`, `vi-VN`, `zh-CN`, `ko-KR`, and `ja-JP`.
+The system SHALL expose a tRPC `scripts.list` query that returns all scripts ordered for CMS display (by `updatedAt` descending), including associated topics for each script.
 
-#### Scenario: Empty title on create
+#### Scenario: List all scripts with topics
 
-- **WHEN** `scripts.create` is called with blank `title`
-- **THEN** the procedure returns a validation error and no row is created
+- **WHEN** an authenticated CMS client calls `scripts.list`
+- **THEN** all script rows are returned with their associated topics included
 
-#### Scenario: Empty content on update
+### Requirement: Script detail API
 
-- **WHEN** `scripts.update` is called with blank `content`
-- **THEN** the procedure returns a validation error and the row is unchanged
+The system SHALL expose a tRPC `scripts.getById` query that returns a single script by `id` including its associated topics, or reports not found.
 
-#### Scenario: Unsupported language on create
+#### Scenario: Get script with topics
 
-- **WHEN** `scripts.create` is called with a `language` value not in the supported set
-- **THEN** the procedure returns a validation error and no row is created
+- **WHEN** `scripts.getById` is called with a valid `id`
+- **THEN** the script is returned with its associated topics included
 
-#### Scenario: Unsupported language on update
+#### Scenario: Unknown script id
 
-- **WHEN** `scripts.update` is called with a `language` value not in the supported set
-- **THEN** the procedure returns a validation error and the row is unchanged
+- **WHEN** `scripts.getById` is called with a non-existent id
+- **THEN** the procedure returns a not-found error

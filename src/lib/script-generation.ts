@@ -29,6 +29,7 @@ type GenerateScriptDraftInput = {
   prompt: string;
   length: ScriptGenerationLength;
   language: ScriptLanguageCode;
+  topicNames?: string[];
 };
 
 type ScriptDraft = {
@@ -40,10 +41,16 @@ export function buildScriptGenerationPrompt({
   prompt,
   length,
   language,
+  topicNames,
 }: GenerateScriptDraftInput): string {
   const languageLabel = getScriptLanguageLabel(language);
   const wordCount = WORD_COUNT_BY_LENGTH[length];
   const duration = DURATION_BY_LENGTH[length];
+
+  const topicLine =
+    topicNames && topicNames.length > 0
+      ? `\nRelated topics: ${topicNames.join(", ")}\n`
+      : "";
 
   return `You are writing a shadowing practice script for language learners.
 
@@ -53,7 +60,7 @@ The script should be engaging, clear, and suitable for pronunciation practice.
 
 Topic or instructions from the author:
 ${prompt}
-
+${topicLine}
 Respond with ONLY valid JSON in this exact shape (no markdown, no extra keys):
 {"title":"A short descriptive title","content":"The full script text"}`;
 }

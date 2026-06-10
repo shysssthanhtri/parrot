@@ -33,6 +33,8 @@ export default async function ScriptDetailPage({
     throw error;
   }
 
+  const topics = await caller.topics.list();
+
   return (
     <div className="flex flex-col gap-4 p-4 md:p-6">
       <ScriptFormBackLink />
@@ -44,7 +46,9 @@ export default async function ScriptDetailPage({
           content: script.content,
           language:
             (script.language as ScriptLanguageCode) ?? DEFAULT_SCRIPT_LANGUAGE,
+          topicIds: script.topics.map((t) => t.id),
         }}
+        topics={topics}
       />
     </div>
   );

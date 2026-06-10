@@ -46,6 +46,7 @@ type ScriptGenerateDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   language: ScriptLanguageCode;
+  topicIds?: string[];
   onGenerated: (draft: GeneratedScriptDraft) => void;
 };
 
@@ -53,6 +54,7 @@ export function ScriptGenerateDialog({
   open,
   onOpenChange,
   language,
+  topicIds,
   onGenerated,
 }: ScriptGenerateDialogProps) {
   const trpc = useTRPC();
@@ -79,6 +81,7 @@ export function ScriptGenerateDialog({
       prompt: prompt.trim(),
       length,
       language,
+      ...(topicIds?.length ? { topicIds } : {}),
     });
   }
 

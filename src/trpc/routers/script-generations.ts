@@ -28,6 +28,7 @@ const generateInputSchema = z.object({
     message: "Unsupported length",
   }),
   language: scriptLanguageSchema.default(DEFAULT_SCRIPT_LANGUAGE),
+  topicIds: z.array(z.string()).optional(),
 });
 
 function getUserSafeGenerationError(error: unknown): string {
@@ -48,8 +49,26 @@ export const scriptGenerationsRouter = createTRPCRouter({
   generate: cmsProcedure
     .input(generateInputSchema)
     .mutation(async ({ input, ctx }) => {
+      let topicNames: string[] | undefined;
+
+      if (input.topicIds?.length) {
+        const topics = await prisma.topic.findMany({
+          where: {
+            id: { in: input.topicIds },
+            userId: ctx.userId,
+          },
+          select: { name: true },
+        });
+        topicNames = topics.map((t) => t.name);
+      }
+
       try {
-        const draft = await generateScriptDraft(input);
+        const draft = await generateScriptDraft({
+          prompt: input.prompt,
+          length: input.length,
+          language: input.language,
+          topicNames,
+        });
 
         const generation = await prisma.scriptGeneration.create({
           data: {

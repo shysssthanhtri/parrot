@@ -96,6 +96,7 @@ model Script {
   user             User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
   scriptGeneration ScriptGeneration?
   speeches         Speech[]
+  topics           Topic[]
 }
 
 model ScriptGeneration {
@@ -172,5 +173,6 @@ model Topic {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scripts Script[]
 }

@@ -33,22 +33,26 @@ import {
 import { useTRPC } from "@/trpc/client";
 
 import { ScriptGenerateDialog } from "./script-generate-dialog";
+import { type TopicOption, TopicPicker } from "./topic-picker";
 
 type ScriptFormValues = {
   title: string;
   content: string;
   language: ScriptLanguageCode;
+  topicIds?: string[];
 };
 
 type ScriptFormProps =
   | {
       mode: "create";
       defaultValues?: ScriptFormValues;
+      topics: TopicOption[];
     }
   | {
       mode: "edit";
       scriptId: string;
       defaultValues: ScriptFormValues;
+      topics: TopicOption[];
     };
 
 export function ScriptForm(props: ScriptFormProps) {
@@ -58,12 +62,16 @@ export function ScriptForm(props: ScriptFormProps) {
     title: "",
     content: "",
     language: DEFAULT_SCRIPT_LANGUAGE,
+    topicIds: [],
   };
 
   const [title, setTitle] = useState(initialValues.title);
   const [content, setContent] = useState(initialValues.content);
   const [language, setLanguage] = useState<ScriptLanguageCode>(
     initialValues.language
+  );
+  const [topicIds, setTopicIds] = useState<string[]>(
+    initialValues.topicIds ?? []
   );
   const [generationId, setGenerationId] = useState<string | null>(null);
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
@@ -102,6 +110,7 @@ export function ScriptForm(props: ScriptFormProps) {
       title: title.trim(),
       content: content.trim(),
       language,
+      topicIds,
     };
 
     if (props.mode === "create") {
@@ -163,6 +172,16 @@ export function ScriptForm(props: ScriptFormProps) {
               </SelectContent>
             </Select>
           </div>
+          {props.topics.length > 0 && (
+            <div className="grid gap-2">
+              <Label>Topics</Label>
+              <TopicPicker
+                topics={props.topics}
+                selectedIds={topicIds}
+                onSelectedChange={setTopicIds}
+              />
+            </div>
+          )}
           <div className="grid gap-2">
             <div className="flex items-center justify-between gap-2">
               <Label htmlFor="script-content">Content</Label>
@@ -201,6 +220,7 @@ export function ScriptForm(props: ScriptFormProps) {
             open={generateDialogOpen}
             onOpenChange={setGenerateDialogOpen}
             language={language}
+            topicIds={topicIds}
             onGenerated={(draft) => {
               setTitle(draft.title);
               setContent(draft.content);
