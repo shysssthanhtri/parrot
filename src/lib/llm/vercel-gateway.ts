@@ -7,7 +7,8 @@ import { env } from "@/lib/env";
 import type { LlmProvider } from "./types";
 
 // export const VERCEL_GATEWAY_MODEL = "google/gemini-2.5-flash";
-export const VERCEL_GATEWAY_MODEL = "minimax/minimax-m2.1";
+export const VERCEL_GATEWAY_MODEL = "google/gemini-2.5-flash-lite";
+// export const VERCEL_GATEWAY_MODEL = "google/gemini-3.1-flash-lite";
 
 const gateway = createGateway({
   apiKey: env.AI_GATEWAY_API_KEY ?? "",
