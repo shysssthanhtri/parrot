@@ -83,7 +83,7 @@ Each TTS control on the speech create page (Creativity, Voice Variety, Expressio
 
 ### Requirement: CMS speech detail page
 
-The CMS SHALL provide a read-only page at `/cms/speeches/[speechId]` showing speech metadata (linked script title, voice name, language, TTS parameter values, timestamps, and process status), the full script text with synchronized chunk highlighting when alignment is stored and audio is playable (past chunks dimmed, active chunk highlighted, upcoming chunks normal, driven by audio playback time), and a waveform-based audio preview when `processStatus` is `finished` and audio is available. While `processStatus` is `pending` or `processing`, the page SHALL show a generating state and poll `speeches.getById` until the status becomes `finished` or `failed`. When `processStatus` is `failed`, the page SHALL display `errorMessage` and a retry control that calls `speeches.retry` and resumes polling. When alignment is not stored (legacy speeches), the page SHALL display the script content without synchronized highlighting. The page SHALL NOT offer edit, archive, or delete controls in v1.
+The CMS SHALL provide a read-only page at `/cms/speeches/[speechId]` showing speech metadata (linked script title, voice name, language, TTS parameter values, timestamps, and process status), the full script text with synchronized chunk highlighting when alignment is stored and audio is playable (past chunks dimmed, active chunk highlighted, upcoming chunks normal, driven by audio playback time), and a waveform-based audio preview when `processStatus` is `finished` and audio is available. While `processStatus` is `pending` or `processing`, the page SHALL show a generating state with chunk-based progress (percentage and chunk fraction when `totalChunks` is greater than zero) derived from `settledChunks` and `totalChunks`, and poll `speeches.getById` until the status becomes `finished` or `failed`. When `processStatus` is `failed`, the page SHALL display `errorMessage` and a retry control that calls `speeches.retry` and resumes polling. When alignment is not stored (legacy speeches), the page SHALL display the script content without synchronized highlighting. The page SHALL NOT offer edit, archive, or delete controls in v1.
 
 #### Scenario: View speech metadata
 
@@ -93,7 +93,22 @@ The CMS SHALL provide a read-only page at `/cms/speeches/[speechId]` showing spe
 #### Scenario: Generating state polls until finished
 
 - **WHEN** an authenticated CMS user opens a speech detail page with `processStatus` `processing`
-- **THEN** a generating indicator is shown, audio playback is unavailable, and the client refreshes speech data until status becomes `finished` or `failed`
+- **THEN** a generating indicator with chunk-based progress is shown, audio playback is unavailable, and the client refreshes speech data until status becomes `finished` or `failed`
+
+#### Scenario: Generating state shows percentage during synthesis
+
+- **WHEN** an authenticated CMS user views a speech with `processStatus` `processing`, `totalChunks` 12, and `settledChunks` 3
+- **THEN** the generating UI shows progress equivalent to 3 of 12 chunks (25%) rather than a generic generating message only
+
+#### Scenario: Generating state before chunks are known
+
+- **WHEN** an authenticated CMS user views a speech with `processStatus` `pending` or `processing` and `totalChunks` 0
+- **THEN** the generating UI shows a starting state without a chunk fraction
+
+#### Scenario: Generating state during finalize
+
+- **WHEN** an authenticated CMS user views a speech with `processStatus` `processing`, `totalChunks` greater than zero, and `settledChunks` equal to `totalChunks`
+- **THEN** the generating UI indicates finalization is in progress (e.g. 100% with a finalizing label)
 
 #### Scenario: Failed speech shows retry
 
@@ -123,3 +138,22 @@ While the speeches list page is loading, the CMS SHALL display a loading UI at `
 
 - **WHEN** an authenticated CMS user navigates to `/cms/speeches` and the page content is not yet ready
 - **THEN** a skeleton loading UI is shown with a table-shaped placeholder matching the speeches list columns
+
+### Requirement: Speech detail audio preview survives tab refocus
+
+When a finished speech is playing or paused on the detail page, returning to the browser tab after a metadata refetch SHALL NOT cause the waveform player to reload or re-download the audio file if the underlying stored audio object is unchanged. Playback position and loaded waveform state SHALL be preserved across tab switches under normal use.
+
+#### Scenario: Tab refocus does not reload finished speech audio
+
+- **WHEN** an authenticated CMS user is previewing audio on a finished speech detail page, switches to another browser tab, and returns while React Query refetches speech metadata
+- **THEN** the waveform player keeps its loaded audio and current playback position without showing the loading state again or issuing a new full audio download for the same speech object
+
+#### Scenario: New audio after generation still loads
+
+- **WHEN** a speech transitions from `processing` to `finished` while the user remains on the detail page (via polling)
+- **THEN** the audio preview loads the newly available audio once and begins playback from the start
+
+#### Scenario: Retry after failure loads fresh audio
+
+- **WHEN** a user retries a failed speech and generation completes successfully
+- **THEN** the audio preview loads the new audio file (replacing any prior preview state)

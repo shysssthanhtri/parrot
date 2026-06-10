@@ -31,7 +31,7 @@ The system SHALL expose a tRPC `speeches.list` query that returns all speeches o
 
 ### Requirement: Speech detail API
 
-The system SHALL expose a tRPC `speeches.getById` query that returns a single speech by `id` with voice and script relations (including script `content`), `processStatus`, optional `errorMessage`, stored `alignment` when present, and a resolved audio preview URL from storage only when `processStatus` is `finished` and the final object exists, or reports not found.
+The system SHALL expose a tRPC `speeches.getById` query that returns a single speech by `id` with voice and script relations (including script `content`), `processStatus`, optional `errorMessage`, `totalChunks`, `settledChunks`, stored `alignment` when present, and a resolved audio preview URL from storage only when `processStatus` is `finished` and the final object exists, or reports not found.
 
 #### Scenario: Unknown speech id
 
@@ -46,12 +46,17 @@ The system SHALL expose a tRPC `speeches.getById` query that returns a single sp
 #### Scenario: Detail omits audio URL while processing
 
 - **WHEN** `speeches.getById` is called for a speech with `processStatus` `pending` or `processing`
-- **THEN** the response includes `processStatus` and does not include a playable audio URL
+- **THEN** the response includes `processStatus`, `totalChunks`, and `settledChunks`, and does not include a playable audio URL
 
 #### Scenario: Detail includes alignment and script content
 
 - **WHEN** `speeches.getById` is called for a finished speech with stored alignment
 - **THEN** the response includes `alignment` and the linked script's full `content` for synchronized display
+
+#### Scenario: Detail includes chunk counters while processing
+
+- **WHEN** `speeches.getById` is called for a speech with `processStatus` `processing` and `totalChunks` greater than zero
+- **THEN** the response includes current `settledChunks` and `totalChunks` values suitable for computing generation progress in the CMS
 
 ### Requirement: Speech create API
 

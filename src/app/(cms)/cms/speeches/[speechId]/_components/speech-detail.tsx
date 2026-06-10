@@ -1,3 +1,5 @@
+"use client";
+
 import { AlertCircleIcon, Loader2Icon, VolumeXIcon } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -20,7 +22,9 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { Progress } from "@/components/ui/progress";
 import { getScriptLanguageLabel } from "@/lib/script-languages";
+import { getSpeechGenerationProgress } from "@/lib/speech-generation-progress";
 import {
   isSpeechInProgress,
   type SpeechProcessStatus,
@@ -35,6 +39,8 @@ type SpeechDetailProps = {
     language: string;
     processStatus: string;
     errorMessage: string | null;
+    totalChunks: number;
+    settledChunks: number;
     temperature: number;
     topP: number;
     topK: number;
@@ -115,19 +121,28 @@ function SpeechAudioSection({
   }
 
   if (isSpeechInProgress(processStatus)) {
+    const progress = getSpeechGenerationProgress(
+      processStatus,
+      speech.totalChunks,
+      speech.settledChunks
+    );
+
     return (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Loader2Icon className="size-4 animate-spin" />
-            Generating audio
+            {progress?.label ?? "Generating audio"}
           </CardTitle>
           <CardDescription>
             Speech audio is being generated in the background. This page
             refreshes automatically until processing finishes.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="grid gap-4">
+          {progress ? (
+            <Progress value={progress.percent} aria-label={progress.label} />
+          ) : null}
           <p className="text-sm text-muted-foreground">
             Script: {speech.script.title}
           </p>
