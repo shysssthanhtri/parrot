@@ -94,6 +94,7 @@ with image.imports():
 
 @app.cls(
     gpu="a10g",
+    max_containers=1,
     scaledown_window=60 * 5,
     secrets=[
         modal.Secret.from_name("hf-token"),
