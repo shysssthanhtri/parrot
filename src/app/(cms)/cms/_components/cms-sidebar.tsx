@@ -6,6 +6,7 @@ import {
   type LucideIcon,
   MicVocal,
   Settings,
+  Tag,
   Text,
 } from "lucide-react";
 import Image from "next/image";
@@ -55,6 +56,11 @@ export const CMSSidebar = () => {
       title: "Scripts",
       url: ROUTES.CMS.SCRIPTS,
       icon: Text,
+    },
+    {
+      title: "Topics",
+      url: ROUTES.CMS.TOPICS,
+      icon: Tag,
     },
     {
       title: "Speeches",

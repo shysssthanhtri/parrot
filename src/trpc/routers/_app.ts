@@ -4,6 +4,7 @@ import { baseProcedure, createTRPCRouter } from "../init";
 import { scriptGenerationsRouter } from "./script-generations";
 import { scriptsRouter } from "./scripts";
 import { speechesRouter } from "./speeches";
+import { topicsRouter } from "./topics";
 import { voicesRouter } from "./voices";
 
 export const appRouter = createTRPCRouter({
@@ -11,6 +12,7 @@ export const appRouter = createTRPCRouter({
   scripts: scriptsRouter,
   scriptGenerations: scriptGenerationsRouter,
   speeches: speechesRouter,
+  topics: topicsRouter,
   hello: baseProcedure
     .input(
       z.object({

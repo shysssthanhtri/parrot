@@ -17,12 +17,13 @@ model User {
   accounts      Account[]
   sessions      Session[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
   voices            Voice[]
   scripts           Script[]
   scriptGenerations ScriptGeneration[]
   speeches          Speech[]
+  topics            Topic[]
 }
 
 model Account {
@@ -83,11 +84,11 @@ model Voice {
 model Script {
   id String @id @default(cuid())
 
-  title          String
-  content        String @db.Text
-  contentLength  Int
-  language       String @default("en-US")
-  userId   String?
+  title         String
+  content       String  @db.Text
+  contentLength Int
+  language      String  @default("en-US")
+  userId        String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -120,22 +121,22 @@ model ScriptGeneration {
 model Speech {
   id String @id @default(cuid())
 
-  voiceId             String
-  scriptId            String
-  contentLength       Int
-  language            String  @default("en-US")
-  temperature         Float   @default(0.8)
-  topP                Float   @default(0.95)
-  topK                Int     @default(1000)
-  repetitionPenalty   Float   @default(1.2)
-  normLoudness        Boolean @default(true)
-  r2ObjectKey         String
-  alignment           Json?
-  processStatus       String  @default("pending")
-  errorMessage        String?
-  totalChunks         Int     @default(0)
-  settledChunks       Int     @default(0)
-  userId              String
+  voiceId           String
+  scriptId          String
+  contentLength     Int
+  language          String  @default("en-US")
+  temperature       Float   @default(0.8)
+  topP              Float   @default(0.95)
+  topK              Int     @default(1000)
+  repetitionPenalty Float   @default(1.2)
+  normLoudness      Boolean @default(true)
+  r2ObjectKey       String
+  alignment         Json?
+  processStatus     String  @default("pending")
+  errorMessage      String?
+  totalChunks       Int     @default(0)
+  settledChunks     Int     @default(0)
+  userId            String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -149,8 +150,8 @@ model Speech {
 model SpeechChunk {
   speechId   String
   chunkIndex Int
-  text       String  @db.Text
-  status     String  @default("pending")
+  text       String @db.Text
+  status     String @default("pending")
   tempR2Key  String
   durationMs Int?
 
@@ -158,4 +159,18 @@ model SpeechChunk {
 
   @@id([speechId, chunkIndex])
   @@index([speechId])
+}
+
+model Topic {
+  id String @id @default(cuid())
+
+  name        String
+  description String?
+  color       String  @default("#6b7280")
+  userId      String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
