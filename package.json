@@ -37,6 +37,7 @@
     "@trpc/client": "^11.17.0",
     "@trpc/server": "^11.17.0",
     "@trpc/tanstack-react-query": "^11.17.0",
+    "@vercel/queue": "^0.3.0",
     "@wavesurfer/react": "^1.0.12",
     "class-variance-authority": "^0.7.1",
     "client-only": "^0.0.1",

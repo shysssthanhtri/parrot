@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { SpeechScriptPlaybackPanel } from "@/app/(cms)/cms/speeches/_components/speech-script-playback-panel";
 import { ROUTES } from "@/app/configs/routes";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,14 +31,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { wavBase64ToBlob } from "@/lib/audio";
 import { formatContentLength } from "@/lib/content-length";
 import {
   DEFAULT_SCRIPT_LANGUAGE,
   SCRIPT_LANGUAGES,
   type ScriptLanguageCode,
 } from "@/lib/script-languages";
-import type { SpeechScriptAlignment } from "@/lib/speech-script-alignment";
 import {
   DEFAULT_SPEECH_TTS_PARAMS,
   NORM_LOUDNESS_CONTROL,
@@ -49,15 +46,11 @@ import {
 } from "@/lib/speech-sliders";
 import { useTRPC } from "@/trpc/client";
 
-type SpeechGenerationInput = SpeechTtsParams & {
+type SpeechCreateInput = SpeechTtsParams & {
   voiceId: string;
   scriptId: string;
   language: ScriptLanguageCode;
 };
-
-function buildConfigKey(input: SpeechGenerationInput) {
-  return JSON.stringify(input);
-}
 
 function ControlLabelWithTooltip({
   htmlFor,
@@ -99,13 +92,6 @@ export function SpeechCreateForm() {
   const [ttsParams, setTtsParams] = useState<SpeechTtsParams>(
     DEFAULT_SPEECH_TTS_PARAMS
   );
-  const [previewAudioBase64, setPreviewAudioBase64] = useState<string | null>(
-    null
-  );
-  const [previewConfigKey, setPreviewConfigKey] = useState<string | null>(null);
-  const [previewAlignment, setPreviewAlignment] =
-    useState<SpeechScriptAlignment | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
 
   const voicesQuery = useQuery(trpc.voices.list.queryOptions());
   const scriptsQuery = useQuery(trpc.scripts.list.queryOptions());
@@ -122,7 +108,7 @@ export function SpeechCreateForm() {
     );
   }, [scriptsQuery.data, language]);
 
-  const currentInput = useMemo<SpeechGenerationInput | null>(() => {
+  const currentInput = useMemo<SpeechCreateInput | null>(() => {
     if (!voiceId || !scriptId) return null;
 
     return {
@@ -133,104 +119,36 @@ export function SpeechCreateForm() {
     };
   }, [voiceId, scriptId, language, ttsParams]);
 
-  const currentConfigKey = currentInput ? buildConfigKey(currentInput) : null;
-  const previewMatchesConfig =
-    previewConfigKey !== null &&
-    currentConfigKey !== null &&
-    previewConfigKey === currentConfigKey;
-  const canGenerate = currentInput !== null;
-  const canSave =
-    previewMatchesConfig &&
-    previewAudioBase64 !== null &&
-    previewAlignment !== null;
+  const canCreate = currentInput !== null;
 
-  const previewMutation = useMutation(
-    trpc.speeches.generatePreview.mutationOptions({
+  const createMutation = useMutation(
+    trpc.speeches.create.mutationOptions({
       onError: (error) => {
-        toast.error(error.message || "Failed to generate preview");
+        toast.error(error.message || "Failed to create speech");
       },
     })
   );
-
-  const getUploadUrlMutation = useMutation(
-    trpc.speeches.getUploadUrl.mutationOptions()
-  );
-  const createMutation = useMutation(trpc.speeches.create.mutationOptions());
 
   function handleLanguageChange(value: ScriptLanguageCode) {
     setLanguage(value);
     setVoiceId("");
     setScriptId("");
-    setPreviewConfigKey(null);
-    setPreviewAlignment(null);
   }
 
   function updateTtsParam(id: SpeechSliderId, value: number) {
     setTtsParams((current) => ({ ...current, [id]: value }));
-    setPreviewConfigKey(null);
-    setPreviewAlignment(null);
   }
 
-  function handleGenerate() {
+  function handleCreate() {
     if (!currentInput) return;
 
-    const input = currentInput;
-    previewMutation.mutate(input, {
-      onSuccess: (result) => {
-        setPreviewAudioBase64(result.audioBase64);
-        setPreviewAlignment(result.alignment);
-        setPreviewConfigKey(buildConfigKey(input));
-        toast.success("Preview generated");
+    createMutation.mutate(currentInput, {
+      onSuccess: (speech) => {
+        router.push(ROUTES.CMS.SPEECH_DETAIL(speech.id));
+        toast.success("Speech created — generation started");
       },
     });
   }
-
-  async function handleSave() {
-    if (
-      !currentInput ||
-      !canSave ||
-      !previewAudioBase64 ||
-      !previewAlignment ||
-      isSaving
-    ) {
-      return;
-    }
-
-    setIsSaving(true);
-
-    try {
-      const uploadInfo = await getUploadUrlMutation.mutateAsync();
-      const uploadResponse = await fetch(uploadInfo.uploadUrl, {
-        method: uploadInfo.method,
-        headers: { "Content-Type": "audio/wav" },
-        body: wavBase64ToBlob(previewAudioBase64),
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload speech audio");
-      }
-
-      const speech = await createMutation.mutateAsync({
-        ...currentInput,
-        id: uploadInfo.id,
-        r2ObjectKey: uploadInfo.r2ObjectKey,
-        alignment: previewAlignment,
-      });
-
-      router.push(ROUTES.CMS.SPEECH_DETAIL(speech.id));
-      toast.success("Speech saved");
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to save speech";
-      toast.error(message);
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
-  const previewAudioUrl = previewAudioBase64
-    ? `data:audio/wav;base64,${previewAudioBase64}`
-    : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -238,7 +156,8 @@ export function SpeechCreateForm() {
         <CardHeader>
           <CardTitle>New speech</CardTitle>
           <CardDescription>
-            Choose a language, voice, and script to generate speech from.
+            Choose a language, voice, and script. Audio is generated in the
+            background after you create the speech.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -267,11 +186,7 @@ export function SpeechCreateForm() {
             <Label htmlFor="speech-voice">Voice</Label>
             <Select
               value={voiceId}
-              onValueChange={(value) => {
-                setVoiceId(value);
-                setPreviewConfigKey(null);
-                setPreviewAlignment(null);
-              }}
+              onValueChange={setVoiceId}
               disabled={!language || voicesQuery.isLoading}
             >
               <SelectTrigger id="speech-voice" className="w-full">
@@ -299,11 +214,7 @@ export function SpeechCreateForm() {
             <Label htmlFor="speech-script">Script</Label>
             <Select
               value={scriptId}
-              onValueChange={(value) => {
-                setScriptId(value);
-                setPreviewConfigKey(null);
-                setPreviewAlignment(null);
-              }}
+              onValueChange={setScriptId}
               disabled={!language || scriptsQuery.isLoading}
             >
               <SelectTrigger id="speech-script" className="w-full">
@@ -333,7 +244,7 @@ export function SpeechCreateForm() {
         <CardHeader>
           <CardTitle>TTS settings</CardTitle>
           <CardDescription>
-            Adjust delivery controls, then generate a preview below.
+            Adjust delivery controls before creating the speech.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -372,8 +283,6 @@ export function SpeechCreateForm() {
                   ...current,
                   normLoudness: checked,
                 }));
-                setPreviewConfigKey(null);
-                setPreviewAlignment(null);
               }}
               aria-label={NORM_LOUDNESS_CONTROL.label}
             />
@@ -381,54 +290,17 @@ export function SpeechCreateForm() {
         </CardContent>
       </Card>
 
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleGenerate}
-            disabled={!canGenerate || previewMutation.isPending}
-          >
-            {previewMutation.isPending
-              ? "Generating…"
-              : previewAudioBase64
-                ? "Regenerate"
-                : "Generate"}
-          </Button>
-          <Button
-            type="button"
-            onClick={handleSave}
-            disabled={!canSave || isSaving}
-          >
-            {isSaving ? "Saving…" : "Save"}
-          </Button>
-          <Button variant="ghost" asChild>
-            <Link href={ROUTES.CMS.SPEECHES}>Cancel</Link>
-          </Button>
-        </div>
-
-        {previewAudioUrl ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Preview</CardTitle>
-              <CardDescription>
-                Listen to the generated audio before saving.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              {previewAudioBase64 && !previewMatchesConfig ? (
-                <p className="text-sm text-muted-foreground">
-                  Settings changed since this preview. Regenerate to hear the
-                  updated audio before saving.
-                </p>
-              ) : null}
-              <SpeechScriptPlaybackPanel
-                audioUrl={previewAudioUrl}
-                alignment={previewAlignment}
-              />
-            </CardContent>
-          </Card>
-        ) : null}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          onClick={handleCreate}
+          disabled={!canCreate || createMutation.isPending}
+        >
+          {createMutation.isPending ? "Creating…" : "Create"}
+        </Button>
+        <Button variant="ghost" asChild>
+          <Link href={ROUTES.CMS.SPEECHES}>Cancel</Link>
+        </Button>
       </div>
     </div>
   );

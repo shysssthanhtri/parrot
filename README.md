@@ -90,6 +90,27 @@ When saving speeches with `STORAGE_DRIVER=r2`, the CMS uploads preview audio dir
 
 If seed fails with an XML/HTML parse error or HTTP 403, check that your network allows HTTPS to `*.r2.cloudflarestorage.com`. Corporate proxies (e.g. Zscaler) often block this endpoint until it is allowlisted.
 
+### Speech TTS queues (Vercel Queues)
+
+Async speech generation uses three Vercel Queue topics (`speech-tts-start`, `speech-tts-chunk`, `speech-tts-finalize`). Producers and consumers live in [src/lib/speech-tts-jobs.ts](src/lib/speech-tts-jobs.ts) and `app/api/queues/`. Triggers are configured in [vercel.json](vercel.json).
+
+#### Local development requires `vercel link`
+
+Queue `send()` calls authenticate to Vercel's Queue Service via OIDC. **Local speech TTS development will not work without linking this repo to a Vercel project** — `pnpm dev` alone is not enough.
+
+One-time setup (install the CLI if needed: `npm i -g vercel`):
+
+```bash
+vercel link    # associate this repo with a Vercel project
+vercel env pull  # write OIDC credentials and other env vars to .env
+```
+
+Then run `pnpm dev` or `vercel dev`. In development mode, `@vercel/queue` publishes messages to Vercel's queue service, then invokes the matching route handlers **in your local Next.js process** (using your local `.env`, Postgres, and storage). Deployed Vercel consumers do not process messages published from local dev.
+
+Re-run `vercel env pull` if queue `send()` fails with authentication errors (OIDC tokens expire).
+
+Queues must also be enabled on the linked Vercel project (for local dev and for staging/production deploys).
+
 ### OpenAPI clients
 
 External HTTP APIs are integrated with [openapi-typescript](https://github.com/openapi-ts/openapi-typescript) (type generation) and [openapi-fetch](https://github.com/openapi-ts/openapi-typescript/tree/main/packages/openapi-fetch) (typed runtime client).

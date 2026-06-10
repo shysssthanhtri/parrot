@@ -3,29 +3,17 @@ import { randomUUID } from "crypto";
 import { z } from "zod";
 
 import {
-  generateLongSpeech,
-  type LongSpeechResult,
-} from "@/lib/chatterbox/generate";
-import {
   DEFAULT_SCRIPT_LANGUAGE,
   SCRIPT_LANGUAGE_CODES,
 } from "@/lib/script-languages";
+import type { SpeechScriptAlignment } from "@/lib/speech-script-alignment";
+import { SPEECH_SLIDERS } from "@/lib/speech-sliders";
+import { enqueueSpeechTtsStart } from "@/lib/speech-tts-jobs";
 import {
-  alignmentSegmentsMatchScriptChunks,
-  type SpeechScriptAlignment,
-  speechScriptAlignmentSchema,
-} from "@/lib/speech-script-alignment";
-import {
-  SPEECH_SLIDERS,
-  type SpeechTtsParams,
-  toChatterboxTtsParams,
-} from "@/lib/speech-sliders";
-import {
+  deleteObjects,
   getAudioUrl,
-  getSpeechUploadUrl,
   objectExists,
   speechObjectKeyForId,
-  speechObjectKeyMatchesId,
 } from "@/lib/storage";
 import { prisma } from "@/prisma";
 
@@ -46,19 +34,11 @@ const speechTtsParamsSchema = z.object({
   normLoudness: z.boolean(),
 });
 
-const speechGenerationInputSchema = speechTtsParamsSchema.extend({
+const speechCreateInputSchema = speechTtsParamsSchema.extend({
   voiceId: z.string().min(1, "Voice is required"),
   scriptId: z.string().min(1, "Script is required"),
   language: scriptLanguageSchema.default(DEFAULT_SCRIPT_LANGUAGE),
 });
-
-const speechCreateInputSchema = speechGenerationInputSchema.extend({
-  id: z.string().uuid(),
-  r2ObjectKey: z.string().min(1),
-  alignment: speechScriptAlignmentSchema,
-});
-
-type SpeechGenerationInput = z.infer<typeof speechGenerationInputSchema>;
 
 async function loadValidatedSpeechInputs(input: {
   voiceId: string;
@@ -108,50 +88,16 @@ async function loadValidatedSpeechInputs(input: {
   return { voice: { ...voice, r2ObjectKey: voice.r2ObjectKey }, script };
 }
 
-async function generateSpeechAudio(
-  voice: { r2ObjectKey: string },
-  script: { content: string },
-  params: SpeechTtsParams
-): Promise<LongSpeechResult> {
-  return generateLongSpeech({
-    prompt: script.content,
-    voice_key: voice.r2ObjectKey,
-    ...toChatterboxTtsParams(params),
-  });
-}
-
-function toSpeechTtsParams(input: SpeechGenerationInput): SpeechTtsParams {
-  return {
-    temperature: input.temperature,
-    topP: input.topP,
-    topK: input.topK,
-    repetitionPenalty: input.repetitionPenalty,
-    normLoudness: input.normLoudness,
-  };
-}
-
-function validateAlignmentForScript(
-  alignment: SpeechScriptAlignment,
-  scriptContent: string
-): SpeechScriptAlignment {
-  if (!alignmentSegmentsMatchScriptChunks(alignment, scriptContent)) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "Alignment segments do not match script content",
-    });
-  }
-
-  return alignment;
-}
+const speechListInclude = {
+  voice: { select: { name: true } },
+  script: { select: { title: true } },
+} as const;
 
 export const speechesRouter = createTRPCRouter({
   list: cmsProcedure.query(async () => {
     return prisma.speech.findMany({
       orderBy: { updatedAt: "desc" },
-      include: {
-        voice: { select: { name: true } },
-        script: { select: { title: true } },
-      },
+      include: speechListInclude,
     });
   }),
 
@@ -173,7 +119,11 @@ export const speechesRouter = createTRPCRouter({
         });
       }
 
-      const audioUrl = await getAudioUrl(speech.r2ObjectKey);
+      const audioUrl =
+        speech.processStatus === "finished" &&
+        (await objectExists(speech.r2ObjectKey))
+          ? await getAudioUrl(speech.r2ObjectKey)
+          : null;
 
       return {
         ...speech,
@@ -182,54 +132,16 @@ export const speechesRouter = createTRPCRouter({
       };
     }),
 
-  getUploadUrl: cmsProcedure.mutation(async () => {
-    const id = randomUUID();
-    const r2ObjectKey = speechObjectKeyForId(id);
-    const { uploadUrl, method } = await getSpeechUploadUrl(r2ObjectKey);
-
-    return { id, r2ObjectKey, uploadUrl, method };
-  }),
-
-  generatePreview: cmsProcedure
-    .input(speechGenerationInputSchema)
-    .mutation(async ({ input }) => {
-      const { voice, script } = await loadValidatedSpeechInputs(input);
-      const { audio, alignment } = await generateSpeechAudio(
-        voice,
-        script,
-        toSpeechTtsParams(input)
-      );
-
-      return { audioBase64: audio.toString("base64"), alignment };
-    }),
-
   create: cmsProcedure
     .input(speechCreateInputSchema)
     .mutation(async ({ input, ctx }) => {
-      if (!speechObjectKeyMatchesId(input.id, input.r2ObjectKey)) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Invalid storage key for speech id",
-        });
-      }
-
       const { script } = await loadValidatedSpeechInputs(input);
+      const id = randomUUID();
+      const r2ObjectKey = speechObjectKeyForId(id);
 
-      if (!(await objectExists(input.r2ObjectKey))) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Speech audio not found in storage",
-        });
-      }
-
-      const alignment = validateAlignmentForScript(
-        input.alignment,
-        script.content
-      );
-
-      return prisma.speech.create({
+      const speech = await prisma.speech.create({
         data: {
-          id: input.id,
+          id,
           voiceId: input.voiceId,
           scriptId: input.scriptId,
           contentLength: script.content.length,
@@ -239,14 +151,60 @@ export const speechesRouter = createTRPCRouter({
           topK: input.topK,
           repetitionPenalty: input.repetitionPenalty,
           normLoudness: input.normLoudness,
-          r2ObjectKey: input.r2ObjectKey,
-          alignment,
+          r2ObjectKey,
+          processStatus: "pending",
           userId: ctx.userId,
         },
-        include: {
-          voice: { select: { name: true } },
-          script: { select: { title: true } },
-        },
+        include: speechListInclude,
+      });
+
+      await enqueueSpeechTtsStart(id);
+
+      return speech;
+    }),
+
+  retry: cmsProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input }) => {
+      const speech = await prisma.speech.findUnique({
+        where: { id: input.id },
+        include: { chunks: true },
+      });
+
+      if (!speech) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Speech not found: ${input.id}`,
+        });
+      }
+
+      if (speech.processStatus !== "failed") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Only failed speeches can be retried",
+        });
+      }
+
+      await deleteObjects(speech.chunks.map((chunk) => chunk.tempR2Key));
+
+      await prisma.$transaction(async (tx) => {
+        await tx.speechChunk.deleteMany({ where: { speechId: input.id } });
+        await tx.speech.update({
+          where: { id: input.id },
+          data: {
+            processStatus: "pending",
+            errorMessage: null,
+            totalChunks: 0,
+            settledChunks: 0,
+          },
+        });
+      });
+
+      await enqueueSpeechTtsStart(input.id);
+
+      return prisma.speech.findUniqueOrThrow({
+        where: { id: input.id },
+        include: speechListInclude,
       });
     }),
 });

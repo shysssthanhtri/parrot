@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { SpeechProcessStatusBadge } from "@/app/(cms)/cms/speeches/_components/speech-process-status-badge";
 import { ROUTES } from "@/app/configs/routes";
 import {
   Table,
@@ -16,6 +17,7 @@ type SpeechRow = {
   id: string;
   language: string;
   contentLength: number;
+  processStatus: string;
   updatedAt: Date;
   voice: { name: string };
   script: { title: string };
@@ -53,6 +55,7 @@ export function SpeechesTable({ speeches }: SpeechesTableProps) {
           <TableHead>Voice</TableHead>
           <TableHead>Language</TableHead>
           <TableHead>Length</TableHead>
+          <TableHead>Status</TableHead>
           <TableHead>Updated</TableHead>
         </TableRow>
       </TableHeader>
@@ -72,6 +75,9 @@ export function SpeechesTable({ speeches }: SpeechesTableProps) {
             <TableCell>{getScriptLanguageLabel(speech.language)}</TableCell>
             <TableCell className="tabular-nums text-muted-foreground">
               {formatContentLength(speech.contentLength)}
+            </TableCell>
+            <TableCell>
+              <SpeechProcessStatusBadge status={speech.processStatus} />
             </TableCell>
             <TableCell>{formatUpdatedAt(speech.updatedAt)}</TableCell>
           </TableRow>

@@ -1,10 +1,4 @@
-# cms-speeches Specification
-
-## Purpose
-
-TBD - created by archiving change speeches. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: CMS speeches list page
 
@@ -14,34 +8,6 @@ The CMS SHALL provide a page at `/cms/speeches` that displays all speeches in a 
 
 - **WHEN** an authenticated CMS user navigates to `/cms/speeches`
 - **THEN** a table of all speeches is shown including readable language labels, content length, and process status for each row
-
-### Requirement: New speech entry from list
-
-The CMS speeches list page SHALL provide a control (e.g. **New speech** button) that navigates to `/cms/speeches/new`.
-
-#### Scenario: Open create page
-
-- **WHEN** user clicks the new-speech control on the list page
-- **THEN** the app navigates to `/cms/speeches/new`
-
-### Requirement: Navigate to speech detail from list
-
-The CMS SHALL render the script title in the speeches list table as a link to `/cms/speeches/{speechId}`. The link SHALL use Next.js `Link` (rendering a real anchor) and match the primary-column link pattern used on the scripts and voices list tables.
-
-#### Scenario: Script title link opens detail
-
-- **WHEN** user activates the script title link for a speech in the list table
-- **THEN** the app navigates to the detail page for that speech's id
-
-#### Scenario: Script title is a real anchor
-
-- **WHEN** the speeches list table is rendered
-- **THEN** each script title is an `<a>` element with `href` set to `/cms/speeches/{speechId}`
-
-#### Scenario: Open detail in new tab
-
-- **WHEN** user opens the script title link with a new-tab gesture (e.g. modifier-click or context menu)
-- **THEN** the speech detail page opens in a new browser tab
 
 ### Requirement: CMS speech create page
 
@@ -66,20 +32,6 @@ The CMS SHALL provide a page at `/cms/speeches/new` where the user selects a tar
 
 - **WHEN** user clicks create and the create request is in flight
 - **THEN** the create control shows a loading state and is disabled to prevent duplicate submissions
-
-### Requirement: TTS slider tooltips on create page
-
-Each TTS control on the speech create page (Creativity, Voice Variety, Expression Range, Natural Flow, and norm loudness) SHALL display a tooltip explaining what the setting affects. Tooltip copy SHALL be defined alongside slider config in `src/lib/speech-sliders.ts` (and norm loudness config) and rendered via the shared shadcn tooltip component.
-
-#### Scenario: View slider tooltip
-
-- **WHEN** user focuses or hovers the info affordance next to a TTS slider label on `/cms/speeches/new`
-- **THEN** a tooltip appears with a plain-language explanation of that setting
-
-#### Scenario: Tooltip copy comes from shared config
-
-- **WHEN** the create form renders TTS controls
-- **THEN** each slider's tooltip text is read from `speech-sliders.ts` rather than hard-coded in the component
 
 ### Requirement: CMS speech detail page
 

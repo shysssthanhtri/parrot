@@ -1,10 +1,4 @@
-# speeches Specification
-
-## Purpose
-
-TBD - created by archiving change speeches. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Speech metadata model
 
@@ -81,6 +75,8 @@ The system SHALL expose a tRPC `speeches.create` mutation that accepts `voiceId`
 - **WHEN** `speeches.create` is called with `temperature` outside 0–2
 - **THEN** the procedure returns a validation error
 
+## ADDED Requirements
+
 ### Requirement: Speech retry API
 
 The system SHALL expose a tRPC `speeches.retry` mutation that accepts a speech `id`. It SHALL succeed only when the speech exists and `processStatus` is `failed`. It SHALL reset chunk progress, clear `errorMessage`, set `processStatus` to `pending`, and enqueue a new `speech-tts-start` message.
@@ -94,3 +90,17 @@ The system SHALL expose a tRPC `speeches.retry` mutation that accepts a speech `
 
 - **WHEN** `speeches.retry` is called for a speech that is not in `failed` status
 - **THEN** the procedure returns a validation error
+
+## REMOVED Requirements
+
+### Requirement: Speech preview generation API
+
+**Reason**: TTS generation moved to async background jobs; the create page no longer previews before persisting.
+
+**Migration**: Use `speeches.create` to enqueue processing and poll `speeches.getById` on the detail page until `processStatus` is `finished`.
+
+### Requirement: Speech upload URL API
+
+**Reason**: Final and temp chunk audio are uploaded server-side by queue consumers, not by the CMS client.
+
+**Migration**: No client upload step; `speeches.create` pre-assigns the final storage key.

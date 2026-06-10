@@ -4,6 +4,7 @@ import {
   CHATTERBOX_PROMPT_MAX_CHARS,
   splitTextForTts,
 } from "@/lib/speech-text-chunking";
+import { CHUNK_JOIN_GAP_MS } from "@/lib/wav-concat";
 
 export type SpeechAlignmentSegment = {
   text: string;
@@ -55,6 +56,42 @@ export const speechScriptAlignmentSchema = z
 
 /** Default tolerance when comparing alignment duration to measured audio length. */
 export const ALIGNMENT_AUDIO_DURATION_TOLERANCE_MS = 50;
+
+export type SpeechChunkAlignmentInput = {
+  text: string;
+  durationMs: number;
+};
+
+export function buildSpeechAlignmentFromChunks(
+  chunks: SpeechChunkAlignmentInput[]
+): SpeechScriptAlignment {
+  if (chunks.length === 0) {
+    throw new Error("At least one chunk is required");
+  }
+
+  if (chunks.length === 1) {
+    const chunk = chunks[0];
+    return {
+      version: 1,
+      segments: [{ text: chunk.text, startMs: 0, endMs: chunk.durationMs }],
+    };
+  }
+
+  const segments: SpeechAlignmentSegment[] = [];
+  let startMs = 0;
+
+  for (let index = 0; index < chunks.length; index += 1) {
+    const chunk = chunks[index];
+    const isLastChunk = index === chunks.length - 1;
+    const endMs =
+      startMs + chunk.durationMs + (isLastChunk ? 0 : CHUNK_JOIN_GAP_MS);
+
+    segments.push({ text: chunk.text, startMs, endMs });
+    startMs = endMs;
+  }
+
+  return { version: 1, segments };
+}
 
 export function joinAlignmentSegmentTexts(
   segments: SpeechAlignmentSegment[]

@@ -1,4 +1,11 @@
-import { access, mkdir, readdir, readFile, writeFile } from "fs/promises";
+import {
+  access,
+  mkdir,
+  readdir,
+  readFile,
+  unlink,
+  writeFile,
+} from "fs/promises";
 import path from "path";
 
 import { getLocalStorageDir } from "./config";
@@ -80,4 +87,16 @@ export const getLocalAudioUrl = (key: string) =>
 export const localObjectExists = async (key: string) => {
   const filePath = await resolveLocalObjectPath(key);
   return filePath !== null;
+};
+
+export const deleteLocalObject = async (key: string) => {
+  const filePath = path.join(localStorageRoot(), key);
+
+  try {
+    await unlink(filePath);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw error;
+    }
+  }
 };

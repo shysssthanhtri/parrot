@@ -1,13 +1,17 @@
 import { getStorageDriver } from "./config";
 import {
+  deleteLocalObject,
   getLocalAudioUrl,
   localObjectExists,
+  readLocalObject,
   uploadLocalObject,
 } from "./local";
 import {
+  deleteR2Object,
   getR2PresignedGetUrl,
   getR2PresignedPutUrl,
   r2ObjectExists,
+  readR2Object,
   uploadR2Object,
 } from "./r2";
 import { SPEECH_AUDIO_CONTENT_TYPE } from "./speech-keys";
@@ -15,8 +19,11 @@ import { SPEECH_AUDIO_CONTENT_TYPE } from "./speech-keys";
 export { getStorageDriver } from "./config";
 export { readLocalObject } from "./local";
 export {
+  isSpeechChunkObjectKey,
   isSpeechObjectKey,
   SPEECH_AUDIO_CONTENT_TYPE,
+  speechChunkObjectKey,
+  speechChunkObjectKeyMatches,
   speechObjectKeyForId,
   speechObjectKeyMatchesId,
 } from "./speech-keys";
@@ -50,6 +57,26 @@ export const objectExists = async (key: string) => {
   }
 
   return r2ObjectExists(key);
+};
+
+export const readObject = async (key: string) => {
+  if (getStorageDriver() === "local") {
+    return readLocalObject(key);
+  }
+
+  return readR2Object(key);
+};
+
+export const deleteObject = async (key: string) => {
+  if (getStorageDriver() === "local") {
+    return deleteLocalObject(key);
+  }
+
+  return deleteR2Object(key);
+};
+
+export const deleteObjects = async (keys: string[]) => {
+  await Promise.all(keys.map((key) => deleteObject(key)));
 };
 
 export const getSpeechUploadUrl = async (key: string) => {

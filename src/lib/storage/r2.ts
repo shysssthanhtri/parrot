@@ -1,4 +1,5 @@
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
@@ -107,6 +108,55 @@ export const getR2PresignedPutUrl = async (
     }),
     { expiresIn }
   );
+};
+
+export const readR2Object = async (key: string) => {
+  const config = requireR2Config();
+
+  try {
+    const response = await getR2Client().send(
+      new GetObjectCommand({
+        Bucket: config.R2_BUCKET_NAME,
+        Key: key,
+      })
+    );
+
+    if (!response.Body) {
+      return null;
+    }
+
+    return {
+      body: Buffer.from(await response.Body.transformToByteArray()),
+      contentType: response.ContentType ?? "application/octet-stream",
+    };
+  } catch (error) {
+    const statusCode = (error as { $metadata?: { httpStatusCode?: number } })
+      .$metadata?.httpStatusCode;
+
+    if (
+      (error as { name?: string }).name === "NoSuchKey" ||
+      statusCode === 404
+    ) {
+      return null;
+    }
+
+    throw toR2Error(error);
+  }
+};
+
+export const deleteR2Object = async (key: string) => {
+  const config = requireR2Config();
+
+  try {
+    await getR2Client().send(
+      new DeleteObjectCommand({
+        Bucket: config.R2_BUCKET_NAME,
+        Key: key,
+      })
+    );
+  } catch (error) {
+    throw toR2Error(error);
+  }
 };
 
 export const r2ObjectExists = async (key: string) => {

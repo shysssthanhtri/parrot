@@ -1,6 +1,10 @@
 import "server-only";
 
-import type { SpeechScriptAlignment } from "@/lib/speech-script-alignment";
+import {
+  buildSpeechAlignmentFromChunks,
+  type SpeechChunkAlignmentInput,
+  type SpeechScriptAlignment,
+} from "@/lib/speech-script-alignment";
 import {
   CHATTERBOX_PROMPT_MAX_CHARS,
   splitTextForTts,
@@ -68,34 +72,28 @@ export async function generateLongSpeech(
 
     return {
       audio,
-      alignment: {
-        version: 1,
-        segments: [{ text: chunkText, startMs: 0, endMs: durationMs }],
-      },
+      alignment: buildSpeechAlignmentFromChunks([
+        { text: chunkText, durationMs },
+      ]),
     };
   }
 
   const audioBuffers: Buffer[] = [];
-  const segments: SpeechScriptAlignment["segments"] = [];
-  let startMs = 0;
+  const chunkMetadata: SpeechChunkAlignmentInput[] = [];
 
-  for (let index = 0; index < chunks.length; index += 1) {
-    const chunk = chunks[index];
+  for (const chunk of chunks) {
     const audio = await generateSpeech({
       ...params,
       prompt: chunk,
     });
     const durationMs = getWavDurationMs(audio);
-    const isLastChunk = index === chunks.length - 1;
-    const endMs = startMs + durationMs + (isLastChunk ? 0 : CHUNK_JOIN_GAP_MS);
 
-    segments.push({ text: chunk, startMs, endMs });
-    startMs = endMs;
+    chunkMetadata.push({ text: chunk, durationMs });
     audioBuffers.push(audio);
   }
 
   return {
     audio: concatWavBuffers(audioBuffers, CHUNK_JOIN_GAP_MS),
-    alignment: { version: 1, segments },
+    alignment: buildSpeechAlignmentFromChunks(chunkMetadata),
   };
 }
