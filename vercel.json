@@ -1,7 +1,7 @@
 {
   "functions": {
     "src/app/api/queues/speech-tts-start/route.ts": {
-      "maxDuration": 180,
+      "maxDuration": 300,
       "experimentalTriggers": [
         {
           "type": "queue/v2beta",
@@ -11,17 +11,17 @@
       ]
     },
     "src/app/api/queues/speech-tts-chunk/route.ts": {
-      "maxDuration": 120,
+      "maxDuration": 300,
       "experimentalTriggers": [
         {
           "type": "queue/v2beta",
           "topic": "speech-tts-chunk",
-          "maxConcurrency": 10
+          "maxConcurrency": 5
         }
       ]
     },
     "src/app/api/queues/speech-tts-finalize/route.ts": {
-      "maxDuration": 120,
+      "maxDuration": 300,
       "experimentalTriggers": [
         {
           "type": "queue/v2beta",

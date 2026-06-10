@@ -1,5 +1,5 @@
 /** Safe per-request prompt size (Chatterbox API hard cap is 5000). */
-export const CHATTERBOX_PROMPT_MAX_CHARS = 400;
+export const CHATTERBOX_PROMPT_MAX_CHARS = 300;
 
 const SENTENCE_CLOSERS = new Set([".", "!", "?", "。", "！", "？"]);
 
