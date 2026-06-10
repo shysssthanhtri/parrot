@@ -1,8 +1,9 @@
 packages:
-  - '.'
+  - "."
 
 allowBuilds:
-  '@prisma/engines': true
+  "@prisma/engines": true
+  "@sentry/cli": set this to true or false
   msw: true
   prisma: true
   sharp: true
