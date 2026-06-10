@@ -1,7 +1,7 @@
 import {
   isSpeechInProgress,
   type SpeechProcessStatus,
-} from "./speech-process-status.ts";
+} from "./speech-process-status";
 
 export type SpeechGenerationProgressPhase =
   | "starting"
