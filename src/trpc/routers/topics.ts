@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { getGeminiScriptModel } from "@/lib/gemini";
+import { generateText } from "@/lib/llm";
 import { prisma } from "@/prisma";
 
 import { cmsProcedure, createTRPCRouter } from "../init";
@@ -113,16 +113,14 @@ export const topicsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input }) => {
-      const model = getGeminiScriptModel();
-
       const descriptionContext = input.description
         ? ` (described as: "${input.description}")`
         : "";
       const prompt = `Given the topic name "${input.name}"${descriptionContext}, suggest a single hex color (e.g. #3b82f6) that visually represents this topic. The color should be vibrant, visually distinct, and suitable as a badge/tag color on a white background. Respond with ONLY the hex color code, nothing else.`;
 
       try {
-        const result = await model.generateContent(prompt);
-        const text = result.response.text().trim();
+        const { text: rawText } = await generateText(prompt);
+        const text = rawText.trim();
         const match = text.match(/#[0-9a-fA-F]{6}/);
 
         if (!match) {

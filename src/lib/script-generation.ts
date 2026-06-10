@@ -5,7 +5,9 @@ import {
   type ScriptLanguageCode,
 } from "@/lib/script-languages";
 
-import { GEMINI_SCRIPT_MODEL, getGeminiScriptModel } from "./gemini";
+import { GEMINI_SCRIPT_MODEL } from "./gemini";
+import { generateText, getLlmProvider } from "./llm";
+import { VERCEL_GATEWAY_MODEL } from "./llm/vercel-gateway";
 
 export const SCRIPT_GENERATION_LENGTHS = ["short", "medium", "long"] as const;
 
@@ -23,7 +25,10 @@ const WORD_COUNT_BY_LENGTH: Record<ScriptGenerationLength, number> = {
   long: 750,
 };
 
-export { GEMINI_SCRIPT_MODEL as SCRIPT_GENERATION_MODEL };
+export const SCRIPT_GENERATION_MODEL =
+  getLlmProvider().providerId === "gemini"
+    ? GEMINI_SCRIPT_MODEL
+    : VERCEL_GATEWAY_MODEL;
 
 type GenerateScriptDraftInput = {
   prompt: string;
@@ -102,14 +107,8 @@ function parseGeneratedScript(text: string): ScriptDraft {
 export async function generateScriptDraft(
   input: GenerateScriptDraftInput
 ): Promise<ScriptDraft> {
-  const model = getGeminiScriptModel();
   const prompt = buildScriptGenerationPrompt(input);
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
-
-  if (!text.trim()) {
-    throw new Error("Model returned an empty response");
-  }
+  const { text } = await generateText(prompt);
 
   return parseGeneratedScript(text);
 }

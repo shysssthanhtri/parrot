@@ -130,7 +130,7 @@ The CMS SHALL provide a page at `/cms/topics/new` with a form to create a new to
 
 ### Requirement: AI color suggestion
 
-The system SHALL expose a tRPC `topics.suggestColor` mutation available to authenticated CMS users that accepts a `name` (non-empty string) and returns a hex color string suggested by Gemini based on the topic name's semantic meaning.
+The system SHALL expose a tRPC `topics.suggestColor` mutation available to authenticated CMS users that accepts a `name` (non-empty string) and optional `description` (string) and returns a hex color string suggested by the active LLM provider based on the topic name's semantic meaning.
 
 #### Scenario: Successful color suggestion
 
@@ -144,7 +144,7 @@ The system SHALL expose a tRPC `topics.suggestColor` mutation available to authe
 
 #### Scenario: AI service failure
 
-- **WHEN** the Gemini API is unavailable or returns unusable output
+- **WHEN** the active LLM provider is unavailable or returns unusable output
 - **THEN** the procedure returns an error with a user-safe message
 
 #### Scenario: Suggest color button in form

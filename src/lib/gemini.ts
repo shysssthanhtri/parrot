@@ -6,8 +6,18 @@ import { env } from "@/lib/env";
 
 export const GEMINI_SCRIPT_MODEL = "gemini-2.5-flash";
 
-const client = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+let client: GoogleGenerativeAI | undefined;
 
-export function getGeminiScriptModel() {
-  return client.getGenerativeModel({ model: GEMINI_SCRIPT_MODEL });
+function getClient() {
+  const apiKey = env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is required when LLM_PROVIDER=gemini");
+  }
+
+  client ??= new GoogleGenerativeAI(apiKey);
+  return client;
+}
+
+export function getGeminiClient() {
+  return getClient();
 }

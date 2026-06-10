@@ -1,6 +1,8 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
+const llmProviderSchema = z.enum(["vercel-ai-gateway", "gemini"]);
+
 export const env = createEnv({
   server: {
     AUTH_SECRET: z.string().min(1),
@@ -13,13 +15,41 @@ export const env = createEnv({
     R2_ACCESS_KEY_ID: z.string().min(1).optional(),
     R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
     R2_BUCKET_NAME: z.string().min(1).optional(),
-    R2_ENDPOINT: z.string().url().optional(),
-    GEMINI_API_KEY: z.string().min(1),
-    CHATTERBOX_API_URL: z.string().url(),
+    R2_ENDPOINT: z.url().optional(),
+    LLM_PROVIDER: llmProviderSchema.default("vercel-ai-gateway"),
+    AI_GATEWAY_API_KEY: z.string().min(1).optional(),
+    GEMINI_API_KEY: z.string().min(1).optional(),
+    CHATTERBOX_API_URL: z.url(),
     CHATTERBOX_API_KEY: z.string().min(1),
   },
   experimental__runtimeEnv: {},
+  emptyStringAsUndefined: true,
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
+  createFinalSchema: (shape, isServer) =>
+    z.object(shape).superRefine((value, ctx) => {
+      if (!isServer) {
+        return;
+      }
+
+      const provider = value.LLM_PROVIDER ?? "vercel-ai-gateway";
+
+      if (provider === "vercel-ai-gateway" && !value.AI_GATEWAY_API_KEY) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "AI_GATEWAY_API_KEY is required when LLM_PROVIDER=vercel-ai-gateway",
+          path: ["AI_GATEWAY_API_KEY"],
+        });
+      }
+
+      if (provider === "gemini" && !value.GEMINI_API_KEY) {
+        ctx.addIssue({
+          code: "custom",
+          message: "GEMINI_API_KEY is required when LLM_PROVIDER=gemini",
+          path: ["GEMINI_API_KEY"],
+        });
+      }
+    }),
 });
 
 export { getR2Endpoint, getStorageDriver } from "./storage/config";
