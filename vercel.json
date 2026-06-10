@@ -1,6 +1,6 @@
 {
   "functions": {
-    "app/api/queues/speech-tts-start/route.ts": {
+    "src/app/api/queues/speech-tts-start/route.ts": {
       "maxDuration": 180,
       "experimentalTriggers": [
         {
@@ -10,7 +10,7 @@
         }
       ]
     },
-    "app/api/queues/speech-tts-chunk/route.ts": {
+    "src/app/api/queues/speech-tts-chunk/route.ts": {
       "maxDuration": 120,
       "experimentalTriggers": [
         {
@@ -20,7 +20,7 @@
         }
       ]
     },
-    "app/api/queues/speech-tts-finalize/route.ts": {
+    "src/app/api/queues/speech-tts-finalize/route.ts": {
       "maxDuration": 120,
       "experimentalTriggers": [
         {
