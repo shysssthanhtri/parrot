@@ -53,14 +53,14 @@ export const CMSSidebar = () => {
       icon: MicVocal,
     },
     {
-      title: "Scripts",
-      url: ROUTES.CMS.SCRIPTS,
-      icon: Text,
-    },
-    {
       title: "Topics",
       url: ROUTES.CMS.TOPICS,
       icon: Tag,
+    },
+    {
+      title: "Scripts",
+      url: ROUTES.CMS.SCRIPTS,
+      icon: Text,
     },
     {
       title: "Speeches",
