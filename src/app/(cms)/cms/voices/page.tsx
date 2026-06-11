@@ -1,6 +1,7 @@
 import { createCallerFactory, createTRPCContext } from "@/trpc/init";
 import { appRouter } from "@/trpc/routers/_app";
 
+import { CMSPageHeader } from "../_components/cms-page-header";
 import { VoicesTable } from "./_components/voices-table";
 
 const createCaller = createCallerFactory(appRouter);
@@ -10,11 +11,11 @@ export default async function VoicesPage() {
   const voices = await caller.voices.list();
 
   return (
-    <div className="flex flex-col gap-4 p-4 md:p-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Voices</h1>
+    <>
+      <CMSPageHeader breadcrumbs={[{ label: "Voices" }]} />
+      <div className="flex flex-col gap-4 p-4 md:p-6">
+        <VoicesTable voices={voices} />
       </div>
-      <VoicesTable voices={voices} />
-    </div>
+    </>
   );
 }

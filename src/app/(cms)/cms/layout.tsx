@@ -6,7 +6,6 @@ import { auth } from "@/auth";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { CMSHeader } from "./_components/cms-header";
 import { CMSSidebar } from "./_components/cms-sidebar";
 
 const CMSLayout = async ({ children }: { children: React.ReactNode }) => {
@@ -21,10 +20,7 @@ const CMSLayout = async ({ children }: { children: React.ReactNode }) => {
       <SidebarProvider defaultOpen={defaultOpen}>
         <TooltipProvider delayDuration={0}>
           <CMSSidebar />
-          <SidebarInset>
-            <CMSHeader />
-            {children}
-          </SidebarInset>
+          <SidebarInset>{children}</SidebarInset>
         </TooltipProvider>
       </SidebarProvider>
     </SessionProvider>

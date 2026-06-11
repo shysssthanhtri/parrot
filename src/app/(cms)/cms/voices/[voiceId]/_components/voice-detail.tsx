@@ -1,8 +1,6 @@
 import { VolumeXIcon } from "lucide-react";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { ROUTES } from "@/app/configs/routes";
 import {
   Card,
   CardContent,
@@ -114,16 +112,5 @@ export function VoiceDetail({ voice, audioUrl }: VoiceDetailProps) {
         </Card>
       )}
     </div>
-  );
-}
-
-export function VoiceDetailBackLink() {
-  return (
-    <Link
-      href={ROUTES.CMS.VOICES}
-      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-    >
-      ← Back to voices
-    </Link>
   );
 }

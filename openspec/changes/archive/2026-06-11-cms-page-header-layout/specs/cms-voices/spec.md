@@ -1,10 +1,6 @@
 # cms-voices Specification
 
-## Purpose
-
-TBD - created by archiving change voices. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: CMS voices list page
 
@@ -15,15 +11,6 @@ The CMS SHALL provide a page at `/cms/voices` that displays all voices in a shad
 - **WHEN** an authenticated CMS user navigates to `/cms/voices`
 - **THEN** a table of all voices is shown below the page header breadcrumb **Voices**
 
-### Requirement: Navigate to voice detail from list
-
-The CMS SHALL allow clicking a voice table row to navigate to `/cms/voices/{voiceId}`.
-
-#### Scenario: Row click opens detail
-
-- **WHEN** user clicks a voice row in the list table
-- **THEN** the app navigates to the detail page for that voice's id
-
 ### Requirement: CMS voice detail page
 
 The CMS SHALL provide a read-only detail page at `/cms/voices/[voiceId]` showing voice metadata (name, description, language, timestamps). The page SHALL use the shared CMS page header with breadcrumbs **Voices** (link to `/cms/voices`) and the voice name as the current segment instead of an in-page back link. The page SHALL NOT show creator/`createdBy` in v1.
@@ -32,25 +19,6 @@ The CMS SHALL provide a read-only detail page at `/cms/voices/[voiceId]` showing
 
 - **WHEN** an authenticated CMS user opens `/cms/voices/{id}` for an existing voice
 - **THEN** the voice metadata is displayed below the page header breadcrumbs **Voices** → voice name
-
-### Requirement: Audio preview on detail page
-
-When the voice has `r2ObjectKey` set, the detail page SHALL render a waveform-based audio player using a presigned URL. The player SHALL display a visual waveform of the sample, provide play/pause transport controls, show elapsed and total duration, and allow seeking by interacting with the waveform. When `r2ObjectKey` is null, the page SHALL show metadata without a player (or a clear empty state) and SHALL NOT error.
-
-#### Scenario: Preview available
-
-- **WHEN** user views detail for a voice with `r2ObjectKey`
-- **THEN** a waveform player loads and plays the R2 object via presigned URL with visible waveform, transport controls, and time display
-
-#### Scenario: Seek during preview
-
-- **WHEN** user clicks or drags on the waveform while preview is loaded
-- **THEN** playback position updates to the corresponding point in the sample
-
-#### Scenario: No audio yet
-
-- **WHEN** user views detail for a voice without `r2ObjectKey`
-- **THEN** metadata is shown and no audio player is offered (or a non-blocking empty message)
 
 ### Requirement: Loading UI on voices list page
 

@@ -1,21 +1,23 @@
 import { TRPCError } from "@trpc/server";
 import { notFound } from "next/navigation";
 
-import { getAudioUrl } from "@/lib/r2";
+import { ROUTES } from "@/app/configs/routes";
 import { createCallerFactory, createTRPCContext } from "@/trpc/init";
 import { appRouter } from "@/trpc/routers/_app";
 
-import { VoiceDetail } from "./_components/voice-detail";
+import { CMSPageHeader } from "../../_components/cms-page-header";
 
 const createCaller = createCallerFactory(appRouter);
 
-type VoiceDetailPageProps = {
+type VoiceDetailLayoutProps = {
+  children: React.ReactNode;
   params: Promise<{ voiceId: string }>;
 };
 
-export default async function VoiceDetailPage({
+export default async function VoiceDetailLayout({
+  children,
   params,
-}: VoiceDetailPageProps) {
+}: VoiceDetailLayoutProps) {
   const { voiceId } = await params;
   const caller = createCaller(await createTRPCContext());
 
@@ -30,13 +32,15 @@ export default async function VoiceDetailPage({
     throw error;
   }
 
-  const audioUrl = voice.r2ObjectKey
-    ? await getAudioUrl(voice.r2ObjectKey)
-    : null;
-
   return (
-    <div className="flex flex-col gap-4 p-4 md:p-6">
-      <VoiceDetail voice={voice} audioUrl={audioUrl} />
-    </div>
+    <>
+      <CMSPageHeader
+        breadcrumbs={[
+          { label: "Voices", href: ROUTES.CMS.VOICES },
+          { label: voice.name },
+        ]}
+      />
+      {children}
+    </>
   );
 }
