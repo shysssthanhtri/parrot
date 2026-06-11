@@ -1,7 +1,9 @@
+import { ROUTES } from "@/app/configs/routes";
 import { createCallerFactory, createTRPCContext } from "@/trpc/init";
 import { appRouter } from "@/trpc/routers/_app";
 
-import { ScriptForm, ScriptFormBackLink } from "../_components/script-form";
+import { CMSPageHeader } from "../../_components/cms-page-header";
+import { ScriptForm } from "../_components/script-form";
 
 const createCaller = createCallerFactory(appRouter);
 
@@ -10,9 +12,16 @@ export default async function NewScriptPage() {
   const topics = await caller.topics.list();
 
   return (
-    <div className="flex flex-col gap-4 p-4 md:p-6">
-      <ScriptFormBackLink />
-      <ScriptForm mode="create" topics={topics} />
-    </div>
+    <>
+      <CMSPageHeader
+        breadcrumbs={[
+          { label: "Scripts", href: ROUTES.CMS.SCRIPTS },
+          { label: "New" },
+        ]}
+      />
+      <div className="flex flex-col gap-4 p-4 md:p-6">
+        <ScriptForm mode="create" topics={topics} />
+      </div>
+    </>
   );
 }

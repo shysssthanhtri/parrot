@@ -12,10 +12,10 @@ import { CMSPageHeader } from "../_components/cms-page-header";
 
 const SKELETON_ROW_COUNT = 6;
 
-export default function SpeechesLoading() {
+export default function ScriptsLoading() {
   return (
     <>
-      <CMSPageHeader breadcrumbs={[{ label: "Speeches" }]} />
+      <CMSPageHeader breadcrumbs={[{ label: "Scripts" }]} />
       <div className="flex flex-col gap-4 p-4 md:p-6">
         <div className="flex justify-end">
           <Skeleton className="h-9 w-28" />
@@ -23,11 +23,10 @@ export default function SpeechesLoading() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Script</TableHead>
-              <TableHead>Voice</TableHead>
+              <TableHead>Title</TableHead>
               <TableHead>Language</TableHead>
               <TableHead>Length</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Content</TableHead>
               <TableHead>Updated</TableHead>
             </TableRow>
           </TableHeader>
@@ -38,16 +37,13 @@ export default function SpeechesLoading() {
                   <Skeleton className="h-4 w-40" />
                 </TableCell>
                 <TableCell>
-                  <Skeleton className="h-4 w-32" />
-                </TableCell>
-                <TableCell>
                   <Skeleton className="h-4 w-16" />
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-4 w-20" />
                 </TableCell>
                 <TableCell>
-                  <Skeleton className="h-5 w-20 rounded-4xl" />
+                  <Skeleton className="h-4 w-48 max-w-md" />
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-4 w-24" />

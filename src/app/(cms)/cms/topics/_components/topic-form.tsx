@@ -222,14 +222,3 @@ export function TopicForm(props: TopicFormProps) {
     </Card>
   );
 }
-
-export function TopicFormBackLink() {
-  return (
-    <Link
-      href={ROUTES.CMS.TOPICS}
-      className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
-    >
-      ← Back to topics
-    </Link>
-  );
-}

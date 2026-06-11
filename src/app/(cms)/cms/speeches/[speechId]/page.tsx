@@ -1,4 +1,3 @@
-import { SpeechDetailBackLink } from "./_components/speech-detail";
 import { SpeechDetailClient } from "./_components/speech-detail-client";
 
 type SpeechDetailPageProps = {
@@ -12,7 +11,6 @@ export default async function SpeechDetailPage({
 
   return (
     <div className="flex flex-col gap-4 p-4 md:p-6">
-      <SpeechDetailBackLink />
       <SpeechDetailClient speechId={speechId} />
     </div>
   );

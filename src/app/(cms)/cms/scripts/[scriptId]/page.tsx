@@ -8,7 +8,7 @@ import {
 import { createCallerFactory, createTRPCContext } from "@/trpc/init";
 import { appRouter } from "@/trpc/routers/_app";
 
-import { ScriptForm, ScriptFormBackLink } from "../_components/script-form";
+import { ScriptForm } from "../_components/script-form";
 import { ScriptDeleteButton } from "./_components/script-delete-button";
 
 const createCaller = createCallerFactory(appRouter);
@@ -38,7 +38,6 @@ export default async function ScriptDetailPage({
 
   return (
     <div className="flex flex-col gap-4 p-4 md:p-6">
-      <ScriptFormBackLink />
       <ScriptForm
         mode="edit"
         scriptId={script.id}

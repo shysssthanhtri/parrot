@@ -305,14 +305,3 @@ export function SpeechCreateForm() {
     </div>
   );
 }
-
-export function SpeechCreateFormBackLink() {
-  return (
-    <Link
-      href={ROUTES.CMS.SPEECHES}
-      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-    >
-      ← Back to speeches
-    </Link>
-  );
-}

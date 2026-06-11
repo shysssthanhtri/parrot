@@ -1,12 +1,10 @@
 "use client";
 
 import { AlertCircleIcon, Loader2Icon, VolumeXIcon } from "lucide-react";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { SpeechProcessStatusBadge } from "@/app/(cms)/cms/speeches/_components/speech-process-status-badge";
 import { SpeechScriptPlaybackPanel } from "@/app/(cms)/cms/speeches/_components/speech-script-playback-panel";
-import { ROUTES } from "@/app/configs/routes";
 import {
   Card,
   CardContent,
@@ -283,16 +281,5 @@ export function SpeechDetail({
         isRegenerating={isRegenerating}
       />
     </div>
-  );
-}
-
-export function SpeechDetailBackLink() {
-  return (
-    <Link
-      href={ROUTES.CMS.SPEECHES}
-      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-    >
-      ← Back to speeches
-    </Link>
   );
 }

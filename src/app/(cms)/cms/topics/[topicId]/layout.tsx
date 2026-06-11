@@ -1,21 +1,23 @@
 import { TRPCError } from "@trpc/server";
 import { notFound } from "next/navigation";
 
+import { ROUTES } from "@/app/configs/routes";
 import { createCallerFactory, createTRPCContext } from "@/trpc/init";
 import { appRouter } from "@/trpc/routers/_app";
 
-import { TopicForm } from "../_components/topic-form";
-import { TopicDeleteButton } from "./_components/topic-delete-button";
+import { CMSPageHeader } from "../../_components/cms-page-header";
 
 const createCaller = createCallerFactory(appRouter);
 
-type TopicDetailPageProps = {
+type TopicDetailLayoutProps = {
+  children: React.ReactNode;
   params: Promise<{ topicId: string }>;
 };
 
-export default async function TopicDetailPage({
+export default async function TopicDetailLayout({
+  children,
   params,
-}: TopicDetailPageProps) {
+}: TopicDetailLayoutProps) {
   const { topicId } = await params;
   const caller = createCaller(await createTRPCContext());
 
@@ -31,17 +33,14 @@ export default async function TopicDetailPage({
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4 md:p-6">
-      <TopicForm
-        mode="edit"
-        topicId={topic.id}
-        defaultValues={{
-          name: topic.name,
-          description: topic.description ?? "",
-          color: topic.color,
-        }}
+    <>
+      <CMSPageHeader
+        breadcrumbs={[
+          { label: "Topics", href: ROUTES.CMS.TOPICS },
+          { label: topic.name },
+        ]}
       />
-      <TopicDeleteButton topicId={topic.id} topicName={topic.name} />
-    </div>
+      {children}
+    </>
   );
 }

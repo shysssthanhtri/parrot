@@ -232,14 +232,3 @@ export function ScriptForm(props: ScriptFormProps) {
     </Card>
   );
 }
-
-export function ScriptFormBackLink() {
-  return (
-    <Link
-      href={ROUTES.CMS.SCRIPTS}
-      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-    >
-      ← Back to scripts
-    </Link>
-  );
-}
