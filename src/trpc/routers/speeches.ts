@@ -207,4 +207,31 @@ export const speechesRouter = createTRPCRouter({
         include: speechListInclude,
       });
     }),
+
+  delete: cmsProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input }) => {
+      const speech = await prisma.speech.findUnique({
+        where: { id: input.id },
+        include: { chunks: true },
+      });
+
+      if (!speech) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Speech not found: ${input.id}`,
+        });
+      }
+
+      const storageKeys = [
+        speech.r2ObjectKey,
+        ...speech.chunks.map((chunk) => chunk.tempR2Key),
+      ];
+
+      await deleteObjects(storageKeys);
+
+      await prisma.speech.delete({ where: { id: input.id } });
+
+      return { success: true };
+    }),
 });

@@ -83,7 +83,7 @@ Each TTS control on the speech create page (Creativity, Voice Variety, Expressio
 
 ### Requirement: CMS speech detail page
 
-The CMS SHALL provide a read-only page at `/cms/speeches/[speechId]` showing speech metadata (linked script title, voice name, language, TTS parameter values, timestamps, and process status), the full script text with synchronized chunk highlighting when alignment is stored and audio is playable (past chunks dimmed, active chunk highlighted, upcoming chunks normal, driven by audio playback time), and a waveform-based audio preview when `processStatus` is `finished` and audio is available. While `processStatus` is `pending` or `processing`, the page SHALL show a generating state with chunk-based progress (percentage and chunk fraction when `totalChunks` is greater than zero) derived from `settledChunks` and `totalChunks`, and poll `speeches.getById` until the status becomes `finished` or `failed`. When `processStatus` is `failed`, the page SHALL display `errorMessage` and a retry control that calls `speeches.retry` and resumes polling. When alignment is not stored (legacy speeches), the page SHALL display the script content without synchronized highlighting. The page SHALL NOT offer edit, archive, or delete controls in v1.
+The CMS SHALL provide a page at `/cms/speeches/[speechId]` showing speech metadata (linked script title, voice name, language, TTS parameter values, timestamps, and process status), the full script text with synchronized chunk highlighting when alignment is stored and audio is playable (past chunks dimmed, active chunk highlighted, upcoming chunks normal, driven by audio playback time), and a waveform-based audio preview when `processStatus` is `finished` and audio is available. While `processStatus` is `pending` or `processing`, the page SHALL show a generating state with chunk-based progress (percentage and chunk fraction when `totalChunks` is greater than zero) derived from `settledChunks` and `totalChunks`, and poll `speeches.getById` until the status becomes `finished` or `failed`. When `processStatus` is `failed`, the page SHALL display `errorMessage` and a retry control that calls `speeches.retry` and resumes polling. When alignment is not stored (legacy speeches), the page SHALL display the script content without synchronized highlighting. The page SHALL provide a **Delete speech** control with a confirmation dialog that calls `speeches.delete` and, on success, navigates to `/cms/speeches` with a success toast. The delete control SHALL be available regardless of `processStatus`.
 
 #### Scenario: View speech metadata
 
@@ -129,6 +129,21 @@ The CMS SHALL provide a read-only page at `/cms/speeches/[speechId]` showing spe
 
 - **WHEN** an authenticated CMS user opens a speech saved before alignment was introduced
 - **THEN** script content is shown without synchronized chunk highlighting and audio preview still works when finished
+
+#### Scenario: Delete speech with confirmation
+
+- **WHEN** user clicks **Delete speech** on the detail page and confirms the dialog
+- **THEN** `speeches.delete` is called, a success toast is shown, and the app navigates to `/cms/speeches`
+
+#### Scenario: Cancel delete
+
+- **WHEN** user opens the delete confirmation dialog and clicks cancel
+- **THEN** no delete request is sent and the user remains on the detail page
+
+#### Scenario: Delete while generating
+
+- **WHEN** user deletes a speech with `processStatus` `pending` or `processing`
+- **THEN** the delete succeeds and the user is redirected to the speeches list
 
 ### Requirement: Loading UI on speeches list page
 

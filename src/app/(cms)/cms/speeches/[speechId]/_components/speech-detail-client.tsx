@@ -12,6 +12,7 @@ import {
 } from "@/lib/speech-process-status";
 import { useTRPC } from "@/trpc/client";
 
+import { SpeechDeleteButton } from "./speech-delete-button";
 import { SpeechDetail } from "./speech-detail";
 
 const POLL_INTERVAL_MS = 60_000;
@@ -72,15 +73,21 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
   }
 
   return (
-    <SpeechDetail
-      speech={speechQuery.data}
-      audioUrl={speechQuery.data.audioUrl}
-      onRetry={
-        speechQuery.data.processStatus === "failed"
-          ? () => retryMutation.mutate({ id: speechId })
-          : undefined
-      }
-      isRetrying={retryMutation.isPending}
-    />
+    <div className="flex flex-col gap-6">
+      <SpeechDetail
+        speech={speechQuery.data}
+        audioUrl={speechQuery.data.audioUrl}
+        onRetry={
+          speechQuery.data.processStatus === "failed"
+            ? () => retryMutation.mutate({ id: speechId })
+            : undefined
+        }
+        isRetrying={retryMutation.isPending}
+      />
+      <SpeechDeleteButton
+        speechId={speechId}
+        scriptTitle={speechQuery.data.script.title}
+      />
+    </div>
   );
 }

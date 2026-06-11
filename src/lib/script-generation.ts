@@ -62,6 +62,7 @@ export function buildScriptGenerationPrompt({
 Write natural spoken prose in ${languageLabel} (${language}) that a learner can read aloud.
 Target approximately ${wordCount} words (${duration} when spoken at a natural pace).
 The script should be engaging, clear, and suitable for pronunciation practice.
+Structure the content in paragraphs where natural, separating paragraphs with blank lines.
 
 Topic or instructions from the author:
 ${prompt}
