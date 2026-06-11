@@ -9,6 +9,7 @@ import { createCallerFactory, createTRPCContext } from "@/trpc/init";
 import { appRouter } from "@/trpc/routers/_app";
 
 import { ScriptForm, ScriptFormBackLink } from "../_components/script-form";
+import { ScriptDeleteButton } from "./_components/script-delete-button";
 
 const createCaller = createCallerFactory(appRouter);
 
@@ -49,6 +50,11 @@ export default async function ScriptDetailPage({
           topicIds: script.topics.map((t) => t.id),
         }}
         topics={topics}
+      />
+      <ScriptDeleteButton
+        scriptId={script.id}
+        scriptTitle={script.title}
+        speechCount={script._count.speeches}
       />
     </div>
   );

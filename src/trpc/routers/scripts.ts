@@ -5,6 +5,7 @@ import {
   DEFAULT_SCRIPT_LANGUAGE,
   SCRIPT_LANGUAGE_CODES,
 } from "@/lib/script-languages";
+import { deleteObjects } from "@/lib/storage";
 import { prisma } from "@/prisma";
 
 import { cmsProcedure, createTRPCRouter } from "../init";
@@ -55,7 +56,10 @@ export const scriptsRouter = createTRPCRouter({
     .query(async ({ input }) => {
       const script = await prisma.script.findUnique({
         where: { id: input.id },
-        include: { topics: true },
+        include: {
+          topics: true,
+          _count: { select: { speeches: true } },
+        },
       });
 
       if (!script) {
@@ -141,5 +145,44 @@ export const scriptsRouter = createTRPCRouter({
         },
         include: { topics: true },
       });
+    }),
+
+  delete: cmsProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input }) => {
+      const script = await prisma.script.findUnique({
+        where: { id: input.id },
+        include: {
+          speeches: {
+            include: { chunks: true },
+          },
+        },
+      });
+
+      if (!script) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Script not found: ${input.id}`,
+        });
+      }
+
+      const storageKeys = script.speeches.flatMap((speech) => [
+        speech.r2ObjectKey,
+        ...speech.chunks.map((chunk) => chunk.tempR2Key),
+      ]);
+
+      if (storageKeys.length > 0) {
+        await deleteObjects(storageKeys);
+      }
+
+      await prisma.$transaction(async (tx) => {
+        if (script.speeches.length > 0) {
+          await tx.speech.deleteMany({ where: { scriptId: input.id } });
+        }
+
+        await tx.script.delete({ where: { id: input.id } });
+      });
+
+      return { success: true };
     }),
 });
