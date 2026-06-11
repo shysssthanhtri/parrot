@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
 import { Loader2Icon } from "lucide-react";
 import { notFound } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -23,6 +24,9 @@ type SpeechDetailClientProps = {
 
 export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
   const trpc = useTRPC();
+  const [stableAudioUrl, setStableAudioUrl] = useState<string | null>(null);
+  const [audioUrlResetVersion, setAudioUrlResetVersion] = useState(0);
+  const [pinnedAudioUrlVersion, setPinnedAudioUrlVersion] = useState(0);
 
   const speechQuery = useQuery({
     ...trpc.speeches.getById.queryOptions({ id: speechId }),
@@ -35,16 +39,19 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
         ? POLL_INTERVAL_MS
         : false;
     },
+    refetchOnWindowFocus: (query) =>
+      query.state.data?.processStatus !== "finished",
   });
 
-  const retryMutation = useMutation(
-    trpc.speeches.retry.mutationOptions({
+  const regenerateMutation = useMutation(
+    trpc.speeches.regenerate.mutationOptions({
       onSuccess: () => {
-        toast.success("Retry started");
+        setAudioUrlResetVersion((version) => version + 1);
+        toast.success("Regeneration started");
         void speechQuery.refetch();
       },
       onError: (error) => {
-        toast.error(error.message || "Failed to retry speech");
+        toast.error(error.message || "Failed to regenerate speech");
       },
     })
   );
@@ -72,21 +79,41 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
     notFound();
   }
 
+  const speech = speechQuery.data;
+
+  if (speech.processStatus !== "finished" || !speech.audioUrl) {
+    if (stableAudioUrl !== null) {
+      setStableAudioUrl(null);
+    }
+  } else if (
+    stableAudioUrl === null ||
+    pinnedAudioUrlVersion !== audioUrlResetVersion
+  ) {
+    setStableAudioUrl(speech.audioUrl);
+    setPinnedAudioUrlVersion(audioUrlResetVersion);
+  }
+
+  const audioUrl =
+    speech.processStatus === "finished"
+      ? (stableAudioUrl ?? speech.audioUrl)
+      : null;
+
   return (
     <div className="flex flex-col gap-6">
       <SpeechDetail
-        speech={speechQuery.data}
-        audioUrl={speechQuery.data.audioUrl}
-        onRetry={
-          speechQuery.data.processStatus === "failed"
-            ? () => retryMutation.mutate({ id: speechId })
+        speech={speech}
+        audioUrl={audioUrl}
+        canRegenerate={speech.canRegenerate}
+        onRegenerate={
+          speech.canRegenerate
+            ? () => regenerateMutation.mutate({ id: speechId })
             : undefined
         }
-        isRetrying={retryMutation.isPending}
+        isRegenerating={regenerateMutation.isPending}
       />
       <SpeechDeleteButton
         speechId={speechId}
-        scriptTitle={speechQuery.data.script.title}
+        scriptTitle={speech.script.title}
       />
     </div>
   );

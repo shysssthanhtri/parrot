@@ -104,6 +104,7 @@ export async function runSpeechTtsStart(speechId: string): Promise<void> {
       where: { id: speechId },
       data: {
         processStatus: "processing",
+        processingStartedAt: new Date(),
         totalChunks: chunkTexts.length,
         settledChunks: 0,
         errorMessage: null,

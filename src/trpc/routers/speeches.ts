@@ -6,6 +6,11 @@ import {
   DEFAULT_SCRIPT_LANGUAGE,
   SCRIPT_LANGUAGE_CODES,
 } from "@/lib/script-languages";
+import {
+  assertSpeechCanRegenerate,
+  canRegenerateSpeech,
+  resetSpeechForTtsRestart,
+} from "@/lib/speech-regenerate";
 import type { SpeechScriptAlignment } from "@/lib/speech-script-alignment";
 import { SPEECH_SLIDERS } from "@/lib/speech-sliders";
 import { enqueueSpeechTtsStart } from "@/lib/speech-tts-jobs";
@@ -129,6 +134,7 @@ export const speechesRouter = createTRPCRouter({
         ...speech,
         alignment: speech.alignment as SpeechScriptAlignment | null,
         audioUrl,
+        canRegenerate: canRegenerateSpeech(speech),
       };
     }),
 
@@ -185,19 +191,45 @@ export const speechesRouter = createTRPCRouter({
         });
       }
 
-      await deleteObjects(speech.chunks.map((chunk) => chunk.tempR2Key));
+      await resetSpeechForTtsRestart({
+        speechId: input.id,
+        chunks: speech.chunks,
+        r2ObjectKey: speech.r2ObjectKey,
+        deleteFinalWav: false,
+        clearAlignment: false,
+      });
 
-      await prisma.$transaction(async (tx) => {
-        await tx.speechChunk.deleteMany({ where: { speechId: input.id } });
-        await tx.speech.update({
-          where: { id: input.id },
-          data: {
-            processStatus: "pending",
-            errorMessage: null,
-            totalChunks: 0,
-            settledChunks: 0,
-          },
+      await enqueueSpeechTtsStart(input.id);
+
+      return prisma.speech.findUniqueOrThrow({
+        where: { id: input.id },
+        include: speechListInclude,
+      });
+    }),
+
+  regenerate: cmsProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input }) => {
+      const speech = await prisma.speech.findUnique({
+        where: { id: input.id },
+        include: { chunks: true },
+      });
+
+      if (!speech) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Speech not found: ${input.id}`,
         });
+      }
+
+      assertSpeechCanRegenerate(speech);
+
+      await resetSpeechForTtsRestart({
+        speechId: input.id,
+        chunks: speech.chunks,
+        r2ObjectKey: speech.r2ObjectKey,
+        deleteFinalWav: true,
+        clearAlignment: true,
       });
 
       await enqueueSpeechTtsStart(input.id);

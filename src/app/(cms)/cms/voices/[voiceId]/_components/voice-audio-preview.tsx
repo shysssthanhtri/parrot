@@ -3,6 +3,7 @@
 import { useWavesurfer } from "@wavesurfer/react";
 import { ExternalLinkIcon, PauseIcon, PlayIcon } from "lucide-react";
 import { useTheme } from "next-themes";
+import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -36,11 +37,13 @@ function readThemeWaveColors() {
 type VoiceAudioPreviewProps = {
   audioUrl: string;
   onTimeUpdate?: (currentTimeMs: number) => void;
+  errorActions?: ReactNode;
 };
 
 export function VoiceAudioPreview({
   audioUrl,
   onTimeUpdate,
+  errorActions,
 }: VoiceAudioPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const onTimeUpdateRef = useRef(onTimeUpdate);
@@ -142,15 +145,18 @@ export function VoiceAudioPreview({
       {error ? (
         <div className="flex flex-col gap-2 text-sm">
           <p className="text-destructive">{error}</p>
-          <a
-            href={audioUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex w-fit items-center gap-1 text-primary underline-offset-4 hover:underline"
-          >
-            Open audio in new tab
-            <ExternalLinkIcon className="size-3.5" />
-          </a>
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href={audioUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-fit items-center gap-1 text-primary underline-offset-4 hover:underline"
+            >
+              Open audio in new tab
+              <ExternalLinkIcon className="size-3.5" />
+            </a>
+            {errorActions}
+          </div>
         </div>
       ) : (
         <div className="flex items-center gap-3">

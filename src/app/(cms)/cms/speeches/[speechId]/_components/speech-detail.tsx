@@ -7,7 +7,6 @@ import type { ReactNode } from "react";
 import { SpeechProcessStatusBadge } from "@/app/(cms)/cms/speeches/_components/speech-process-status-badge";
 import { SpeechScriptPlaybackPanel } from "@/app/(cms)/cms/speeches/_components/speech-script-playback-panel";
 import { ROUTES } from "@/app/configs/routes";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -32,6 +31,8 @@ import {
 } from "@/lib/speech-process-status";
 import type { SpeechScriptAlignment } from "@/lib/speech-script-alignment";
 import { NORM_LOUDNESS_CONTROL, SPEECH_SLIDERS } from "@/lib/speech-sliders";
+
+import { SpeechRegenerateButton } from "./speech-regenerate-button";
 
 type SpeechDetailProps = {
   speech: {
@@ -58,8 +59,9 @@ type SpeechDetailProps = {
     alignment: SpeechScriptAlignment | null;
   };
   audioUrl: string | null;
-  onRetry?: () => void;
-  isRetrying?: boolean;
+  canRegenerate?: boolean;
+  onRegenerate?: () => void;
+  isRegenerating?: boolean;
 };
 
 function formatTimestamp(date: Date) {
@@ -83,11 +85,34 @@ function getProcessStatus(status: string): SpeechProcessStatus {
   return parsed.success ? parsed.data : "pending";
 }
 
+function SpeechRegenerateAction({
+  speech,
+  onRegenerate,
+  isRegenerating,
+  canRegenerate,
+}: Pick<
+  SpeechDetailProps,
+  "speech" | "onRegenerate" | "isRegenerating" | "canRegenerate"
+>) {
+  if (!onRegenerate || !canRegenerate) {
+    return null;
+  }
+
+  return (
+    <SpeechRegenerateButton
+      scriptTitle={speech.script.title}
+      onRegenerate={onRegenerate}
+      isRegenerating={isRegenerating}
+    />
+  );
+}
+
 function SpeechAudioSection({
   speech,
   audioUrl,
-  onRetry,
-  isRetrying,
+  canRegenerate,
+  onRegenerate,
+  isRegenerating,
 }: SpeechDetailProps) {
   const processStatus = getProcessStatus(speech.processStatus);
 
@@ -104,18 +129,14 @@ function SpeechAudioSection({
               "Speech generation failed. Please try again."}
           </CardDescription>
         </CardHeader>
-        {onRetry ? (
-          <CardContent>
-            <Button
-              type="button"
-              onClick={onRetry}
-              disabled={isRetrying}
-              variant="outline"
-            >
-              {isRetrying ? "Retrying…" : "Retry"}
-            </Button>
-          </CardContent>
-        ) : null}
+        <CardContent>
+          <SpeechRegenerateAction
+            speech={speech}
+            onRegenerate={onRegenerate}
+            isRegenerating={isRegenerating}
+            canRegenerate={canRegenerate}
+          />
+        </CardContent>
       </Card>
     );
   }
@@ -146,6 +167,12 @@ function SpeechAudioSection({
           <p className="text-sm text-muted-foreground">
             Script: {speech.script.title}
           </p>
+          <SpeechRegenerateAction
+            speech={speech}
+            onRegenerate={onRegenerate}
+            isRegenerating={isRegenerating}
+            canRegenerate={canRegenerate}
+          />
         </CardContent>
       </Card>
     );
@@ -170,17 +197,29 @@ function SpeechAudioSection({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Audio preview</CardTitle>
-        <CardDescription>
-          Preview the generated speech audio stored for this entry.
-        </CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between gap-4">
+        <div className="grid gap-1.5">
+          <CardTitle>Audio preview</CardTitle>
+          <CardDescription>
+            Preview the generated speech audio stored for this entry.
+          </CardDescription>
+        </div>
+        <SpeechRegenerateAction
+          speech={speech}
+          onRegenerate={onRegenerate}
+          isRegenerating={isRegenerating}
+          canRegenerate={canRegenerate}
+        />
       </CardHeader>
       <CardContent>
         <SpeechScriptPlaybackPanel
           audioUrl={audioUrl}
           alignment={speech.alignment}
           scriptContent={speech.script.content}
+          scriptTitle={speech.script.title}
+          onRegenerate={onRegenerate}
+          isRegenerating={isRegenerating}
+          canRegenerate={canRegenerate}
         />
       </CardContent>
     </Card>
@@ -190,8 +229,9 @@ function SpeechAudioSection({
 export function SpeechDetail({
   speech,
   audioUrl,
-  onRetry,
-  isRetrying,
+  canRegenerate,
+  onRegenerate,
+  isRegenerating,
 }: SpeechDetailProps) {
   return (
     <div className="flex flex-col gap-6">
@@ -238,8 +278,9 @@ export function SpeechDetail({
       <SpeechAudioSection
         speech={speech}
         audioUrl={audioUrl}
-        onRetry={onRetry}
-        isRetrying={isRetrying}
+        canRegenerate={canRegenerate}
+        onRegenerate={onRegenerate}
+        isRegenerating={isRegenerating}
       />
     </div>
   );
