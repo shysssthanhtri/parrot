@@ -2,6 +2,7 @@
 
 import {
   AudioLines,
+  ChevronRight,
   Home,
   type LucideIcon,
   MicVocal,
@@ -12,9 +13,15 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 import { APP_CONFIG } from "@/app/configs/app";
 import { ROUTES } from "@/app/configs/routes";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
@@ -25,15 +32,39 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
 
 import { UserButton } from "./user-button";
 
+const settingsSubItems = [
+  { title: "Personal", url: ROUTES.CMS.SETTINGS_PERSONAL },
+  { title: "CMS", url: ROUTES.CMS.SETTINGS_CMS },
+] as const;
+
 export const CMSSidebar = () => {
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
+  const isSettingsRoute = pathname.startsWith(ROUTES.CMS.SETTINGS);
+  const [settingsOpenOverride, setSettingsOpenOverride] = useState<
+    boolean | null
+  >(null);
+  const [prevIsSettingsRoute, setPrevIsSettingsRoute] =
+    useState(isSettingsRoute);
+
+  if (isSettingsRoute !== prevIsSettingsRoute) {
+    setPrevIsSettingsRoute(isSettingsRoute);
+    if (!isSettingsRoute) {
+      setSettingsOpenOverride(null);
+    }
+  }
+
+  const settingsOpen =
+    settingsOpenOverride !== null ? settingsOpenOverride : isSettingsRoute;
 
   const closeMobileSidebar = () => {
     if (isMobile) {
@@ -66,11 +97,6 @@ export const CMSSidebar = () => {
       title: "Speeches",
       url: ROUTES.CMS.SPEECHES,
       icon: AudioLines,
-    },
-    {
-      title: "Settings",
-      url: ROUTES.CMS.SETTINGS,
-      icon: Settings,
     },
   ];
 
@@ -124,6 +150,42 @@ export const CMSSidebar = () => {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <Collapsible
+                asChild
+                open={settingsOpen}
+                onOpenChange={setSettingsOpenOverride}
+                className="group/collapsible"
+              >
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip="Settings">
+                      <Settings />
+                      <span>Settings</span>
+                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {settingsSubItems.map((item) => (
+                        <SidebarMenuSubItem key={item.title}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={pathname === item.url}
+                          >
+                            <Link
+                              href={item.url}
+                              prefetch={false}
+                              onClick={closeMobileSidebar}
+                            >
+                              <span>{item.title}</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

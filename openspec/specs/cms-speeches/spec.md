@@ -8,12 +8,12 @@ TBD - created by archiving change speeches. Update Purpose after archive.
 
 ### Requirement: CMS speeches list page
 
-The CMS SHALL provide a page at `/cms/speeches` that displays all speeches in a shadcn table with columns appropriate for browsing (at minimum: script title, voice name, language label, length, process status, updated date). The length column SHALL display the speech's stored `contentLength` formatted as a locale-aware integer with a "chars" suffix. The process status column SHALL display a readable label for `pending`, `processing`, `finished`, and `failed`. The page SHALL be accessible only to authenticated CMS users (`isCmsUser === true`).
+The CMS SHALL provide a page at `/cms/speeches` that displays all speeches in a shadcn table with columns appropriate for browsing (at minimum: script title, voice name, language label, length, process status, updated date). The length column SHALL display the speech's stored `contentLength` formatted as a locale-aware integer with a "chars" suffix. The process status column SHALL display a readable label for `pending`, `processing`, `finished`, and `failed`. The page SHALL use the shared CMS page header with **Speeches** as the current breadcrumb segment instead of an in-page `h1` title. The page SHALL provide a **New speech** control below the header. The page SHALL be accessible only to authenticated CMS users (`isCmsUser === true`).
 
 #### Scenario: View speeches table
 
 - **WHEN** an authenticated CMS user navigates to `/cms/speeches`
-- **THEN** a table of all speeches is shown including readable language labels, content length, and process status for each row
+- **THEN** a table of all speeches is shown below the page header breadcrumb **Speeches**, including readable language labels, content length, and process status for each row
 
 ### Requirement: New speech entry from list
 
@@ -45,7 +45,7 @@ The CMS SHALL render the script title in the speeches list table as a link to `/
 
 ### Requirement: CMS speech create page
 
-The CMS SHALL provide a page at `/cms/speeches/new` where the user selects a target language first, then selects a voice and script filtered to that language (voices without stored audio excluded), adjusts TTS sliders (Creativity, Voice Variety, Expression Range, Natural Flow, and norm loudness), and creates a speech via `speeches.create` without generating a synchronous preview or uploading audio from the browser. Each script option in the script picker SHALL display the script title and its `contentLength` (e.g. `Morning routine (842 chars)`). On successful create, the app SHALL redirect to `/cms/speeches/{speechId}`. The page SHALL NOT show creator/`createdBy` in v1.
+The CMS SHALL provide a page at `/cms/speeches/new` where the user selects a target language first, then selects a voice and script filtered to that language (voices without stored audio excluded), adjusts TTS sliders (Creativity, Voice Variety, Expression Range, Natural Flow, and norm loudness), and creates a speech via `speeches.create` without generating a synchronous preview or uploading audio from the browser. The page SHALL use the shared CMS page header with breadcrumbs **Speeches** (link to `/cms/speeches`) and **New** as the current segment instead of an in-page back link. Each script option in the script picker SHALL display the script title and its `contentLength` (e.g. `Morning routine (842 chars)`). On successful create, the app SHALL redirect to `/cms/speeches/{speechId}`. The page SHALL NOT show creator/`createdBy` in v1.
 
 #### Scenario: Language gates voice and script pickers
 
@@ -83,12 +83,12 @@ Each TTS control on the speech create page (Creativity, Voice Variety, Expressio
 
 ### Requirement: CMS speech detail page
 
-The CMS SHALL provide a page at `/cms/speeches/[speechId]` showing speech metadata (linked script title, voice name, language, TTS parameter values, timestamps, and process status), the full script text with synchronized chunk highlighting when alignment is stored and audio is playable (past chunks dimmed, active chunk highlighted, upcoming chunks normal, driven by audio playback time), and a waveform-based audio preview when `processStatus` is `finished` and audio is available. While `processStatus` is `pending` or `processing`, the page SHALL show a generating state with chunk-based progress (percentage and chunk fraction when `totalChunks` is greater than zero) derived from `settledChunks` and `totalChunks`, and poll `speeches.getById` until the status becomes `finished` or `failed`. When `processStatus` is `pending` or `processing` and the speech is eligible for regenerate per `speeches.regenerate` rules (`processingStartedAt` null or at least 30 minutes ago for `processing`; always for `pending`), the generating card SHALL include a **Regenerate** control that calls `speeches.regenerate`, shows a loading/disabled state while the request is in flight, and resumes polling until processing completes or fails again. When `processStatus` is `failed`, the page SHALL display `errorMessage` and a **Regenerate** control that calls `speeches.regenerate`, shows a loading/disabled state while the request is in flight, and resumes polling until processing completes or fails again. When `processStatus` is `finished` and audio is playable, the audio preview section SHALL include a **Regenerate** control that calls `speeches.regenerate`, shows a loading/disabled state while the request is in flight, and resumes polling until processing completes or fails again. When the waveform player reports a load error, the audio preview section SHALL still offer **Regenerate** as a recovery action (in addition to any existing open-in-new-tab link). When alignment is not stored (legacy speeches), the page SHALL display the script content without synchronized highlighting. The page SHALL provide a **Delete speech** control with a confirmation dialog that calls `speeches.delete` and, on success, navigates to `/cms/speeches` with a success toast. The delete control SHALL be available regardless of `processStatus`.
+The CMS SHALL provide a page at `/cms/speeches/[speechId]` showing speech metadata (linked script title, voice name, language, TTS parameter values, timestamps, and process status), the full script text with synchronized chunk highlighting when alignment is stored and audio is playable (past chunks dimmed, active chunk highlighted, upcoming chunks normal, driven by audio playback time), and a waveform-based audio preview when `processStatus` is `finished` and audio is available. The page SHALL use the shared CMS page header with breadcrumbs **Speeches** (link to `/cms/speeches`) and the linked script title as the current segment instead of an in-page back link. While `processStatus` is `pending` or `processing`, the page SHALL show a generating state with chunk-based progress (percentage and chunk fraction when `totalChunks` is greater than zero) derived from `settledChunks` and `totalChunks`, and poll `speeches.getById` until the status becomes `finished` or `failed`. When `processStatus` is `pending` or `processing` and the speech is eligible for regenerate per `speeches.regenerate` rules (`processingStartedAt` null or at least 30 minutes ago for `processing`; always for `pending`), the generating card SHALL include a **Regenerate** control that calls `speeches.regenerate`, shows a loading/disabled state while the request is in flight, and resumes polling until processing completes or fails again. When `processStatus` is `failed`, the page SHALL display `errorMessage` and a **Regenerate** control that calls `speeches.regenerate`, shows a loading/disabled state while the request is in flight, and resumes polling until processing completes or fails again. When `processStatus` is `finished` and audio is playable, the audio preview section SHALL include a **Regenerate** control that calls `speeches.regenerate`, shows a loading/disabled state while the request is in flight, and resumes polling until processing completes or fails again. When the waveform player reports a load error, the audio preview section SHALL still offer **Regenerate** as a recovery action (in addition to any existing open-in-new-tab link). When alignment is not stored (legacy speeches), the page SHALL display the script content without synchronized highlighting. The page SHALL provide a **Delete speech** control with a confirmation dialog that calls `speeches.delete` and, on success, navigates to `/cms/speeches` with a success toast. The delete control SHALL be available regardless of `processStatus`.
 
 #### Scenario: View speech metadata
 
 - **WHEN** an authenticated CMS user opens `/cms/speeches/{id}` for an existing speech
-- **THEN** script title, voice name, language, TTS settings, process status, and timestamps are displayed
+- **THEN** script title, voice name, language, TTS settings, process status, and timestamps are displayed below the page header breadcrumbs **Speeches** → script title
 
 #### Scenario: Generating state polls until finished
 
@@ -182,12 +182,12 @@ The CMS SHALL provide a page at `/cms/speeches/[speechId]` showing speech metada
 
 ### Requirement: Loading UI on speeches list page
 
-While the speeches list page is loading, the CMS SHALL display a loading UI at `/cms/speeches` that matches the list page layout: page heading area and a table skeleton with columns for script title, voice name, language, length, process status, and updated date.
+While the speeches list page is loading, the CMS SHALL display a loading UI at `/cms/speeches` that matches the list page layout: shared page header with **Speeches** breadcrumb and a table skeleton with columns for script title, voice name, language, length, process status, and updated date.
 
 #### Scenario: Loading state during navigation
 
 - **WHEN** an authenticated CMS user navigates to `/cms/speeches` and the page content is not yet ready
-- **THEN** a skeleton loading UI is shown with a table-shaped placeholder matching the speeches list columns
+- **THEN** a skeleton loading UI is shown with the shared page header breadcrumb **Speeches** and a table-shaped placeholder matching the speeches list columns
 
 ### Requirement: Speech detail audio preview survives tab refocus
 

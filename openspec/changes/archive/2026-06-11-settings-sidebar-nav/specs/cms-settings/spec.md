@@ -1,33 +1,12 @@
-# cms-settings Specification
+## REMOVED Requirements
 
-## Purpose
+### Requirement: Settings page uses tabbed sections
 
-TBD - created by archiving change settings-page-tabs. Update Purpose after archive.
+**Reason**: Personal and CMS are now separate routes navigated via sidebar sub-items and breadcrumbs instead of in-page tabs.
 
-## Requirements
+**Migration**: Users visiting `/cms/settings` are redirected to `/cms/settings/personal`. Sidebar **Settings** expands to show **Personal** and **CMS** sub-links.
 
-### Requirement: Personal tab contains theme and sign out
-
-The Personal tab SHALL include the theme mode control (light, dark, system) and a sign-out action for the authenticated CMS user.
-
-#### Scenario: Theme control in Personal tab
-
-- **WHEN** an authenticated CMS user views the Personal tab on CMS settings
-- **THEN** the theme mode control is visible and functional
-
-#### Scenario: Sign out from Personal tab
-
-- **WHEN** an authenticated CMS user clicks the sign-out control on the Personal tab
-- **THEN** the user session is ended and the user is redirected away from CMS routes
-
-### Requirement: CMS tab is a placeholder
-
-The CMS tab SHALL display placeholder content indicating that CMS-specific settings will be added in a future update. It SHALL NOT expose incomplete or non-functional configuration controls.
-
-#### Scenario: CMS tab placeholder visible
-
-- **WHEN** an authenticated CMS user selects the CMS tab
-- **THEN** placeholder messaging is shown and no editable CMS configuration fields are present
+## ADDED Requirements
 
 ### Requirement: Settings uses route-based sections
 

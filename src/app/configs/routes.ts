@@ -17,6 +17,8 @@ export const ROUTES = {
     SPEECH_NEW: `${ROOT_ROUTES.CMS}/speeches/new`,
     SPEECH_DETAIL: (id: string) => `${ROOT_ROUTES.CMS}/speeches/${id}`,
     SETTINGS: `${ROOT_ROUTES.CMS}/settings`,
+    SETTINGS_PERSONAL: `${ROOT_ROUTES.CMS}/settings/personal`,
+    SETTINGS_CMS: `${ROOT_ROUTES.CMS}/settings/cms`,
   },
   PUBLIC: {
     SIGNIN: "/api/auth/signin",
