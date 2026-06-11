@@ -1,12 +1,13 @@
 import "server-only";
 
+import { env } from "@/lib/env";
 import {
   getScriptLanguageLabel,
   type ScriptLanguageCode,
 } from "@/lib/script-languages";
 
 import { GEMINI_SCRIPT_MODEL } from "./gemini";
-import { generateText, getLlmProvider } from "./llm";
+import { generateText } from "./llm";
 import { VERCEL_GATEWAY_MODEL } from "./llm/vercel-gateway";
 
 export const SCRIPT_GENERATION_LENGTHS = ["short", "medium", "long"] as const;
@@ -25,10 +26,10 @@ const WORD_COUNT_BY_LENGTH: Record<ScriptGenerationLength, number> = {
   long: 750,
 };
 
-export const SCRIPT_GENERATION_MODEL =
-  getLlmProvider().providerId === "gemini"
-    ? GEMINI_SCRIPT_MODEL
-    : VERCEL_GATEWAY_MODEL;
+export function getScriptGenerationModel(): string {
+  const providerId = env.LLM_PROVIDER ?? "vercel-ai-gateway";
+  return providerId === "gemini" ? GEMINI_SCRIPT_MODEL : VERCEL_GATEWAY_MODEL;
+}
 
 type GenerateScriptDraftInput = {
   prompt: string;

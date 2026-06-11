@@ -13,8 +13,16 @@ const providers: Record<LlmProvider["providerId"], LlmProvider> = {
 
 let activeProvider: LlmProvider | undefined;
 
+const DEFAULT_LLM_PROVIDER: LlmProvider["providerId"] = "vercel-ai-gateway";
+
 export function getLlmProvider(): LlmProvider {
-  activeProvider ??= providers[env.LLM_PROVIDER];
+  const providerId = env.LLM_PROVIDER ?? DEFAULT_LLM_PROVIDER;
+  activeProvider ??= providers[providerId];
+
+  if (!activeProvider) {
+    throw new Error(`Unknown LLM_PROVIDER: ${providerId}`);
+  }
+
   return activeProvider;
 }
 

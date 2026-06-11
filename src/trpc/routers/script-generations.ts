@@ -3,8 +3,8 @@ import { z } from "zod";
 
 import {
   generateScriptDraft,
+  getScriptGenerationModel,
   SCRIPT_GENERATION_LENGTHS,
-  SCRIPT_GENERATION_MODEL,
 } from "@/lib/script-generation";
 import {
   DEFAULT_SCRIPT_LANGUAGE,
@@ -78,7 +78,7 @@ export const scriptGenerationsRouter = createTRPCRouter({
             generatedTitle: draft.title,
             generatedContent: draft.content,
             status: "success",
-            model: SCRIPT_GENERATION_MODEL,
+            model: getScriptGenerationModel(),
             userId: ctx.userId,
           },
         });
@@ -98,7 +98,7 @@ export const scriptGenerationsRouter = createTRPCRouter({
             language: input.language,
             status: "failed",
             errorMessage: getUserSafeGenerationError(error),
-            model: SCRIPT_GENERATION_MODEL,
+            model: getScriptGenerationModel(),
             userId: ctx.userId,
           },
         });
