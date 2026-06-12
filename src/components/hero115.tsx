@@ -3,6 +3,8 @@ import { ArrowRight, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+import { HoverBorderGradient } from "./ui/hover-border-gradient";
+
 interface Image {
   src: string;
   alt: string;
@@ -85,12 +87,18 @@ const Hero115 = (props: Props) => {
             </p>
             <div className="flex flex-col items-center gap-3 pt-3 pb-12">
               {buttons?.primary && (
-                <Button size="lg" asChild className="w-full sm:w-auto">
-                  <a href={buttons.primary.url}>
+                <HoverBorderGradient
+                  as="button"
+                  className="dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2"
+                >
+                  <a
+                    href={buttons.primary.url}
+                    className="flex items-center gap-2"
+                  >
                     {buttons.primary.text}
                     <ArrowRight className="size-4" />
                   </a>
-                </Button>
+                </HoverBorderGradient>
               )}
               {byline && (
                 <div className="text-center text-sm text-muted-foreground">

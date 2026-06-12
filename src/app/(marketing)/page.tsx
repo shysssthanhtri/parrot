@@ -24,7 +24,7 @@ export default function LandingPage() {
         buttons={{
           primary: {
             text: "Get started free",
-            url: ROUTES.PUBLIC.SIGNUP,
+            url: ROUTES.LEARN.HOME,
           },
         }}
         byline={undefined}
