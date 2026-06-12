@@ -1,7 +1,7 @@
 import {
   getScriptLanguageLabel,
   type ScriptLanguageCode,
-} from "./script-languages.ts";
+} from "./script-languages";
 
 export const SCRIPT_GENERATION_LENGTHS = ["short", "medium", "long"] as const;
 
