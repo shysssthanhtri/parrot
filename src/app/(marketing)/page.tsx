@@ -69,9 +69,7 @@ export default function LandingPage() {
         }}
         byline={undefined}
         image={{
-          src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/image-set/modern/saas-hero/saas-hero-1-16x9.png",
-          srcDark:
-            "https://deifkwefumgah.cloudfront.net/shadcnblocks/image-set/modern/saas-hero/saas-hero-1-16x9-dark.png",
+          src: OG_IMAGE_PATH,
           alt: "Language learner practicing shadowing with Parrot",
         }}
       />
