@@ -2,10 +2,11 @@ import { Mic } from "lucide-react";
 import type { Metadata } from "next";
 
 import { ROUTES } from "@/app/configs/routes";
-import { auth } from "@/auth";
 import { Hero115 } from "@/components/hero115";
 
 import { HowItWorks } from "./_components/how-it-works";
+
+export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "Parrot — Language shadowing practice",
@@ -13,10 +14,7 @@ export const metadata: Metadata = {
     "Learn languages by shadowing native speakers. Browse speeches, listen along, and practice out loud with Parrot.",
 };
 
-export default async function LandingPage() {
-  const session = await auth();
-  const isSignedIn = !!session?.user;
-
+export default function LandingPage() {
   return (
     <>
       <Hero115
@@ -25,8 +23,8 @@ export default async function LandingPage() {
         description="Parrot helps you practice pronunciation and rhythm by listening to real speeches and speaking along — one sentence at a time."
         buttons={{
           primary: {
-            text: isSignedIn ? "Go to learner space" : "Get started free",
-            url: isSignedIn ? ROUTES.LEARN.HOME : ROUTES.PUBLIC.SIGNUP,
+            text: "Get started free",
+            url: ROUTES.PUBLIC.SIGNUP,
           },
         }}
         byline={undefined}

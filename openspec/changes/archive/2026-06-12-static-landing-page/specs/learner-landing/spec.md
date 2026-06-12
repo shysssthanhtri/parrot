@@ -1,29 +1,4 @@
-# learner-landing Specification
-
-## Purpose
-
-TBD - created by archiving change learner-landing-page. Update Purpose after archive.
-
-## Requirements
-
-### Requirement: Public marketing landing page
-
-The app SHALL provide a learner-focused marketing landing page at `/` outside the CMS layout. The page SHALL NOT require authentication to view. Signed-in users MAY view the landing page without being redirected.
-
-#### Scenario: Guest views landing page
-
-- **WHEN** an unauthenticated user navigates to `/`
-- **THEN** the marketing landing page is displayed without redirecting to sign-in
-
-#### Scenario: Signed-in user views landing
-
-- **WHEN** an authenticated user navigates to `/`
-- **THEN** the marketing landing page is displayed without redirecting to `/learn`
-
-#### Scenario: Landing route constant
-
-- **WHEN** application code references the public landing route
-- **THEN** `ROUTES.PUBLIC.HOME` resolves to `/`
+## ADDED Requirements
 
 ### Requirement: Static landing page rendering
 
@@ -38,6 +13,8 @@ The marketing landing page at `/` SHALL be statically generated at build time. T
 
 - **WHEN** any user navigates to `/`
 - **THEN** the same static marketing content is served regardless of authentication state
+
+## MODIFIED Requirements
 
 ### Requirement: Landing page site header
 
@@ -66,21 +43,3 @@ The landing page SHALL include a hero section above the fold with a learner-focu
 
 - **WHEN** a user activates the hero primary call-to-action
 - **THEN** the app navigates to `/signup`
-
-### Requirement: Landing page how-it-works section
-
-The landing page SHALL include a static "How it works" section below the hero describing the shadowing flow in three steps (browse speeches, listen and follow along, practice out loud). The section SHALL NOT require authentication or live catalog data.
-
-#### Scenario: How-it-works visible on landing
-
-- **WHEN** an unauthenticated user scrolls the landing page
-- **THEN** a three-step how-it-works section is displayed below the hero
-
-### Requirement: Landing page metadata
-
-The app SHALL expose Parrot-specific document metadata for the landing page, including a title and description suitable for end-user learners (not CMS operators).
-
-#### Scenario: Landing page title
-
-- **WHEN** an unauthenticated user loads `/`
-- **THEN** the document title identifies the product as Parrot for language shadowing

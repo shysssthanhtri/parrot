@@ -1,20 +1,16 @@
-import { SessionProvider } from "next-auth/react";
+import { LandingHeader } from "./_components/landing-header";
 
-import { auth } from "@/auth";
+export const dynamic = "force-static";
 
-import { SiteHeader } from "./_components/site-header";
-
-export default async function MarketingLayout({
+export default function MarketingLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
-
   return (
-    <SessionProvider session={session}>
-      <SiteHeader />
+    <>
+      <LandingHeader />
       <main className="flex flex-1 flex-col">{children}</main>
-    </SessionProvider>
+    </>
   );
 }

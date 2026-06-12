@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { SessionProvider } from "next-auth/react";
 
-import { SiteHeader } from "@/app/(marketing)/_components/site-header";
 import { signInUrl } from "@/app/configs/routes";
 import { auth } from "@/auth";
+
+import { LearnHeader } from "./_components/learn-header";
 
 export default async function LearnLayout({
   children,
@@ -18,7 +19,7 @@ export default async function LearnLayout({
 
   return (
     <SessionProvider session={session}>
-      <SiteHeader />
+      <LearnHeader />
       <main className="flex flex-1 flex-col">{children}</main>
     </SessionProvider>
   );
