@@ -1,7 +1,17 @@
 name: Database Migrations
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "prisma/migrations/**"
+      - ".github/workflows/migrations.yml"
   workflow_dispatch:
+
+concurrency:
+  group: database-migrations
+  cancel-in-progress: false
 
 jobs:
   migrations:
