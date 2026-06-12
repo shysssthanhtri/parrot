@@ -55,6 +55,45 @@ const voiceNameFromFilename = (filename: string) =>
 const r2ObjectKeyFromFilename = (filename: string) =>
   `system-voices/${voiceNameFromFilename(filename).toLowerCase()}${WAV_EXTENSION}`;
 
+const findExistingSystemVoice = async (name: string, r2ObjectKey: string) => {
+  const matches = await prisma.voice.findMany({
+    where: {
+      userId: null,
+      OR: [{ name }, { r2ObjectKey }],
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  if (matches.length > 1) {
+    console.warn(
+      `Found ${matches.length} system voice rows for "${name}" (${r2ObjectKey}); updating the oldest row`
+    );
+  }
+
+  return matches[0] ?? null;
+};
+
+const upsertSystemVoice = async (name: string, r2ObjectKey: string) => {
+  const existing = await findExistingSystemVoice(name, r2ObjectKey);
+
+  if (existing) {
+    await prisma.voice.update({
+      where: { id: existing.id },
+      data: { name, r2ObjectKey },
+    });
+    return;
+  }
+
+  await prisma.voice.create({
+    data: {
+      name,
+      r2ObjectKey,
+      language: "en-US",
+      userId: null,
+    },
+  });
+};
+
 const seedSystemVoices = async () => {
   const entries = await readdir(SYSTEM_VOICES_DIR);
   const wavFiles = entries.filter((name) =>
@@ -78,25 +117,7 @@ const seedSystemVoices = async () => {
       await uploadObject(r2ObjectKey, body, "audio/wav");
     }
 
-    const existing = await prisma.voice.findFirst({
-      where: { name, userId: null },
-    });
-
-    if (existing) {
-      await prisma.voice.update({
-        where: { id: existing.id },
-        data: { r2ObjectKey },
-      });
-    } else {
-      await prisma.voice.create({
-        data: {
-          name,
-          r2ObjectKey,
-          language: "en-US",
-          userId: null,
-        },
-      });
-    }
+    await upsertSystemVoice(name, r2ObjectKey);
 
     const uploadNote = storageDriver === "local" ? " (local — no upload)" : "";
     console.log(`Seeded voice: ${name} → ${r2ObjectKey}${uploadNote}`);
