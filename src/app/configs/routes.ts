@@ -25,7 +25,7 @@ export const ROUTES = {
   },
   PUBLIC: {
     HOME: "/",
-    SIGNIN: "/api/auth/signin",
+    SIGNIN: "/signin",
     SIGNUP: "/signup",
     SIGNOUT: "/api/auth/signout",
     FORBIDDEN: "/forbidden",

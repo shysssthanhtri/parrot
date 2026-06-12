@@ -18,6 +18,9 @@ const credentialsSchema = z.object({
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
+  pages: {
+    signIn: ROUTES.PUBLIC.SIGNIN,
+  },
   callbacks: {
     authorized({ auth, request }) {
       if (!request.nextUrl.pathname.startsWith(ROOT_ROUTES.CMS)) {

@@ -2,21 +2,28 @@
 
 import { signIn } from "next-auth/react";
 
-import { ROUTES } from "@/app/configs/routes";
 import { Button } from "@/components/ui/button";
 
 import { GoogleIcon } from "./google-icon";
 
-export function GoogleSignupButton() {
+type GoogleAuthButtonProps = {
+  label: string;
+  callbackUrl: string;
+};
+
+export function GoogleAuthButton({
+  label,
+  callbackUrl,
+}: GoogleAuthButtonProps) {
   return (
     <Button
       type="button"
       variant="outline"
       className="w-full"
-      onClick={() => signIn("google", { callbackUrl: ROUTES.LEARN.HOME })}
+      onClick={() => signIn("google", { callbackUrl })}
     >
-      <GoogleIcon />
-      Sign up with Google
+      <GoogleIcon className="size-4" />
+      {label}
     </Button>
   );
 }
