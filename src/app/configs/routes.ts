@@ -3,6 +3,9 @@ export const ROOT_ROUTES = {
 };
 
 export const ROUTES = {
+  LEARN: {
+    HOME: "/learn",
+  },
   CMS: {
     DASHBOARD: `${ROOT_ROUTES.CMS}/dashboard`,
     VOICES: `${ROOT_ROUTES.CMS}/voices`,
@@ -21,9 +24,15 @@ export const ROUTES = {
     SETTINGS_CMS: `${ROOT_ROUTES.CMS}/settings/cms`,
   },
   PUBLIC: {
+    HOME: "/",
     SIGNIN: "/api/auth/signin",
     SIGNUP: "/signup",
     SIGNOUT: "/api/auth/signout",
     FORBIDDEN: "/forbidden",
   },
 } as const;
+
+export function signInUrl(callbackUrl: string = ROUTES.LEARN.HOME): string {
+  const params = new URLSearchParams({ callbackUrl });
+  return `${ROUTES.PUBLIC.SIGNIN}?${params.toString()}`;
+}

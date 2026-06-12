@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { ROUTES } from "@/app/configs/routes";
+import { signInUrl } from "@/app/configs/routes";
 import { signup, type SignupState } from "@/app/signup/actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -100,7 +100,7 @@ export function SignupForm() {
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link
-          href={ROUTES.PUBLIC.SIGNIN}
+          href={signInUrl()}
           className="text-primary underline-offset-4 hover:underline"
         >
           Sign in

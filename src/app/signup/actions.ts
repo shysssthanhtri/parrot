@@ -4,6 +4,7 @@ import { hash } from "bcryptjs";
 import { AuthError } from "next-auth";
 import { z } from "zod";
 
+import { ROUTES } from "@/app/configs/routes";
 import { signIn } from "@/auth";
 import { prisma } from "@/prisma";
 
@@ -81,7 +82,7 @@ export async function signup(
     await signIn("credentials", {
       email,
       password,
-      redirectTo: "/",
+      redirectTo: ROUTES.LEARN.HOME,
     });
   } catch (error) {
     if (error instanceof AuthError) {
