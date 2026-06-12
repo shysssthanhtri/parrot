@@ -30,6 +30,11 @@ import {
 import type { SpeechScriptAlignment } from "@/lib/speech-script-alignment";
 import { NORM_LOUDNESS_CONTROL, SPEECH_SLIDERS } from "@/lib/speech-sliders";
 
+import {
+  getPublicationStatusLabel,
+  type PublicationSummary,
+  SpeechPublishingCard,
+} from "./speech-publishing-card";
 import { SpeechRegenerateButton } from "./speech-regenerate-button";
 
 type SpeechDetailProps = {
@@ -55,11 +60,18 @@ type SpeechDetailProps = {
       content: string;
     };
     alignment: SpeechScriptAlignment | null;
+    publication: PublicationSummary;
   };
   audioUrl: string | null;
   canRegenerate?: boolean;
   onRegenerate?: () => void;
   isRegenerating?: boolean;
+  onPublish?: () => void;
+  onUnpublish?: () => void;
+  onUnpublishAndRegenerate?: () => void;
+  isPublishing?: boolean;
+  isUnpublishing?: boolean;
+  isUnpublishAndRegenerating?: boolean;
 };
 
 function formatTimestamp(date: Date) {
@@ -230,6 +242,12 @@ export function SpeechDetail({
   canRegenerate,
   onRegenerate,
   isRegenerating,
+  onPublish,
+  onUnpublish,
+  onUnpublishAndRegenerate,
+  isPublishing,
+  isUnpublishing,
+  isUnpublishAndRegenerating,
 }: SpeechDetailProps) {
   return (
     <div className="flex flex-col gap-6">
@@ -249,6 +267,10 @@ export function SpeechDetail({
             <MetadataField
               label="Status"
               value={<SpeechProcessStatusBadge status={speech.processStatus} />}
+            />
+            <MetadataField
+              label="Publication"
+              value={getPublicationStatusLabel(speech.publication)}
             />
             {SPEECH_SLIDERS.map((slider) => (
               <MetadataField
@@ -272,6 +294,20 @@ export function SpeechDetail({
           </dl>
         </CardContent>
       </Card>
+
+      {onPublish && onUnpublish && onUnpublishAndRegenerate ? (
+        <SpeechPublishingCard
+          scriptTitle={speech.script.title}
+          processStatus={speech.processStatus}
+          publication={speech.publication}
+          onPublish={onPublish}
+          onUnpublish={onUnpublish}
+          onUnpublishAndRegenerate={onUnpublishAndRegenerate}
+          isPublishing={isPublishing}
+          isUnpublishing={isUnpublishing}
+          isUnpublishAndRegenerating={isUnpublishAndRegenerating}
+        />
+      ) : null}
 
       <SpeechAudioSection
         speech={speech}

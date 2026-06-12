@@ -2,10 +2,12 @@ import { TRPCError } from "@trpc/server";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 
+import { SpeechPublicationStatus } from "@/generated/prisma/client";
 import {
   DEFAULT_SCRIPT_LANGUAGE,
   SCRIPT_LANGUAGE_CODES,
 } from "@/lib/script-languages";
+import { assertSpeechNotPublished } from "@/lib/speech-publication";
 import {
   assertSpeechCanRegenerate,
   canRegenerateSpeech,
@@ -114,6 +116,7 @@ export const speechesRouter = createTRPCRouter({
         include: {
           voice: true,
           script: true,
+          publication: { select: { status: true, publishedAt: true } },
         },
       });
 
@@ -130,11 +133,22 @@ export const speechesRouter = createTRPCRouter({
           ? await getAudioUrl(speech.r2ObjectKey)
           : null;
 
+      const publication = speech.publication
+        ? {
+            status: speech.publication.status,
+            publishedAt: speech.publication.publishedAt,
+          }
+        : { status: "not_published" as const };
+
+      const isPublished =
+        publication.status === SpeechPublicationStatus.published;
+
       return {
         ...speech,
+        publication,
         alignment: speech.alignment as SpeechScriptAlignment | null,
         audioUrl,
-        canRegenerate: canRegenerateSpeech(speech),
+        canRegenerate: canRegenerateSpeech(speech) && !isPublished,
       };
     }),
 
@@ -223,6 +237,7 @@ export const speechesRouter = createTRPCRouter({
       }
 
       assertSpeechCanRegenerate(speech);
+      await assertSpeechNotPublished(input.id);
 
       await resetSpeechForTtsRestart({
         speechId: input.id,
@@ -254,6 +269,8 @@ export const speechesRouter = createTRPCRouter({
           message: `Speech not found: ${input.id}`,
         });
       }
+
+      await assertSpeechNotPublished(input.id);
 
       const storageKeys = [
         speech.r2ObjectKey,

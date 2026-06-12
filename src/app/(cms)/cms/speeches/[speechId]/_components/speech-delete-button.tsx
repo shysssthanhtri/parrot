@@ -23,11 +23,13 @@ import { useTRPC } from "@/trpc/client";
 type SpeechDeleteButtonProps = {
   speechId: string;
   scriptTitle: string;
+  isPublished?: boolean;
 };
 
 export function SpeechDeleteButton({
   speechId,
   scriptTitle,
+  isPublished = false,
 }: SpeechDeleteButtonProps) {
   const router = useRouter();
   const trpc = useTRPC();
@@ -48,7 +50,7 @@ export function SpeechDeleteButton({
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" className="w-fit">
+        <Button variant="destructive" className="w-fit" disabled={isPublished}>
           Delete speech
         </Button>
       </AlertDialogTrigger>
@@ -56,16 +58,26 @@ export function SpeechDeleteButton({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete speech</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete the speech for &ldquo;{scriptTitle}
-            &rdquo;? This action cannot be undone and will remove all generated
-            audio files.
+            {isPublished ? (
+              <>
+                This speech is published and visible to learners. Unpublish it
+                before deleting.
+              </>
+            ) : (
+              <>
+                Are you sure you want to delete the speech for &ldquo;
+                {scriptTitle}
+                &rdquo;? This action cannot be undone and will remove all
+                generated audio files.
+              </>
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={() => deleteMutation.mutate({ id: speechId })}
-            disabled={deleteMutation.isPending}
+            disabled={deleteMutation.isPending || isPublished}
           >
             {deleteMutation.isPending ? "Deleting…" : "Delete"}
           </AlertDialogAction>

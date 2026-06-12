@@ -43,15 +43,58 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
       query.state.data?.processStatus !== "finished",
   });
 
+  const refetchSpeech = () => {
+    void speechQuery.refetch();
+  };
+
   const regenerateMutation = useMutation(
     trpc.speeches.regenerate.mutationOptions({
       onSuccess: () => {
         setAudioUrlResetVersion((version) => version + 1);
         toast.success("Regeneration started");
-        void speechQuery.refetch();
+        refetchSpeech();
       },
       onError: (error) => {
         toast.error(error.message || "Failed to regenerate speech");
+      },
+    })
+  );
+
+  const publishMutation = useMutation(
+    trpc.speechPublications.publish.mutationOptions({
+      onSuccess: () => {
+        toast.success("Speech published");
+        refetchSpeech();
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to publish speech");
+      },
+    })
+  );
+
+  const unpublishMutation = useMutation(
+    trpc.speechPublications.unpublish.mutationOptions({
+      onSuccess: () => {
+        toast.success("Speech unpublished");
+        refetchSpeech();
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to unpublish speech");
+      },
+    })
+  );
+
+  const unpublishAndRegenerateMutation = useMutation(
+    trpc.speechPublications.unpublishAndRegenerate.mutationOptions({
+      onSuccess: () => {
+        setAudioUrlResetVersion((version) => version + 1);
+        toast.success("Speech unpublished and regeneration started");
+        refetchSpeech();
+      },
+      onError: (error) => {
+        toast.error(
+          error.message || "Failed to unpublish and regenerate speech"
+        );
       },
     })
   );
@@ -98,6 +141,8 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
       ? (stableAudioUrl ?? speech.audioUrl)
       : null;
 
+  const isPublished = speech.publication.status === "published";
+
   return (
     <div className="flex flex-col gap-6">
       <SpeechDetail
@@ -110,10 +155,19 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
             : undefined
         }
         isRegenerating={regenerateMutation.isPending}
+        onPublish={() => publishMutation.mutate({ id: speechId })}
+        onUnpublish={() => unpublishMutation.mutate({ id: speechId })}
+        onUnpublishAndRegenerate={() =>
+          unpublishAndRegenerateMutation.mutate({ id: speechId })
+        }
+        isPublishing={publishMutation.isPending}
+        isUnpublishing={unpublishMutation.isPending}
+        isUnpublishAndRegenerating={unpublishAndRegenerateMutation.isPending}
       />
       <SpeechDeleteButton
         speechId={speechId}
         scriptTitle={speech.script.title}
+        isPublished={isPublished}
       />
     </div>
   );

@@ -146,8 +146,39 @@ model Speech {
 
   voice  Voice         @relation(fields: [voiceId], references: [id], onDelete: Restrict)
   script Script        @relation(fields: [scriptId], references: [id], onDelete: Restrict)
-  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  chunks SpeechChunk[]
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chunks      SpeechChunk[]
+  publication SpeechPublication?
+}
+
+enum SpeechPublicationStatus {
+  published
+  unpublished
+}
+
+model SpeechPublication {
+  id String @id @default(cuid())
+
+  speechId    String                  @unique
+  status      SpeechPublicationStatus
+  publishedAt DateTime?
+
+  title       String
+  content     String   @db.Text
+  language    String
+  alignment   Json
+  r2ObjectKey String
+  voiceName   String
+  topicIds    String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  speech Speech @relation(fields: [speechId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([language])
+  @@index([topicIds], type: Gin)
 }
 
 model SpeechChunk {
