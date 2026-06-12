@@ -24,7 +24,7 @@ The system SHALL persist script AI generation attempts in PostgreSQL using a Pri
 
 The system SHALL expose a tRPC `scriptGenerations.generate` mutation available to authenticated CMS users. The mutation SHALL accept `prompt` (non-empty string), `length` (one of `short`, `medium`, or `long`), `language` (a supported script language code), and optional `topicIds` (array of topic ID strings). It SHALL call the active LLM provider server-side via the provider strategy, persist a `ScriptGeneration` row for every attempt, and on success return `generationId`, `title`, and `content`.
 
-When `topicIds` are provided and resolve to valid topics owned by the user, the system SHALL inject the topic names into the generation prompt to provide topical context to the LLM.
+When `topicIds` are provided and resolve to valid topics owned by the user, the system SHALL inject the topic names and descriptions (when present) into the generation prompt to provide topical context to the LLM.
 
 Target spoken durations for each length value SHALL be approximately: `short` — 30 seconds, `medium` — 1 minute, `long` — 5 minutes.
 
@@ -37,6 +37,16 @@ Target spoken durations for each length value SHALL be approximately: `short` �
 
 - **WHEN** an authenticated CMS client calls `scriptGenerations.generate` with valid `topicIds` referencing topics "Travel" and "Food"
 - **THEN** the AI generation prompt SHALL include the topic names "Travel" and "Food" as contextual guidance
+
+#### Scenario: Generation with topic descriptions
+
+- **WHEN** an authenticated CMS client calls `scriptGenerations.generate` with valid `topicIds` referencing a topic named "Travel" with description "Stories about airports, hotels, and cultural experiences abroad"
+- **THEN** the AI generation prompt SHALL include both the topic name and its description as contextual guidance
+
+#### Scenario: Generation with topic missing description
+
+- **WHEN** an authenticated CMS client calls `scriptGenerations.generate` with valid `topicIds` referencing a topic that has no description
+- **THEN** the AI generation prompt SHALL include the topic name only (no error)
 
 #### Scenario: Generation with empty or invalid topic IDs
 
