@@ -136,4 +136,32 @@ export const topicsRouter = createTRPCRouter({
         });
       }
     }),
+
+  suggestDescription: cmsProcedure
+    .input(
+      z.object({
+        name: z.string().trim().min(1, "Name is required"),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const prompt = `Given the topic name "${input.name}", write a concise description (1–2 sentences) of what kinds of shadowing practice scripts belong under this topic. Focus on themes, vocabulary areas, or scenarios a language learner might practice. Respond with ONLY the description text, nothing else.`;
+
+      try {
+        const { text: rawText } = await generateText(prompt);
+        const description = rawText.trim();
+
+        if (!description || description.length > 500) {
+          throw new Error("Model did not return a valid description");
+        }
+
+        return { description };
+      } catch (error) {
+        console.error(error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            "Failed to suggest a description. Please write one manually.",
+        });
+      }
+    }),
 });

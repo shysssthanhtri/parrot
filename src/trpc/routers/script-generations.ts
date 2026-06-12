@@ -49,17 +49,16 @@ export const scriptGenerationsRouter = createTRPCRouter({
   generate: cmsProcedure
     .input(generateInputSchema)
     .mutation(async ({ input, ctx }) => {
-      let topicNames: string[] | undefined;
+      let topics: { name: string; description: string | null }[] | undefined;
 
       if (input.topicIds?.length) {
-        const topics = await prisma.topic.findMany({
+        topics = await prisma.topic.findMany({
           where: {
             id: { in: input.topicIds },
             userId: ctx.userId,
           },
-          select: { name: true },
+          select: { name: true, description: true },
         });
-        topicNames = topics.map((t) => t.name);
       }
 
       try {
@@ -67,7 +66,7 @@ export const scriptGenerationsRouter = createTRPCRouter({
           prompt: input.prompt,
           length: input.length,
           language: input.language,
-          topicNames,
+          topics,
         });
 
         const generation = await prisma.scriptGeneration.create({

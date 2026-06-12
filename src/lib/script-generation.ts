@@ -1,29 +1,23 @@
 import "server-only";
 
 import { env } from "@/lib/env";
-import {
-  getScriptLanguageLabel,
-  type ScriptLanguageCode,
-} from "@/lib/script-languages";
+import { type ScriptLanguageCode } from "@/lib/script-languages";
 
 import { GEMINI_SCRIPT_MODEL } from "./gemini";
 import { generateText } from "./llm";
 import { VERCEL_GATEWAY_MODEL } from "./llm/vercel-gateway";
+import {
+  buildScriptGenerationPrompt,
+  SCRIPT_GENERATION_LENGTHS,
+  type ScriptGenerationLength,
+  type ScriptGenerationTopic,
+} from "./script-generation-prompt";
 
-export const SCRIPT_GENERATION_LENGTHS = ["short", "medium", "long"] as const;
-
-export type ScriptGenerationLength = (typeof SCRIPT_GENERATION_LENGTHS)[number];
-
-const DURATION_BY_LENGTH: Record<ScriptGenerationLength, string> = {
-  short: "30 seconds",
-  medium: "1 minute",
-  long: "5 minutes",
-};
-
-const WORD_COUNT_BY_LENGTH: Record<ScriptGenerationLength, number> = {
-  short: 75,
-  medium: 150,
-  long: 750,
+export {
+  buildScriptGenerationPrompt,
+  SCRIPT_GENERATION_LENGTHS,
+  type ScriptGenerationLength,
+  type ScriptGenerationTopic,
 };
 
 export function getScriptGenerationModel(): string {
@@ -35,42 +29,13 @@ type GenerateScriptDraftInput = {
   prompt: string;
   length: ScriptGenerationLength;
   language: ScriptLanguageCode;
-  topicNames?: string[];
+  topics?: ScriptGenerationTopic[];
 };
 
 type ScriptDraft = {
   title: string;
   content: string;
 };
-
-export function buildScriptGenerationPrompt({
-  prompt,
-  length,
-  language,
-  topicNames,
-}: GenerateScriptDraftInput): string {
-  const languageLabel = getScriptLanguageLabel(language);
-  const wordCount = WORD_COUNT_BY_LENGTH[length];
-  const duration = DURATION_BY_LENGTH[length];
-
-  const topicLine =
-    topicNames && topicNames.length > 0
-      ? `\nRelated topics: ${topicNames.join(", ")}\n`
-      : "";
-
-  return `You are writing a shadowing practice script for language learners.
-
-Write natural spoken prose in ${languageLabel} (${language}) that a learner can read aloud.
-Target approximately ${wordCount} words (${duration} when spoken at a natural pace).
-The script should be engaging, clear, and suitable for pronunciation practice.
-Structure the content in paragraphs where natural, separating paragraphs with blank lines.
-
-Topic or instructions from the author:
-${prompt}
-${topicLine}
-Respond with ONLY valid JSON in this exact shape (no markdown, no extra keys):
-{"title":"A short descriptive title","content":"The full script text"}`;
-}
 
 function parseGeneratedScript(text: string): ScriptDraft {
   const trimmed = text.trim();

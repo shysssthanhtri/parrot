@@ -1,20 +1,46 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+# Project context shown to AI when creating OpenSpec artifacts.
+context: |
+  **Product:** Parrot is a web application for language shadowing — end users listen to and repeat along with spoken content to practice pronunciation, rhythm, and fluency.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  **Content pipeline (CMS):** Authors automate content creation through a linear flow:
+  - **Topics** — categorize scripts (name, description, color); optional AI assists for metadata.
+  - **Scripts** — shadowing text, often AI-generated from topics and author prompts; linked to one or more topics.
+  - **Speeches** — TTS audio generated from scripts via async jobs (Chatterbox API), with alignment and preview playback.
+
+  **Surfaces:** Public routes (sign in / sign up) and an authenticated **CMS** at `/cms` for managing voices, topics, scripts, and speeches.
+
+  **Tech stack:** Next.js 16 (App Router), React 19, TypeScript, tRPC, Prisma + PostgreSQL, NextAuth, Tailwind CSS + shadcn/ui, Zod, TanStack Query.
+
+  **Integrations:** Chatterbox TTS (OpenAPI client in `src/lib/chatterbox`), LLM provider strategy for script/topic AI (`src/lib/llm`), Cloudflare R2 or local storage for audio, Vercel Queues for async speech TTS jobs.
+
+  **Conventions:** Server-only for secrets and external APIs; tRPC routers in `src/trpc/routers/`; CMS pages under `src/app/(cms)/`; specs live in `openspec/specs/` (kebab-case capability names). Prefer extending existing patterns over new abstractions.
+
+# Per-artifact rules for AI artifact generation.
+rules:
+  proposal:
+    - Frame problems in terms of the topics → scripts → speeches pipeline and end-user shadowing experience when relevant.
+    - Check `openspec/specs/` before listing capabilities; reuse existing spec names for modifications, kebab-case for new ones.
+    - Keep proposals concise (1–2 pages). Focus on why and what, not how.
+    - Always include Impact (APIs, CMS UI, background jobs, storage, dependencies).
+    - Mark breaking changes explicitly with **BREAKING**.
+
+  design:
+    - Include Goals / Non-Goals, Decisions (with alternatives considered), Risks / Trade-offs, and Migration Plan when applicable.
+    - Reference concrete file paths and existing patterns to mirror (e.g. `topics.suggestColor`, Chatterbox client, queue handlers).
+    - Do not propose schema changes unless the proposal requires them; call out when no migration is needed.
+    - Prefer server-side validation, explicit user actions for LLM calls, and user-safe error messages.
+
+  specs:
+    - Use requirement language (SHALL / MUST) and `#### Scenario:` blocks with **WHEN** / **THEN** bullets.
+    - Name capabilities in kebab-case matching `openspec/specs/<name>/spec.md`.
+    - Spec behavior for CMS features under authenticated CMS users unless stated otherwise.
+    - Delta specs in changes describe only added or modified requirements, not full rewrites.
+
+  tasks:
+    - Group tasks by area (API, CMS UI, background jobs, etc.).
+    - Reference specific files and symbols (routers, components, lib modules).
+    - Do not add tasks for writing tests (unit, integration, or e2e).
+    - Do not add tasks for smoke tests, manual verification, or lint/typecheck runs.
+    - Keep each task independently completable; avoid tasks larger than a few hours of work.

@@ -99,6 +99,18 @@ export function TopicForm(props: TopicFormProps) {
     })
   );
 
+  const suggestDescriptionMutation = useMutation(
+    trpc.topics.suggestDescription.mutationOptions({
+      onSuccess: (data) => {
+        setDescription(data.description);
+        toast.success("Description suggested!");
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to suggest description");
+      },
+    })
+  );
+
   const isPending =
     props.mode === "create"
       ? createMutation.isPending
@@ -150,7 +162,25 @@ export function TopicForm(props: TopicFormProps) {
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="topic-description">Description</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="topic-description">Description</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!name.trim() || suggestDescriptionMutation.isPending}
+                onClick={() =>
+                  suggestDescriptionMutation.mutate({
+                    name: name.trim(),
+                  })
+                }
+              >
+                <Sparkles className="mr-1 h-3.5 w-3.5" />
+                {suggestDescriptionMutation.isPending
+                  ? "Suggesting…"
+                  : "Suggest with AI"}
+              </Button>
+            </div>
             <Textarea
               id="topic-description"
               name="description"
