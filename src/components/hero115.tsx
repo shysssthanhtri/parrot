@@ -9,6 +9,7 @@ interface Image {
   src: string;
   alt: string;
   srcDark?: string;
+  srcMobile?: string;
 }
 interface Button {
   text: string;
@@ -63,6 +64,11 @@ const Hero115 = (props: Props) => {
     ...props,
   };
 
+  const desktopImageClassName =
+    "mx-auto aspect-3/4 h-full max-h-[524px] w-full max-w-5xl rounded-lg border border-border object-cover object-top-left md:aspect-video md:object-top";
+  const mobileImageClassName =
+    "mx-auto h-auto w-full max-w-5xl rounded-lg border border-border md:hidden";
+
   return (
     <section className={cn("overflow-hidden py-32", className)}>
       <div className="container mx-auto">
@@ -107,19 +113,31 @@ const Hero115 = (props: Props) => {
               )}
             </div>
           </div>
+          {image.srcMobile && (
+            /* eslint-disable-next-line @next/next/no-img-element -- shadcnblocks hero uses external CDN images */
+            <img
+              src={image.srcMobile}
+              alt={image.alt}
+              className={mobileImageClassName}
+            />
+          )}
           {image.srcDark ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element -- shadcnblocks hero uses external CDN images */}
               <img
                 src={image.src}
                 alt={image.alt}
-                className="mx-auto aspect-3/4 h-full max-h-[524px] w-full max-w-5xl rounded-lg border border-border object-cover object-top-left md:aspect-video md:object-top dark:hidden"
+                className={cn(
+                  desktopImageClassName,
+                  "dark:hidden",
+                  image.srcMobile && "hidden md:block"
+                )}
               />
               {/* eslint-disable-next-line @next/next/no-img-element -- shadcnblocks hero uses external CDN images */}
               <img
                 src={image.srcDark}
                 alt={image.alt}
-                className="mx-auto hidden aspect-3/4 h-full max-h-[524px] w-full max-w-5xl rounded-lg border border-border object-cover object-top-left md:aspect-video md:object-top dark:block"
+                className={cn(desktopImageClassName, "hidden md:dark:block")}
               />
             </>
           ) : (
@@ -127,7 +145,10 @@ const Hero115 = (props: Props) => {
             <img
               src={image.src}
               alt={image.alt}
-              className="mx-auto aspect-3/4 h-full max-h-[524px] w-full max-w-5xl rounded-lg border border-border object-cover object-top-left md:aspect-video md:object-top"
+              className={cn(
+                desktopImageClassName,
+                image.srcMobile && "hidden md:block"
+              )}
             />
           )}
         </div>

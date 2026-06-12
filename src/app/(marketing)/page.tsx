@@ -7,6 +7,7 @@ import { JsonLd } from "@/components/json-ld";
 import {
   getSiteUrl,
   LANDING_DESCRIPTION,
+  LANDING_HERO_MOBILE_IMAGE_PATH,
   LANDING_TITLE,
   OG_IMAGE_PATH,
   SITE_NAME,
@@ -70,6 +71,7 @@ export default function LandingPage() {
         byline={undefined}
         image={{
           src: OG_IMAGE_PATH,
+          srcMobile: LANDING_HERO_MOBILE_IMAGE_PATH,
           alt: "Language learner practicing shadowing with Parrot",
         }}
       />

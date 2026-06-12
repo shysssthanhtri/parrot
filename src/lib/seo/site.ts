@@ -13,6 +13,8 @@ export const LANDING_DESCRIPTION =
 
 export const OG_IMAGE_PATH = "/og-image.png";
 
+export const LANDING_HERO_MOBILE_IMAGE_PATH = "/ob-image-mobile.png";
+
 export const PUBLIC_SITEMAP_ROUTES = [
   ROUTES.PUBLIC.HOME,
   ROUTES.PUBLIC.SIGNIN,
