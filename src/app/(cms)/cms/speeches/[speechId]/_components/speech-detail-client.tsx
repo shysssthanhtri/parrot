@@ -16,7 +16,7 @@ import { useTRPC } from "@/trpc/client";
 import { SpeechDeleteButton } from "./speech-delete-button";
 import { SpeechDetail } from "./speech-detail";
 
-const POLL_INTERVAL_MS = 60_000;
+const POLL_INTERVAL_MS = 10_000;
 
 type SpeechDetailClientProps = {
   speechId: string;
