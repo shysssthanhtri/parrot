@@ -4,6 +4,9 @@ import { z } from "zod";
 const llmProviderSchema = z.enum(["vercel-ai-gateway", "gemini"]);
 
 export const env = createEnv({
+  client: {
+    NEXT_PUBLIC_APP_URL: z.url().optional(),
+  },
   server: {
     AUTH_SECRET: z.string().min(1),
     AUTH_GOOGLE_ID: z.string().min(1),
@@ -22,7 +25,9 @@ export const env = createEnv({
     CHATTERBOX_API_URL: z.url(),
     CHATTERBOX_API_KEY: z.string().min(1),
   },
-  experimental__runtimeEnv: {},
+  experimental__runtimeEnv: {
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  },
   emptyStringAsUndefined: true,
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   createFinalSchema: (shape, isServer) =>

@@ -5,6 +5,12 @@ import { Geist_Mono, Inter } from "next/font/google";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import {
+  getSiteUrl,
+  OG_IMAGE_PATH,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+} from "@/lib/seo/site";
 import { TRPCReactProvider } from "@/trpc/client";
 
 const inter = Inter({
@@ -18,11 +24,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "Parrot",
+    default: SITE_NAME,
     template: "%s | Parrot",
   },
-  description: "Learn languages by shadowing native speakers with Parrot.",
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: [OG_IMAGE_PATH],
+  },
+  twitter: {
+    card: "summary_large_image",
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({

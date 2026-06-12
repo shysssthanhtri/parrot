@@ -3,20 +3,60 @@ import type { Metadata } from "next";
 
 import { ROUTES } from "@/app/configs/routes";
 import { Hero115 } from "@/components/hero115";
+import { JsonLd } from "@/components/json-ld";
+import {
+  getSiteUrl,
+  LANDING_DESCRIPTION,
+  LANDING_TITLE,
+  OG_IMAGE_PATH,
+  SITE_NAME,
+} from "@/lib/seo/site";
 
 import { HowItWorks } from "./_components/how-it-works";
 
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Parrot — Language shadowing practice",
-  description:
-    "Learn languages by shadowing native speakers. Browse speeches, listen along, and practice out loud with Parrot.",
+  title: {
+    absolute: LANDING_TITLE,
+  },
+  description: LANDING_DESCRIPTION,
+  openGraph: {
+    title: LANDING_TITLE,
+    description: LANDING_DESCRIPTION,
+    images: [{ url: OG_IMAGE_PATH, width: 1200, height: 630 }],
+  },
+  twitter: {
+    title: LANDING_TITLE,
+    description: LANDING_DESCRIPTION,
+    images: [OG_IMAGE_PATH],
+  },
+};
+
+const landingStructuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      name: SITE_NAME,
+      url: getSiteUrl(),
+      description: LANDING_DESCRIPTION,
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: SITE_NAME,
+      url: getSiteUrl(),
+      description: LANDING_DESCRIPTION,
+      applicationCategory: "EducationalApplication",
+      operatingSystem: "Web",
+    },
+  ],
 };
 
 export default function LandingPage() {
   return (
     <>
+      <JsonLd data={landingStructuredData} />
       <Hero115
         icon={<Mic className="size-6" />}
         heading="Learn languages by shadowing native speakers"
