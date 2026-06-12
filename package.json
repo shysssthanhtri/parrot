@@ -42,6 +42,7 @@
     "@vercel/queue": "^0.3.0",
     "@wavesurfer/react": "^1.0.12",
     "ai": "^6.0.198",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "client-only": "^0.0.1",
     "clsx": "^2.1.1",
