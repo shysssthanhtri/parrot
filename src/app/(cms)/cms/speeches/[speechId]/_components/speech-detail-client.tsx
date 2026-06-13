@@ -84,21 +84,6 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
     })
   );
 
-  const unpublishAndRegenerateMutation = useMutation(
-    trpc.speechPublications.unpublishAndRegenerate.mutationOptions({
-      onSuccess: () => {
-        setAudioUrlResetVersion((version) => version + 1);
-        toast.success("Speech unpublished and regeneration started");
-        refetchSpeech();
-      },
-      onError: (error) => {
-        toast.error(
-          error.message || "Failed to unpublish and regenerate speech"
-        );
-      },
-    })
-  );
-
   if (speechQuery.isLoading) {
     return (
       <div className="flex items-center justify-center py-16 text-muted-foreground">
@@ -157,12 +142,8 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
         isRegenerating={regenerateMutation.isPending}
         onPublish={() => publishMutation.mutate({ id: speechId })}
         onUnpublish={() => unpublishMutation.mutate({ id: speechId })}
-        onUnpublishAndRegenerate={() =>
-          unpublishAndRegenerateMutation.mutate({ id: speechId })
-        }
         isPublishing={publishMutation.isPending}
         isUnpublishing={unpublishMutation.isPending}
-        isUnpublishAndRegenerating={unpublishAndRegenerateMutation.isPending}
       />
       <SpeechDeleteButton
         speechId={speechId}

@@ -3,11 +3,11 @@ import "server-only";
 import { TRPCError } from "@trpc/server";
 
 import { SpeechPublicationStatus } from "@/generated/prisma/client";
+import { assertSpeechReadyToPublish } from "@/lib/speech-publish-readiness";
 import {
   type SpeechScriptAlignment,
   speechScriptAlignmentSchema,
 } from "@/lib/speech-script-alignment";
-import { objectExists } from "@/lib/storage";
 import { prisma } from "@/prisma";
 
 export type PublicationStatus = "not_published" | SpeechPublicationStatus;
@@ -16,6 +16,8 @@ export type SpeechForPublicationSnapshot = {
   processStatus: string;
   alignment: unknown;
   r2ObjectKey: string;
+  thumbnailProcessStatus: string;
+  thumbnailR2ObjectKey: string | null;
   language: string;
   script: {
     title: string;
@@ -33,6 +35,7 @@ export type PublicationSnapshot = {
   language: string;
   alignment: SpeechScriptAlignment;
   r2ObjectKey: string;
+  thumbnailR2ObjectKey: string;
   voiceName: string;
   topicIds: string[];
 };
@@ -66,35 +69,16 @@ export async function assertSpeechNotPublished(speechId: string) {
 export async function buildPublicationSnapshot(
   speech: SpeechForPublicationSnapshot
 ): Promise<PublicationSnapshot> {
-  if (speech.processStatus !== "finished") {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "Only finished speeches can be published.",
-    });
-  }
-
-  if (speech.alignment == null) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "Speech alignment is required before publishing.",
-    });
-  }
+  await assertSpeechReadyToPublish(speech);
 
   const alignmentResult = speechScriptAlignmentSchema.safeParse(
     speech.alignment
   );
 
-  if (!alignmentResult.success) {
+  if (!alignmentResult.success || !speech.thumbnailR2ObjectKey) {
     throw new TRPCError({
       code: "BAD_REQUEST",
-      message: "Speech alignment is invalid.",
-    });
-  }
-
-  if (!(await objectExists(speech.r2ObjectKey))) {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "Final speech audio is missing.",
+      message: "Speech is not ready to publish.",
     });
   }
 
@@ -104,6 +88,7 @@ export async function buildPublicationSnapshot(
     language: speech.language,
     alignment: alignmentResult.data,
     r2ObjectKey: speech.r2ObjectKey,
+    thumbnailR2ObjectKey: speech.thumbnailR2ObjectKey,
     voiceName: speech.voice.name,
     topicIds: speech.script.topics.map((topic) => topic.id),
   };

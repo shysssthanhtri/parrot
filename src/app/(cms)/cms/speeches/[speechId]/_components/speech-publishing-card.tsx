@@ -26,25 +26,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import { SpeechUnpublishAndRegenerateButton } from "./speech-unpublish-and-regenerate-button";
-
 type SpeechPublishingCardProps = {
   scriptTitle: string;
   processStatus: string;
   publication: PublicationSummary;
   onPublish: () => void;
   onUnpublish: () => void;
-  onUnpublishAndRegenerate: () => void;
   isPublishing?: boolean;
   isUnpublishing?: boolean;
-  isUnpublishAndRegenerating?: boolean;
 };
 
 const PUBLICATION_STATUS_COPY: Record<PublicationSummary["status"], string> = {
   not_published:
     "This speech is not visible to learners. Publish when audio generation is finished.",
   published:
-    "This speech is live in the learner catalog. Unpublish to hide it or regenerate audio.",
+    "This speech is live in the learner catalog. Unpublish to hide it from learners.",
   unpublished:
     "This speech was previously published and is now hidden from learners.",
 };
@@ -62,10 +58,8 @@ export function SpeechPublishingCard({
   publication,
   onPublish,
   onUnpublish,
-  onUnpublishAndRegenerate,
   isPublishing = false,
   isUnpublishing = false,
-  isUnpublishAndRegenerating = false,
 }: SpeechPublishingCardProps) {
   const [unpublishOpen, setUnpublishOpen] = useState(false);
   const isFinished = processStatus === "finished";
@@ -105,7 +99,7 @@ export function SpeechPublishingCard({
                   <Button
                     type="button"
                     variant="outline"
-                    disabled={isUnpublishing || isUnpublishAndRegenerating}
+                    disabled={isUnpublishing}
                   >
                     {isUnpublishing ? "Unpublishing…" : "Unpublish"}
                   </Button>
@@ -133,11 +127,6 @@ export function SpeechPublishingCard({
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-              <SpeechUnpublishAndRegenerateButton
-                scriptTitle={scriptTitle}
-                onUnpublishAndRegenerate={onUnpublishAndRegenerate}
-                isUnpublishAndRegenerating={isUnpublishAndRegenerating}
-              />
             </>
           )}
         </div>

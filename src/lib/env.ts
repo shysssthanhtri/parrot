@@ -24,6 +24,8 @@ export const env = createEnv({
     GEMINI_API_KEY: z.string().min(1).optional(),
     CHATTERBOX_API_URL: z.url(),
     CHATTERBOX_API_KEY: z.string().min(1),
+    THUMBNAIL_API_URL: z.url(),
+    THUMBNAIL_API_KEY: z.string().min(1),
   },
   experimental__runtimeEnv: {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,

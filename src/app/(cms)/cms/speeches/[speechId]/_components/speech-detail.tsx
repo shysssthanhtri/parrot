@@ -68,10 +68,8 @@ type SpeechDetailProps = {
   isRegenerating?: boolean;
   onPublish?: () => void;
   onUnpublish?: () => void;
-  onUnpublishAndRegenerate?: () => void;
   isPublishing?: boolean;
   isUnpublishing?: boolean;
-  isUnpublishAndRegenerating?: boolean;
 };
 
 function formatTimestamp(date: Date) {
@@ -244,10 +242,8 @@ export function SpeechDetail({
   isRegenerating,
   onPublish,
   onUnpublish,
-  onUnpublishAndRegenerate,
   isPublishing,
   isUnpublishing,
-  isUnpublishAndRegenerating,
 }: SpeechDetailProps) {
   return (
     <div className="flex flex-col gap-6">
@@ -303,17 +299,15 @@ export function SpeechDetail({
         isRegenerating={isRegenerating}
       />
 
-      {onPublish && onUnpublish && onUnpublishAndRegenerate ? (
+      {onPublish && onUnpublish ? (
         <SpeechPublishingCard
           scriptTitle={speech.script.title}
           processStatus={speech.processStatus}
           publication={speech.publication}
           onPublish={onPublish}
           onUnpublish={onUnpublish}
-          onUnpublishAndRegenerate={onUnpublishAndRegenerate}
           isPublishing={isPublishing}
           isUnpublishing={isUnpublishing}
-          isUnpublishAndRegenerating={isUnpublishAndRegenerating}
         />
       ) : null}
     </div>

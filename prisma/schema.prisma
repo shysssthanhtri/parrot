@@ -137,6 +137,9 @@ model Speech {
   alignment         Json?
   processStatus     String  @default("pending")
   errorMessage      String?
+  thumbnailR2ObjectKey   String?
+  thumbnailProcessStatus String  @default("pending")
+  thumbnailErrorMessage  String?
   totalChunks           Int       @default(0)
   settledChunks         Int       @default(0)
   processingStartedAt   DateTime?
@@ -169,6 +172,7 @@ model SpeechPublication {
   language    String
   alignment   Json
   r2ObjectKey String
+  thumbnailR2ObjectKey String?
   voiceName   String
   topicIds    String[]
 

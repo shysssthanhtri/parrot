@@ -8,6 +8,7 @@ import {
   SCRIPT_LANGUAGE_CODES,
 } from "@/lib/script-languages";
 import { assertSpeechNotPublished } from "@/lib/speech-publication";
+import { getPublishReadinessIssues } from "@/lib/speech-publish-readiness";
 import {
   assertSpeechCanRegenerate,
   canRegenerateSpeech,
@@ -15,12 +16,14 @@ import {
 } from "@/lib/speech-regenerate";
 import type { SpeechScriptAlignment } from "@/lib/speech-script-alignment";
 import { SPEECH_SLIDERS } from "@/lib/speech-sliders";
+import { enqueueSpeechThumbnail } from "@/lib/speech-thumbnail-jobs";
 import { enqueueSpeechTtsStart } from "@/lib/speech-tts-jobs";
 import {
   deleteObjects,
   getAudioUrl,
   objectExists,
   speechObjectKeyForId,
+  speechThumbnailObjectKey,
 } from "@/lib/storage";
 import { prisma } from "@/prisma";
 
@@ -167,12 +170,39 @@ export const speechesRouter = createTRPCRouter({
       };
     }),
 
+  getPublishReadiness: cmsProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input }) => {
+      const speech = await prisma.speech.findUnique({
+        where: { id: input.id },
+        select: {
+          processStatus: true,
+          alignment: true,
+          r2ObjectKey: true,
+          thumbnailProcessStatus: true,
+          thumbnailR2ObjectKey: true,
+        },
+      });
+
+      if (!speech) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Speech not found: ${input.id}`,
+        });
+      }
+
+      const issues = await getPublishReadinessIssues(speech);
+
+      return { issues };
+    }),
+
   create: cmsProcedure
     .input(speechCreateInputSchema)
     .mutation(async ({ input, ctx }) => {
       const { script } = await loadValidatedSpeechInputs(input);
       const id = randomUUID();
       const r2ObjectKey = speechObjectKeyForId(id);
+      const thumbnailR2ObjectKey = speechThumbnailObjectKey(id);
 
       const speech = await prisma.speech.create({
         data: {
@@ -187,13 +217,17 @@ export const speechesRouter = createTRPCRouter({
           repetitionPenalty: input.repetitionPenalty,
           normLoudness: input.normLoudness,
           r2ObjectKey,
+          thumbnailR2ObjectKey,
           processStatus: "pending",
           userId: ctx.userId,
         },
         include: speechListInclude,
       });
 
-      await enqueueSpeechTtsStart(id);
+      await Promise.all([
+        enqueueSpeechTtsStart(id),
+        enqueueSpeechThumbnail(id),
+      ]);
 
       return speech;
     }),
@@ -270,6 +304,43 @@ export const speechesRouter = createTRPCRouter({
       });
     }),
 
+  regenerateThumbnail: cmsProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input }) => {
+      const speech = await prisma.speech.findUnique({
+        where: { id: input.id },
+        select: { thumbnailR2ObjectKey: true },
+      });
+
+      if (!speech) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Speech not found: ${input.id}`,
+        });
+      }
+
+      await assertSpeechNotPublished(input.id);
+
+      if (speech.thumbnailR2ObjectKey) {
+        await deleteObjects([speech.thumbnailR2ObjectKey]);
+      }
+
+      await prisma.speech.update({
+        where: { id: input.id },
+        data: {
+          thumbnailProcessStatus: "pending",
+          thumbnailErrorMessage: null,
+        },
+      });
+
+      await enqueueSpeechThumbnail(input.id);
+
+      return prisma.speech.findUniqueOrThrow({
+        where: { id: input.id },
+        include: speechListInclude,
+      });
+    }),
+
   delete: cmsProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input }) => {
@@ -289,6 +360,7 @@ export const speechesRouter = createTRPCRouter({
 
       const storageKeys = [
         speech.r2ObjectKey,
+        ...(speech.thumbnailR2ObjectKey ? [speech.thumbnailR2ObjectKey] : []),
         ...speech.chunks.map((chunk) => chunk.tempR2Key),
       ];
 

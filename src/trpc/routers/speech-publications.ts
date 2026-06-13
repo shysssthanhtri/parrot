@@ -1,13 +1,11 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { Prisma, SpeechPublicationStatus } from "@/generated/prisma/client";
+import { SpeechPublicationStatus } from "@/generated/prisma/client";
 import { SCRIPT_LANGUAGE_CODES } from "@/lib/script-languages";
 import { buildPublicationSnapshot } from "@/lib/speech-publication";
-import { assertSpeechCanRegenerate } from "@/lib/speech-regenerate";
 import type { SpeechScriptAlignment } from "@/lib/speech-script-alignment";
-import { enqueueSpeechTtsStart } from "@/lib/speech-tts-jobs";
-import { deleteObjects, getAudioUrl, objectExists } from "@/lib/storage";
+import { getAudioUrl, objectExists } from "@/lib/storage";
 import { prisma } from "@/prisma";
 
 import { authProcedure, cmsProcedure, createTRPCRouter } from "../init";
@@ -108,76 +106,6 @@ export const speechPublicationsRouter = createTRPCRouter({
       return prisma.speechPublication.update({
         where: { speechId: input.id },
         data: { status: SpeechPublicationStatus.unpublished },
-      });
-    }),
-
-  unpublishAndRegenerate: cmsProcedure
-    .input(speechIdInputSchema)
-    .mutation(async ({ input }) => {
-      const speech = await prisma.speech.findUnique({
-        where: { id: input.id },
-        include: {
-          chunks: true,
-          publication: true,
-        },
-      });
-
-      if (!speech) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: `Speech not found: ${input.id}`,
-        });
-      }
-
-      if (
-        !speech.publication ||
-        speech.publication.status !== SpeechPublicationStatus.published
-      ) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message:
-            "Only published speeches can be unpublished and regenerated.",
-        });
-      }
-
-      assertSpeechCanRegenerate(speech);
-
-      const storageKeys = [
-        ...speech.chunks.map((chunk) => chunk.tempR2Key),
-        speech.r2ObjectKey,
-      ];
-
-      if (storageKeys.length > 0) {
-        await deleteObjects(storageKeys);
-      }
-
-      await prisma.$transaction(async (tx) => {
-        await tx.speechPublication.update({
-          where: { speechId: input.id },
-          data: { status: SpeechPublicationStatus.unpublished },
-        });
-        await tx.speechChunk.deleteMany({ where: { speechId: input.id } });
-        await tx.speech.update({
-          where: { id: input.id },
-          data: {
-            processStatus: "pending",
-            errorMessage: null,
-            totalChunks: 0,
-            settledChunks: 0,
-            processingStartedAt: null,
-            alignment: Prisma.DbNull,
-          },
-        });
-      });
-
-      await enqueueSpeechTtsStart(input.id);
-
-      return prisma.speech.findUniqueOrThrow({
-        where: { id: input.id },
-        include: {
-          voice: { select: { name: true } },
-          script: { select: { title: true } },
-        },
       });
     }),
 

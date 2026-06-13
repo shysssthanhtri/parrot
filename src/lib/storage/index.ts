@@ -21,11 +21,15 @@ export { readLocalObject } from "./local";
 export {
   isSpeechChunkObjectKey,
   isSpeechObjectKey,
+  isSpeechThumbnailObjectKey,
   SPEECH_AUDIO_CONTENT_TYPE,
+  SPEECH_THUMBNAIL_CONTENT_TYPE,
   speechChunkObjectKey,
   speechChunkObjectKeyMatches,
   speechObjectKeyForId,
   speechObjectKeyMatchesId,
+  speechThumbnailObjectKey,
+  speechThumbnailObjectKeyMatchesId,
 } from "./speech-keys";
 
 export const uploadObject = async (
