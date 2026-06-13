@@ -1,10 +1,10 @@
 import "server-only";
 
-import { getScriptLanguageLabel } from "@/lib/script-languages";
 import { generateThumbnail } from "@/lib/thumbnail/generateThumbnail";
 import { prisma } from "@/prisma";
 
 import { markSpeechThumbnailFailed } from "./speech-thumbnail-jobs";
+import { buildSpeechThumbnailPrompt } from "./speech-thumbnail-prompt";
 import {
   SPEECH_THUMBNAIL_CONTENT_TYPE,
   speechThumbnailObjectKey,
@@ -12,6 +12,11 @@ import {
 } from "./storage";
 
 export const SPEECH_THUMBNAIL_MAX_QUEUE_ATTEMPTS = 3;
+export {
+  buildSpeechThumbnailPrompt,
+  SPEECH_THUMBNAIL_PROMPT_MAX_LENGTH,
+  truncateForThumbnailPrompt,
+} from "./speech-thumbnail-prompt";
 
 const THUMBNAIL_FAILURE_MESSAGE =
   "Thumbnail generation failed. Please try again.";
@@ -23,29 +28,13 @@ type SpeechThumbnailContext = {
   thumbnailProcessStatus: string;
   script: {
     title: string;
+    content: string;
     topics: {
       name: string;
       color: string;
     }[];
   };
 };
-
-export function buildSpeechThumbnailPrompt(speech: SpeechThumbnailContext) {
-  const languageLabel = getScriptLanguageLabel(speech.language);
-  const topicHint =
-    speech.script.topics.length > 0
-      ? `Themes: ${speech.script.topics
-          .map((topic) => `${topic.name} (${topic.color})`)
-          .join(", ")}. `
-      : "";
-
-  return [
-    `Editorial portrait cover art for a language-learning speech titled "${speech.script.title}".`,
-    topicHint,
-    `Inspired by ${languageLabel} language learning.`,
-    "Soft cinematic lighting, abstract composition, rich color, no text, no letters, no typography, no words.",
-  ].join(" ");
-}
 
 async function loadSpeechThumbnailContext(
   speechId: string
@@ -60,6 +49,7 @@ async function loadSpeechThumbnailContext(
       script: {
         select: {
           title: true,
+          content: true,
           topics: {
             select: {
               name: true,

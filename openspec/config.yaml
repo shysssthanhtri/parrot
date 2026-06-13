@@ -42,5 +42,6 @@ rules:
     - Group tasks by area (API, CMS UI, background jobs, etc.).
     - Reference specific files and symbols (routers, components, lib modules).
     - Do not add tasks for writing tests (unit, integration, or e2e).
-    - Do not add tasks for smoke tests, manual verification, or lint/typecheck runs.
+    - Do not add tasks for smoke tests, manual verification.
     - Keep each task independently completable; avoid tasks larger than a few hours of work.
+    - Add tasks for linting, type checking, and build.
