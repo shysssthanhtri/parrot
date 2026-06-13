@@ -1,10 +1,4 @@
-# cms-scripts Specification
-
-## Purpose
-
-TBD - created by archiving change scripts. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: CMS scripts list page
 
@@ -14,24 +8,6 @@ The CMS SHALL provide a page at `/cms/scripts` that displays all scripts in a sh
 
 - **WHEN** an authenticated CMS user navigates to `/cms/scripts`
 - **THEN** a table of all scripts is shown below the page header breadcrumb **Scripts**, including language and length columns with readable labels for each row
-
-### Requirement: New script entry from list
-
-The CMS scripts list page SHALL provide a control (e.g. **New script** button) that navigates to `/cms/scripts/new`.
-
-#### Scenario: Open create page
-
-- **WHEN** user clicks the new-script control on the list page
-- **THEN** the app navigates to `/cms/scripts/new`
-
-### Requirement: Navigate to script detail from list
-
-The CMS SHALL allow clicking a script table row to navigate to `/cms/scripts/{scriptId}`.
-
-#### Scenario: Row click opens detail
-
-- **WHEN** user clicks a script row in the list table
-- **THEN** the app navigates to the detail page for that script's id
 
 ### Requirement: CMS script create page
 
@@ -138,12 +114,3 @@ The CMS script create page (`/cms/scripts/new`) SHALL provide a **Generate with 
 
 - **WHEN** generation fails
 - **THEN** an error indication is shown (e.g. toast) and the form retains its previous field values and any prior `generationId`
-
-### Requirement: Loading UI on scripts list page
-
-While the scripts list page is loading (server data fetch in progress), the CMS SHALL display a loading UI at `/cms/scripts` that matches the list page layout: shared page header with **Scripts** breadcrumb and a table skeleton with columns for title, language, length, content snippet, and updated date.
-
-#### Scenario: Loading state during navigation
-
-- **WHEN** an authenticated CMS user navigates to `/cms/scripts` and the page content is not yet ready
-- **THEN** a skeleton loading UI is shown with the shared page header breadcrumb **Scripts** and a table-shaped placeholder matching the scripts list columns

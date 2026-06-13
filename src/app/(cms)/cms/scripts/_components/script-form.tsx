@@ -26,6 +26,10 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  SCRIPT_LENGTH_OPTIONS,
+  type ScriptGenerationLength,
+} from "@/lib/script-generation-prompt";
+import {
   DEFAULT_SCRIPT_LANGUAGE,
   SCRIPT_LANGUAGES,
   type ScriptLanguageCode,
@@ -39,6 +43,7 @@ type ScriptFormValues = {
   title: string;
   content: string;
   language: ScriptLanguageCode;
+  length: ScriptGenerationLength;
   topicIds?: string[];
 };
 
@@ -62,6 +67,7 @@ export function ScriptForm(props: ScriptFormProps) {
     title: "",
     content: "",
     language: DEFAULT_SCRIPT_LANGUAGE,
+    length: "medium" as ScriptGenerationLength,
     topicIds: [],
   };
 
@@ -69,6 +75,9 @@ export function ScriptForm(props: ScriptFormProps) {
   const [content, setContent] = useState(initialValues.content);
   const [language, setLanguage] = useState<ScriptLanguageCode>(
     initialValues.language
+  );
+  const [length, setLength] = useState<ScriptGenerationLength>(
+    initialValues.length
   );
   const [topicIds, setTopicIds] = useState<string[]>(
     initialValues.topicIds ?? []
@@ -110,6 +119,7 @@ export function ScriptForm(props: ScriptFormProps) {
       title: title.trim(),
       content: content.trim(),
       language,
+      length,
       topicIds,
     };
 
@@ -135,8 +145,8 @@ export function ScriptForm(props: ScriptFormProps) {
         </CardTitle>
         <CardDescription>
           {props.mode === "create"
-            ? "Add a title, language, and the script text learners will shadow."
-            : "Update the title, language, or script text, then save."}
+            ? "Add a title, language, target length, and the script text learners will shadow."
+            : "Update the title, language, target length, or script text, then save."}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -165,6 +175,26 @@ export function ScriptForm(props: ScriptFormProps) {
               </SelectTrigger>
               <SelectContent>
                 {SCRIPT_LANGUAGES.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="script-length">Length</Label>
+            <Select
+              value={length}
+              onValueChange={(value) =>
+                setLength(value as ScriptGenerationLength)
+              }
+            >
+              <SelectTrigger id="script-length" className="w-full">
+                <SelectValue placeholder="Select length" />
+              </SelectTrigger>
+              <SelectContent>
+                {SCRIPT_LENGTH_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
@@ -220,6 +250,7 @@ export function ScriptForm(props: ScriptFormProps) {
             open={generateDialogOpen}
             onOpenChange={setGenerateDialogOpen}
             language={language}
+            length={length}
             topicIds={topicIds}
             onGenerated={(draft) => {
               setTitle(draft.title);

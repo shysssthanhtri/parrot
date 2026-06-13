@@ -14,27 +14,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  getScriptLengthLabel,
+  type ScriptGenerationLength,
+} from "@/lib/script-generation-prompt";
 import {
   getScriptLanguageLabel,
   type ScriptLanguageCode,
 } from "@/lib/script-languages";
 import { useTRPC } from "@/trpc/client";
-
-const LENGTH_OPTIONS = [
-  { value: "short", label: "Short (~30 seconds)" },
-  { value: "medium", label: "Medium (~1 minute)" },
-  { value: "long", label: "Long (~5 minutes)" },
-] as const;
-
-type ScriptGenerationLength = (typeof LENGTH_OPTIONS)[number]["value"];
 
 type GeneratedScriptDraft = {
   title: string;
@@ -46,6 +35,7 @@ type ScriptGenerateDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   language: ScriptLanguageCode;
+  length: ScriptGenerationLength;
   topicIds?: string[];
   onGenerated: (draft: GeneratedScriptDraft) => void;
 };
@@ -54,12 +44,12 @@ export function ScriptGenerateDialog({
   open,
   onOpenChange,
   language,
+  length,
   topicIds,
   onGenerated,
 }: ScriptGenerateDialogProps) {
   const trpc = useTRPC();
   const [prompt, setPrompt] = useState("");
-  const [length, setLength] = useState<ScriptGenerationLength>("medium");
 
   const generateMutation = useMutation(
     trpc.scriptGenerations.generate.mutationOptions({
@@ -92,8 +82,8 @@ export function ScriptGenerateDialog({
           <DialogTitle>Generate with AI</DialogTitle>
           <DialogDescription>
             Describe what the script should be about. Content will be generated
-            in {getScriptLanguageLabel(language)} using your selected language
-            above.
+            in {getScriptLanguageLabel(language)} at{" "}
+            {getScriptLengthLabel(length)} using your selections above.
           </DialogDescription>
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -107,26 +97,6 @@ export function ScriptGenerateDialog({
               className="min-h-28"
               required
             />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="script-generate-length">Length</Label>
-            <Select
-              value={length}
-              onValueChange={(value) =>
-                setLength(value as ScriptGenerationLength)
-              }
-            >
-              <SelectTrigger id="script-generate-length" className="w-full">
-                <SelectValue placeholder="Select length" />
-              </SelectTrigger>
-              <SelectContent>
-                {LENGTH_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
           <DialogFooter>
             <Button

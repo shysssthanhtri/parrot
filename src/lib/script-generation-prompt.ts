@@ -7,6 +7,21 @@ export const SCRIPT_GENERATION_LENGTHS = ["short", "medium", "long"] as const;
 
 export type ScriptGenerationLength = (typeof SCRIPT_GENERATION_LENGTHS)[number];
 
+const SCRIPT_LENGTH_LABELS: Record<ScriptGenerationLength, string> = {
+  short: "Short (~30 seconds)",
+  medium: "Medium (~1 minute)",
+  long: "Long (~5 minutes)",
+};
+
+export const SCRIPT_LENGTH_OPTIONS = SCRIPT_GENERATION_LENGTHS.map((value) => ({
+  value,
+  label: SCRIPT_LENGTH_LABELS[value],
+}));
+
+export function getScriptLengthLabel(length: ScriptGenerationLength): string {
+  return SCRIPT_LENGTH_LABELS[length];
+}
+
 const DURATION_BY_LENGTH: Record<ScriptGenerationLength, string> = {
   short: "30 seconds",
   medium: "1 minute",

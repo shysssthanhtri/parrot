@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { notFound } from "next/navigation";
 
+import type { ScriptGenerationLength } from "@/lib/script-generation-prompt";
 import {
   DEFAULT_SCRIPT_LANGUAGE,
   type ScriptLanguageCode,
@@ -46,6 +47,7 @@ export default async function ScriptDetailPage({
           content: script.content,
           language:
             (script.language as ScriptLanguageCode) ?? DEFAULT_SCRIPT_LANGUAGE,
+          length: script.length as ScriptGenerationLength,
           topicIds: script.topics.map((t) => t.id),
         }}
         topics={topics}

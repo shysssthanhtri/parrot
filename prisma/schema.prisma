@@ -88,6 +88,7 @@ model Script {
   title         String
   content       String  @db.Text
   contentLength Int
+  length        String  @default("medium")
   language      String  @default("en-US")
   userId        String?
 

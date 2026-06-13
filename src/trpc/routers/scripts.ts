@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { SCRIPT_GENERATION_LENGTHS } from "@/lib/script-generation-prompt";
 import {
   DEFAULT_SCRIPT_LANGUAGE,
   SCRIPT_LANGUAGE_CODES,
@@ -14,9 +15,14 @@ const scriptLanguageSchema = z.enum(SCRIPT_LANGUAGE_CODES, {
   message: "Unsupported language",
 });
 
+const scriptLengthSchema = z.enum(SCRIPT_GENERATION_LENGTHS, {
+  message: "Unsupported length",
+});
+
 const scriptFieldsSchema = z.object({
   title: z.string().trim().min(1, "Title is required"),
   content: z.string().trim().min(1, "Content is required"),
+  length: scriptLengthSchema,
   language: scriptLanguageSchema.default(DEFAULT_SCRIPT_LANGUAGE),
 });
 
@@ -25,7 +31,7 @@ const scriptCreateSchema = scriptFieldsSchema.extend({
   topicIds: z.array(z.string()).optional(),
 });
 
-async function assertValidGenerationLink(generationId: string, userId: string) {
+async function getValidGenerationForLink(generationId: string, userId: string) {
   const generation = await prisma.scriptGeneration.findUnique({
     where: { id: generationId },
   });
@@ -41,6 +47,8 @@ async function assertValidGenerationLink(generationId: string, userId: string) {
       message: "Invalid generation link",
     });
   }
+
+  return generation;
 }
 
 export const scriptsRouter = createTRPCRouter({
@@ -77,9 +85,13 @@ export const scriptsRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { generationId, topicIds, ...fields } = input;
 
-      if (generationId) {
-        await assertValidGenerationLink(generationId, ctx.userId);
-      }
+      const generation = generationId
+        ? await getValidGenerationForLink(generationId, ctx.userId)
+        : null;
+
+      const length = generation
+        ? scriptLengthSchema.parse(generation.length)
+        : fields.length;
 
       return prisma.$transaction(async (tx) => {
         const script = await tx.script.create({
@@ -87,6 +99,7 @@ export const scriptsRouter = createTRPCRouter({
             title: fields.title,
             content: fields.content,
             contentLength: fields.content.length,
+            length,
             language: fields.language,
             userId: ctx.userId,
             ...(topicIds?.length && {
@@ -136,6 +149,7 @@ export const scriptsRouter = createTRPCRouter({
           title: fields.title,
           content: fields.content,
           contentLength: fields.content.length,
+          length: fields.length,
           language: fields.language,
           ...(topicIds !== undefined && {
             topics: {

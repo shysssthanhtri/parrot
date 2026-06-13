@@ -9,7 +9,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatContentLength } from "@/lib/content-length";
+import {
+  getScriptLengthLabel,
+  type ScriptGenerationLength,
+} from "@/lib/script-generation-prompt";
 import { getScriptLanguageLabel } from "@/lib/script-languages";
 
 type ScriptRow = {
@@ -17,7 +20,7 @@ type ScriptRow = {
   title: string;
   language: string;
   content: string;
-  contentLength: number;
+  length: string;
   updatedAt: Date;
 };
 
@@ -75,8 +78,8 @@ export function ScriptsTable({ scripts }: ScriptsTableProps) {
               </Link>
             </TableCell>
             <TableCell>{getScriptLanguageLabel(script.language)}</TableCell>
-            <TableCell className="tabular-nums text-muted-foreground">
-              {formatContentLength(script.contentLength)}
+            <TableCell className="text-muted-foreground">
+              {getScriptLengthLabel(script.length as ScriptGenerationLength)}
             </TableCell>
             <TableCell className="max-w-md truncate text-muted-foreground">
               {contentSnippet(script.content)}
