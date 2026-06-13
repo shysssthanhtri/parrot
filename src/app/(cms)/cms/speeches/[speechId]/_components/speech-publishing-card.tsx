@@ -3,6 +3,10 @@
 import { useState } from "react";
 
 import {
+  type PublicationSummary,
+  SpeechPublicationStatusBadge,
+} from "@/app/(cms)/cms/speeches/_components/speech-publication-status-badge";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -13,7 +17,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,11 +28,6 @@ import {
 
 import { SpeechUnpublishAndRegenerateButton } from "./speech-unpublish-and-regenerate-button";
 
-type PublicationSummary =
-  | { status: "not_published" }
-  | { status: "published"; publishedAt: Date | null }
-  | { status: "unpublished" };
-
 type SpeechPublishingCardProps = {
   scriptTitle: string;
   processStatus: string;
@@ -40,22 +38,6 @@ type SpeechPublishingCardProps = {
   isPublishing?: boolean;
   isUnpublishing?: boolean;
   isUnpublishAndRegenerating?: boolean;
-};
-
-const PUBLICATION_STATUS_LABELS: Record<PublicationSummary["status"], string> =
-  {
-    not_published: "Not published",
-    published: "Published",
-    unpublished: "Unpublished",
-  };
-
-const PUBLICATION_STATUS_VARIANTS: Record<
-  PublicationSummary["status"],
-  "default" | "secondary" | "outline"
-> = {
-  not_published: "secondary",
-  published: "default",
-  unpublished: "outline",
 };
 
 const PUBLICATION_STATUS_COPY: Record<PublicationSummary["status"], string> = {
@@ -101,9 +83,7 @@ export function SpeechPublishingCard({
       </CardHeader>
       <CardContent className="grid gap-4">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant={PUBLICATION_STATUS_VARIANTS[publication.status]}>
-            {PUBLICATION_STATUS_LABELS[publication.status]}
-          </Badge>
+          <SpeechPublicationStatusBadge publication={publication} />
           {publication.status === "published" && publication.publishedAt ? (
             <span className="text-sm text-muted-foreground">
               Live since {formatTimestamp(publication.publishedAt)}
@@ -171,8 +151,7 @@ export function SpeechPublishingCard({
   );
 }
 
-export function getPublicationStatusLabel(publication: PublicationSummary) {
-  return PUBLICATION_STATUS_LABELS[publication.status];
-}
-
-export type { PublicationSummary };
+export {
+  getPublicationStatusLabel,
+  type PublicationSummary,
+} from "@/app/(cms)/cms/speeches/_components/speech-publication-status-badge";

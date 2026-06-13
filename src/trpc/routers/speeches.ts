@@ -98,14 +98,34 @@ async function loadValidatedSpeechInputs(input: {
 const speechListInclude = {
   voice: { select: { name: true } },
   script: { select: { title: true } },
+  publication: { select: { status: true, publishedAt: true } },
 } as const;
+
+function toPublicationSummary(
+  publication: {
+    status: SpeechPublicationStatus;
+    publishedAt: Date | null;
+  } | null
+) {
+  return publication
+    ? {
+        status: publication.status,
+        publishedAt: publication.publishedAt,
+      }
+    : { status: "not_published" as const };
+}
 
 export const speechesRouter = createTRPCRouter({
   list: cmsProcedure.query(async () => {
-    return prisma.speech.findMany({
+    const speeches = await prisma.speech.findMany({
       orderBy: { updatedAt: "desc" },
       include: speechListInclude,
     });
+
+    return speeches.map(({ publication, ...speech }) => ({
+      ...speech,
+      publication: toPublicationSummary(publication),
+    }));
   }),
 
   getById: cmsProcedure
@@ -133,12 +153,7 @@ export const speechesRouter = createTRPCRouter({
           ? await getAudioUrl(speech.r2ObjectKey)
           : null;
 
-      const publication = speech.publication
-        ? {
-            status: speech.publication.status,
-            publishedAt: speech.publication.publishedAt,
-          }
-        : { status: "not_published" as const };
+      const publication = toPublicationSummary(speech.publication);
 
       const isPublished =
         publication.status === SpeechPublicationStatus.published;

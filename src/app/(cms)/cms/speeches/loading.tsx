@@ -27,7 +27,8 @@ export default function SpeechesLoading() {
               <TableHead>Voice</TableHead>
               <TableHead>Language</TableHead>
               <TableHead>Length</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Process</TableHead>
+              <TableHead>Publication</TableHead>
               <TableHead>Updated</TableHead>
             </TableRow>
           </TableHeader>
@@ -48,6 +49,9 @@ export default function SpeechesLoading() {
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-5 w-20 rounded-4xl" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-5 w-24 rounded-4xl" />
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-4 w-24" />

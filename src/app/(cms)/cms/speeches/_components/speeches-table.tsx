@@ -1,6 +1,10 @@
 import Link from "next/link";
 
 import { SpeechProcessStatusBadge } from "@/app/(cms)/cms/speeches/_components/speech-process-status-badge";
+import {
+  type PublicationSummary,
+  SpeechPublicationStatusBadge,
+} from "@/app/(cms)/cms/speeches/_components/speech-publication-status-badge";
 import { ROUTES } from "@/app/configs/routes";
 import {
   Table,
@@ -19,6 +23,7 @@ type SpeechRow = {
   contentLength: number;
   processStatus: string;
   updatedAt: Date;
+  publication: PublicationSummary;
   voice: { name: string };
   script: { title: string };
 };
@@ -55,7 +60,8 @@ export function SpeechesTable({ speeches }: SpeechesTableProps) {
           <TableHead>Voice</TableHead>
           <TableHead>Language</TableHead>
           <TableHead>Length</TableHead>
-          <TableHead>Status</TableHead>
+          <TableHead>Process</TableHead>
+          <TableHead>Publication</TableHead>
           <TableHead>Updated</TableHead>
         </TableRow>
       </TableHeader>
@@ -78,6 +84,9 @@ export function SpeechesTable({ speeches }: SpeechesTableProps) {
             </TableCell>
             <TableCell>
               <SpeechProcessStatusBadge status={speech.processStatus} />
+            </TableCell>
+            <TableCell>
+              <SpeechPublicationStatusBadge publication={speech.publication} />
             </TableCell>
             <TableCell>{formatUpdatedAt(speech.updatedAt)}</TableCell>
           </TableRow>

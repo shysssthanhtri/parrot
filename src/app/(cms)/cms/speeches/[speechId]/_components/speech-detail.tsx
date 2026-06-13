@@ -295,6 +295,14 @@ export function SpeechDetail({
         </CardContent>
       </Card>
 
+      <SpeechAudioSection
+        speech={speech}
+        audioUrl={audioUrl}
+        canRegenerate={canRegenerate}
+        onRegenerate={onRegenerate}
+        isRegenerating={isRegenerating}
+      />
+
       {onPublish && onUnpublish && onUnpublishAndRegenerate ? (
         <SpeechPublishingCard
           scriptTitle={speech.script.title}
@@ -308,14 +316,6 @@ export function SpeechDetail({
           isUnpublishAndRegenerating={isUnpublishAndRegenerating}
         />
       ) : null}
-
-      <SpeechAudioSection
-        speech={speech}
-        audioUrl={audioUrl}
-        canRegenerate={canRegenerate}
-        onRegenerate={onRegenerate}
-        isRegenerating={isRegenerating}
-      />
     </div>
   );
 }
