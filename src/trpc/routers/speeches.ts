@@ -156,6 +156,13 @@ export const speechesRouter = createTRPCRouter({
           ? await getAudioUrl(speech.r2ObjectKey)
           : null;
 
+      const thumbnailUrl =
+        speech.thumbnailProcessStatus === "finished" &&
+        speech.thumbnailR2ObjectKey &&
+        (await objectExists(speech.thumbnailR2ObjectKey))
+          ? await getAudioUrl(speech.thumbnailR2ObjectKey)
+          : null;
+
       const publication = toPublicationSummary(speech.publication);
 
       const isPublished =
@@ -166,6 +173,7 @@ export const speechesRouter = createTRPCRouter({
         publication,
         alignment: speech.alignment as SpeechScriptAlignment | null,
         audioUrl,
+        thumbnailUrl,
         canRegenerate: canRegenerateSpeech(speech) && !isPublished,
       };
     }),

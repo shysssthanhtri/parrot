@@ -1,10 +1,4 @@
-# cms-speech-publishing Specification
-
-## Purpose
-
-TBD - created by archiving change speech-publishing. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: CMS speech publishing card
 
@@ -49,14 +43,15 @@ The Publishing card SHALL call `speechPublications.publish` when the user activa
 - **WHEN** user clicks **Unpublish** on a published speech and confirms the dialog
 - **THEN** `speechPublications.unpublish` is called, the card updates to **Unpublished**, and a success toast is shown
 
-### Requirement: CMS delete blocked while published
+## REMOVED Requirements
 
-The **Delete speech** control on the detail page SHALL be disabled or SHALL explain that the speech must be unpublished first when publication `status` is `published`. It SHALL NOT send `speeches.delete` while the speech is live.
+### Requirement: CMS unpublish and regenerate action
 
-#### Scenario: Delete disabled for published speech
+**Reason**: Replaced by separate **Unpublish**, **Regenerate** (audio), and **Regenerate thumbnail** controls.
 
-- **WHEN** user views a speech with publication `status` `published`
-- **THEN** **Delete speech** cannot be used until the speech is unpublished
+**Migration**: Unpublish the speech, regenerate audio and/or thumbnail as needed, then publish again when readiness checks pass.
+
+## ADDED Requirements
 
 ### Requirement: Regenerate hidden while published
 

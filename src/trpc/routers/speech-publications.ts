@@ -117,7 +117,7 @@ export const speechPublicationsRouter = createTRPCRouter({
       })
     )
     .query(async ({ input }) => {
-      return prisma.speechPublication.findMany({
+      const publications = await prisma.speechPublication.findMany({
         where: {
           status: SpeechPublicationStatus.published,
           ...(input.language ? { language: input.language } : {}),
@@ -131,8 +131,23 @@ export const speechPublicationsRouter = createTRPCRouter({
           voiceName: true,
           publishedAt: true,
           topicIds: true,
+          thumbnailR2ObjectKey: true,
         },
       });
+
+      return Promise.all(
+        publications.map(async ({ thumbnailR2ObjectKey, ...publication }) => {
+          const thumbnailUrl =
+            thumbnailR2ObjectKey && (await objectExists(thumbnailR2ObjectKey))
+              ? await getAudioUrl(thumbnailR2ObjectKey)
+              : null;
+
+          return {
+            ...publication,
+            thumbnailUrl,
+          };
+        })
+      );
     }),
 
   getById: authProcedure
@@ -156,10 +171,17 @@ export const speechPublicationsRouter = createTRPCRouter({
         ? await getAudioUrl(publication.r2ObjectKey)
         : null;
 
+      const thumbnailUrl =
+        publication.thumbnailR2ObjectKey &&
+        (await objectExists(publication.thumbnailR2ObjectKey))
+          ? await getAudioUrl(publication.thumbnailR2ObjectKey)
+          : null;
+
       return {
         ...publication,
         alignment: publication.alignment as SpeechScriptAlignment,
         audioUrl,
+        thumbnailUrl,
       };
     }),
 });

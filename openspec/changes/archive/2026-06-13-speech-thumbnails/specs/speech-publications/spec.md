@@ -1,10 +1,4 @@
-# speech-publications Specification
-
-## Purpose
-
-TBD - created by archiving change speech-publishing. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Speech publication model
 
@@ -49,29 +43,6 @@ Publishing SHALL freeze a learner snapshot from the current authoring state: `ti
 - **WHEN** publish is called for a speech that fails the thumbnail readiness check
 - **THEN** the procedure returns a validation error and no publication row is created or updated
 
-### Requirement: Publication unpublish API
-
-The system SHALL expose a tRPC `speechPublications.unpublish` mutation that accepts a speech `id`. It SHALL succeed only when a publication row exists with `status` `published`. It SHALL set `status` to `unpublished` and SHALL NOT delete the row or snapshot fields.
-
-#### Scenario: Unpublish live speech
-
-- **WHEN** an authenticated CMS client unpublishes a speech with `status` `published`
-- **THEN** `status` becomes `unpublished` and learners no longer see the speech in published catalog queries
-
-#### Scenario: Unpublish rejected when not published
-
-- **WHEN** unpublish is called for a speech with no publication row or `status` `unpublished`
-- **THEN** the procedure returns a validation error
-
-### Requirement: Publication CMS lookup API
-
-The system SHALL expose a tRPC `speechPublications.getBySpeechId` query for CMS use that returns the publication row for a speech id, or `status: not_published` when no row exists.
-
-#### Scenario: CMS reads not published state
-
-- **WHEN** `getBySpeechId` is called for a speech with no publication row
-- **THEN** the response indicates `not_published`
-
 ### Requirement: Published speeches list API for learners
 
 The system SHALL expose a tRPC `speechPublications.list` query available to any authenticated user (not only CMS users). It SHALL return only rows with `status` `published`, ordered by `publishedAt` descending. It SHALL accept optional filters `language` (exact BCP-47 match) and `topicId` (publication `topicIds` contains the id). Each item SHALL include at minimum `id`, `title`, `language`, `voiceName`, `publishedAt`, `topicIds`, and a resolved `thumbnailUrl` from snapshot `thumbnailR2ObjectKey` when the object exists. It SHALL NOT expose TTS parameters, `processStatus`, chunk counters, or CMS-only authoring fields.
@@ -109,3 +80,11 @@ The system SHALL expose a tRPC `speechPublications.getById` query available to a
 
 - **WHEN** `speechPublications.getById` is called for a publication with `status` `unpublished`
 - **THEN** the procedure returns a not-found error
+
+## REMOVED Requirements
+
+### Requirement: Publication unpublish and regenerate API
+
+**Reason**: Unpublish and audio regenerate are separate author actions; the combined mutation adds complexity without clear benefit.
+
+**Migration**: CMS users unpublish via `speechPublications.unpublish`, then call `speeches.regenerate` and/or `speeches.regenerateThumbnail` as needed, then republish manually.

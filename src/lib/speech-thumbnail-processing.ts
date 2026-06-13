@@ -17,7 +17,7 @@ const THUMBNAIL_FAILURE_MESSAGE =
 type SpeechThumbnailContext = {
   id: string;
   language: string;
-  thumbnailR2ObjectKey: string | null;
+  thumbnailR2ObjectKey: string;
   thumbnailProcessStatus: string;
   script: {
     title: string;
@@ -77,7 +77,10 @@ async function loadSpeechThumbnailContext(
     throw new Error(`Speech has no thumbnail key: ${speechId}`);
   }
 
-  return speech;
+  return {
+    ...speech,
+    thumbnailR2ObjectKey: speech.thumbnailR2ObjectKey,
+  };
 }
 
 async function convertPngToWebp(png: Buffer): Promise<Buffer> {
@@ -112,10 +115,9 @@ export async function runSpeechThumbnail(
     const prompt = buildSpeechThumbnailPrompt(speech);
     const png = await generateThumbnail({ prompt });
     const webp = await convertPngToWebp(png);
-    const thumbnailR2ObjectKey = speech.thumbnailR2ObjectKey;
 
     await uploadObject(
-      thumbnailR2ObjectKey,
+      speech.thumbnailR2ObjectKey,
       webp,
       SPEECH_THUMBNAIL_CONTENT_TYPE
     );

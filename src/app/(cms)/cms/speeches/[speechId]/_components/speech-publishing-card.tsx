@@ -28,8 +28,8 @@ import {
 
 type SpeechPublishingCardProps = {
   scriptTitle: string;
-  processStatus: string;
   publication: PublicationSummary;
+  publishReadinessIssues: { code: string; message: string }[];
   onPublish: () => void;
   onUnpublish: () => void;
   isPublishing?: boolean;
@@ -54,18 +54,20 @@ function formatTimestamp(date: Date) {
 
 export function SpeechPublishingCard({
   scriptTitle,
-  processStatus,
   publication,
+  publishReadinessIssues,
   onPublish,
   onUnpublish,
   isPublishing = false,
   isUnpublishing = false,
 }: SpeechPublishingCardProps) {
   const [unpublishOpen, setUnpublishOpen] = useState(false);
-  const isFinished = processStatus === "finished";
   const isPublished = publication.status === "published";
   const canPublish =
-    isFinished && !isPublished && !isPublishing && !isUnpublishing;
+    !isPublished &&
+    publishReadinessIssues.length === 0 &&
+    !isPublishing &&
+    !isUnpublishing;
 
   return (
     <Card>
@@ -130,10 +132,12 @@ export function SpeechPublishingCard({
             </>
           )}
         </div>
-        {!isFinished ? (
-          <p className="text-sm text-muted-foreground">
-            Publishing requires finished audio generation.
-          </p>
+        {publishReadinessIssues.length > 0 && !isPublished ? (
+          <ul className="grid gap-1 text-sm text-muted-foreground">
+            {publishReadinessIssues.map((issue) => (
+              <li key={issue.code}>{issue.message}</li>
+            ))}
+          </ul>
         ) : null}
       </CardContent>
     </Card>

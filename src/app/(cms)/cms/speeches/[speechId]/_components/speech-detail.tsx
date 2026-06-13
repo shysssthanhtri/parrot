@@ -36,6 +36,7 @@ import {
   SpeechPublishingCard,
 } from "./speech-publishing-card";
 import { SpeechRegenerateButton } from "./speech-regenerate-button";
+import { SpeechThumbnailCard } from "./speech-thumbnail-card";
 
 type SpeechDetailProps = {
   speech: {
@@ -61,11 +62,17 @@ type SpeechDetailProps = {
     };
     alignment: SpeechScriptAlignment | null;
     publication: PublicationSummary;
+    thumbnailProcessStatus: string;
+    thumbnailErrorMessage: string | null;
   };
   audioUrl: string | null;
+  thumbnailUrl: string | null;
+  publishReadinessIssues: { code: string; message: string }[];
   canRegenerate?: boolean;
   onRegenerate?: () => void;
   isRegenerating?: boolean;
+  onRegenerateThumbnail?: () => void;
+  isRegeneratingThumbnail?: boolean;
   onPublish?: () => void;
   onUnpublish?: () => void;
   isPublishing?: boolean;
@@ -121,7 +128,10 @@ function SpeechAudioSection({
   canRegenerate,
   onRegenerate,
   isRegenerating,
-}: SpeechDetailProps) {
+}: Pick<
+  SpeechDetailProps,
+  "speech" | "audioUrl" | "canRegenerate" | "onRegenerate" | "isRegenerating"
+>) {
   const processStatus = getProcessStatus(speech.processStatus);
 
   if (processStatus === "failed") {
@@ -237,14 +247,20 @@ function SpeechAudioSection({
 export function SpeechDetail({
   speech,
   audioUrl,
+  thumbnailUrl,
+  publishReadinessIssues,
   canRegenerate,
   onRegenerate,
   isRegenerating,
+  onRegenerateThumbnail,
+  isRegeneratingThumbnail,
   onPublish,
   onUnpublish,
   isPublishing,
   isUnpublishing,
 }: SpeechDetailProps) {
+  const isPublished = speech.publication.status === "published";
+
   return (
     <div className="flex flex-col gap-6">
       <Card>
@@ -291,6 +307,28 @@ export function SpeechDetail({
         </CardContent>
       </Card>
 
+      {onPublish && onUnpublish ? (
+        <SpeechPublishingCard
+          scriptTitle={speech.script.title}
+          publication={speech.publication}
+          publishReadinessIssues={publishReadinessIssues}
+          onPublish={onPublish}
+          onUnpublish={onUnpublish}
+          isPublishing={isPublishing}
+          isUnpublishing={isUnpublishing}
+        />
+      ) : null}
+
+      <SpeechThumbnailCard
+        scriptTitle={speech.script.title}
+        thumbnailProcessStatus={speech.thumbnailProcessStatus}
+        thumbnailErrorMessage={speech.thumbnailErrorMessage}
+        thumbnailUrl={thumbnailUrl}
+        isPublished={isPublished}
+        onRegenerateThumbnail={onRegenerateThumbnail}
+        isRegeneratingThumbnail={isRegeneratingThumbnail}
+      />
+
       <SpeechAudioSection
         speech={speech}
         audioUrl={audioUrl}
@@ -298,18 +336,6 @@ export function SpeechDetail({
         onRegenerate={onRegenerate}
         isRegenerating={isRegenerating}
       />
-
-      {onPublish && onUnpublish ? (
-        <SpeechPublishingCard
-          scriptTitle={speech.script.title}
-          processStatus={speech.processStatus}
-          publication={speech.publication}
-          onPublish={onPublish}
-          onUnpublish={onUnpublish}
-          isPublishing={isPublishing}
-          isUnpublishing={isUnpublishing}
-        />
-      ) : null}
     </div>
   );
 }

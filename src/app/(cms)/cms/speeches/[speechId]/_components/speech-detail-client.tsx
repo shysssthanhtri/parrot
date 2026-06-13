@@ -18,6 +18,11 @@ import { SpeechDetail } from "./speech-detail";
 
 const POLL_INTERVAL_MS = 10_000;
 
+function isThumbnailInProgress(status: string) {
+  const parsed = speechProcessStatusSchema.safeParse(status);
+  return parsed.success && isSpeechInProgress(parsed.data);
+}
+
 type SpeechDetailClientProps = {
   speechId: string;
 };
@@ -31,20 +36,39 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
   const speechQuery = useQuery({
     ...trpc.speeches.getById.queryOptions({ id: speechId }),
     refetchInterval: (query) => {
-      const status = query.state.data?.processStatus;
-      const parsed = status
-        ? speechProcessStatusSchema.safeParse(status)
-        : null;
-      return parsed?.success && isSpeechInProgress(parsed.data)
-        ? POLL_INTERVAL_MS
-        : false;
+      const speech = query.state.data;
+      if (!speech) {
+        return false;
+      }
+
+      const parsed = speechProcessStatusSchema.safeParse(speech.processStatus);
+      const audioInProgress = parsed.success && isSpeechInProgress(parsed.data);
+      const thumbnailInProgress = isThumbnailInProgress(
+        speech.thumbnailProcessStatus
+      );
+
+      return audioInProgress || thumbnailInProgress ? POLL_INTERVAL_MS : false;
     },
-    refetchOnWindowFocus: (query) =>
-      query.state.data?.processStatus !== "finished",
+    refetchOnWindowFocus: (query) => {
+      const speech = query.state.data;
+      if (!speech) {
+        return false;
+      }
+
+      return (
+        speech.processStatus !== "finished" ||
+        isThumbnailInProgress(speech.thumbnailProcessStatus)
+      );
+    },
   });
+
+  const publishReadinessQuery = useQuery(
+    trpc.speeches.getPublishReadiness.queryOptions({ id: speechId })
+  );
 
   const refetchSpeech = () => {
     void speechQuery.refetch();
+    void publishReadinessQuery.refetch();
   };
 
   const regenerateMutation = useMutation(
@@ -56,6 +80,18 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
       },
       onError: (error) => {
         toast.error(error.message || "Failed to regenerate speech");
+      },
+    })
+  );
+
+  const regenerateThumbnailMutation = useMutation(
+    trpc.speeches.regenerateThumbnail.mutationOptions({
+      onSuccess: () => {
+        toast.success("Thumbnail regeneration started");
+        refetchSpeech();
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to regenerate thumbnail");
       },
     })
   );
@@ -133,6 +169,8 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
       <SpeechDetail
         speech={speech}
         audioUrl={audioUrl}
+        thumbnailUrl={speech.thumbnailUrl}
+        publishReadinessIssues={publishReadinessQuery.data?.issues ?? []}
         canRegenerate={speech.canRegenerate}
         onRegenerate={
           speech.canRegenerate
@@ -140,6 +178,12 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
             : undefined
         }
         isRegenerating={regenerateMutation.isPending}
+        onRegenerateThumbnail={
+          !isPublished
+            ? () => regenerateThumbnailMutation.mutate({ id: speechId })
+            : undefined
+        }
+        isRegeneratingThumbnail={regenerateThumbnailMutation.isPending}
         onPublish={() => publishMutation.mutate({ id: speechId })}
         onUnpublish={() => unpublishMutation.mutate({ id: speechId })}
         isPublishing={publishMutation.isPending}
