@@ -6,8 +6,7 @@ allowBuilds:
   "@sentry/cli": true
   msw: true
   prisma: true
-  sharp: true
+  sharp: set this to true or false
   unrs-resolver: true
 ignoredBuiltDependencies:
-  - sharp
   - unrs-resolver

@@ -1,7 +1,5 @@
 import "server-only";
 
-import sharp from "sharp";
-
 import { getScriptLanguageLabel } from "@/lib/script-languages";
 import { generateThumbnail } from "@/lib/thumbnail/generateThumbnail";
 import { prisma } from "@/prisma";
@@ -9,7 +7,7 @@ import { prisma } from "@/prisma";
 import { markSpeechThumbnailFailed } from "./speech-thumbnail-jobs";
 import { SPEECH_THUMBNAIL_CONTENT_TYPE, uploadObject } from "./storage";
 
-export const SPEECH_THUMBNAIL_MAX_QUEUE_ATTEMPTS = 10;
+export const SPEECH_THUMBNAIL_MAX_QUEUE_ATTEMPTS = 3;
 
 const THUMBNAIL_FAILURE_MESSAGE =
   "Thumbnail generation failed. Please try again.";
@@ -83,10 +81,6 @@ async function loadSpeechThumbnailContext(
   };
 }
 
-async function convertPngToWebp(png: Buffer): Promise<Buffer> {
-  return sharp(png).webp({ quality: 85 }).toBuffer();
-}
-
 export async function runSpeechThumbnail(
   speechId: string,
   deliveryCount: number
@@ -113,8 +107,7 @@ export async function runSpeechThumbnail(
 
   try {
     const prompt = buildSpeechThumbnailPrompt(speech);
-    const png = await generateThumbnail({ prompt });
-    const webp = await convertPngToWebp(png);
+    const webp = await generateThumbnail({ prompt });
 
     await uploadObject(
       speech.thumbnailR2ObjectKey,

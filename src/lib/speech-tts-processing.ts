@@ -32,7 +32,7 @@ import {
   getWavDurationMs,
 } from "./wav-concat";
 
-export const SPEECH_TTS_MAX_QUEUE_ATTEMPTS = 10;
+export const SPEECH_TTS_MAX_QUEUE_ATTEMPTS = 3;
 
 const START_FAILURE_MESSAGE = "Speech generation failed. Please try again.";
 const FINALIZE_FAILURE_MESSAGE =

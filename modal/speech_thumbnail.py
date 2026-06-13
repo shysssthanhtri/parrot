@@ -24,6 +24,7 @@ THUMBNAIL_WIDTH = 832
 THUMBNAIL_HEIGHT = 1088
 INFERENCE_STEPS = 4
 GUIDANCE_SCALE = 0.0
+WEBP_QUALITY = 85
 CACHE_DIR = "/cache"
 
 hf_cache_volume = modal.Volume.from_name("parrot-hf-cache", create_if_missing=True)
@@ -107,16 +108,16 @@ class ThumbnailInference:
             allow_headers=["*"],
         )
 
-        @web_app.post("/generate", responses={200: {"content": {"image/png": {}}}})
+        @web_app.post("/generate", responses={200: {"content": {"image/webp": {}}}})
         def generate_thumbnail(request: ThumbnailRequest):
             try:
-                png_bytes = self.generate.local(
+                webp_bytes = self.generate.local(
                     request.prompt,
                     request.seed,
                 )
                 return StreamingResponse(
-                    io.BytesIO(png_bytes),
-                    media_type="image/png",
+                    io.BytesIO(webp_bytes),
+                    media_type="image/webp",
                 )
             except Exception as e:
                 raise HTTPException(
@@ -143,7 +144,7 @@ class ThumbnailInference:
         image = result.images[0]
 
         buffer = io.BytesIO()
-        image.save(buffer, format="PNG")
+        image.save(buffer, format="WEBP", quality=WEBP_QUALITY)
         buffer.seek(0)
         return buffer.read()
 
