@@ -23,7 +23,6 @@ import {
   getAudioUrl,
   objectExists,
   speechObjectKeyForId,
-  speechThumbnailObjectKey,
 } from "@/lib/storage";
 import { prisma } from "@/prisma";
 
@@ -210,7 +209,6 @@ export const speechesRouter = createTRPCRouter({
       const { script } = await loadValidatedSpeechInputs(input);
       const id = randomUUID();
       const r2ObjectKey = speechObjectKeyForId(id);
-      const thumbnailR2ObjectKey = speechThumbnailObjectKey(id);
 
       const speech = await prisma.speech.create({
         data: {
@@ -225,7 +223,6 @@ export const speechesRouter = createTRPCRouter({
           repetitionPenalty: input.repetitionPenalty,
           normLoudness: input.normLoudness,
           r2ObjectKey,
-          thumbnailR2ObjectKey,
           processStatus: "pending",
           userId: ctx.userId,
         },
@@ -336,6 +333,7 @@ export const speechesRouter = createTRPCRouter({
       await prisma.speech.update({
         where: { id: input.id },
         data: {
+          thumbnailR2ObjectKey: null,
           thumbnailProcessStatus: "pending",
           thumbnailErrorMessage: null,
         },

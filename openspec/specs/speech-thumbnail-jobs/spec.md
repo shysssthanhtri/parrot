@@ -31,7 +31,7 @@ When `speeches.create` succeeds, the system SHALL enqueue a `speech-thumbnail` m
 
 ### Requirement: Thumbnail queue worker processing
 
-The `speech-thumbnail` consumer SHALL load the speech with linked script (title) and script topics (name, color), build a text prompt suitable for cover-art generation (no text in the image), set `thumbnailProcessStatus` to `processing`, call the Modal thumbnail API at the configured resolution 832×1088, upload the WebP result to `thumbnailR2ObjectKey` via the configured storage driver with content type `image/webp`, set `thumbnailProcessStatus` to `finished`, and clear `thumbnailErrorMessage`. The worker SHALL NOT depend on native image libraries (e.g. `sharp`) for format conversion. On failure after retries it SHALL set `thumbnailProcessStatus` to `failed` with a user-safe `thumbnailErrorMessage`.
+The `speech-thumbnail` consumer SHALL load the speech with linked script (title) and script topics (name, color), build a text prompt suitable for cover-art generation (no text in the image), assign `thumbnailR2ObjectKey` to `speeches/{id}/thumbnail.webp` when processing starts if not already set, set `thumbnailProcessStatus` to `processing`, call the Modal thumbnail API at the configured resolution 832×1088, upload the WebP result to `thumbnailR2ObjectKey` via the configured storage driver with content type `image/webp`, set `thumbnailProcessStatus` to `finished`, and clear `thumbnailErrorMessage`. The worker SHALL NOT depend on native image libraries (e.g. `sharp`) for format conversion. On failure after retries it SHALL set `thumbnailProcessStatus` to `failed` with a user-safe `thumbnailErrorMessage`. The worker SHALL NOT fail when `thumbnailR2ObjectKey` is null at job start.
 
 #### Scenario: Successful thumbnail job
 
@@ -47,6 +47,11 @@ The `speech-thumbnail` consumer SHALL load the speech with linked script (title)
 
 - **WHEN** a `speech-thumbnail` message is delivered on Vercel production (linux-x64)
 - **THEN** the route handler loads and executes without requiring the `sharp` native module
+
+#### Scenario: Worker assigns key for legacy speech
+
+- **WHEN** the thumbnail worker runs for a speech with null `thumbnailR2ObjectKey`
+- **THEN** it assigns `speeches/{id}/thumbnail.webp` before calling the Modal API and does not throw a missing-key error
 
 ### Requirement: Modal speech thumbnail deployment
 

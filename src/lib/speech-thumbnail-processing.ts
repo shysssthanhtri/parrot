@@ -5,7 +5,11 @@ import { generateThumbnail } from "@/lib/thumbnail/generateThumbnail";
 import { prisma } from "@/prisma";
 
 import { markSpeechThumbnailFailed } from "./speech-thumbnail-jobs";
-import { SPEECH_THUMBNAIL_CONTENT_TYPE, uploadObject } from "./storage";
+import {
+  SPEECH_THUMBNAIL_CONTENT_TYPE,
+  speechThumbnailObjectKey,
+  uploadObject,
+} from "./storage";
 
 export const SPEECH_THUMBNAIL_MAX_QUEUE_ATTEMPTS = 3;
 
@@ -15,7 +19,7 @@ const THUMBNAIL_FAILURE_MESSAGE =
 type SpeechThumbnailContext = {
   id: string;
   language: string;
-  thumbnailR2ObjectKey: string;
+  thumbnailR2ObjectKey: string | null;
   thumbnailProcessStatus: string;
   script: {
     title: string;
@@ -71,20 +75,15 @@ async function loadSpeechThumbnailContext(
     throw new Error(`Speech not found: ${speechId}`);
   }
 
-  if (!speech.thumbnailR2ObjectKey) {
-    throw new Error(`Speech has no thumbnail key: ${speechId}`);
-  }
-
-  return {
-    ...speech,
-    thumbnailR2ObjectKey: speech.thumbnailR2ObjectKey,
-  };
+  return speech;
 }
 
 export async function runSpeechThumbnail(
   speechId: string,
   deliveryCount: number
 ): Promise<void> {
+  console.log(`[speech-thumbnail] ${speechId}`, deliveryCount);
+
   const speech = await loadSpeechThumbnailContext(speechId);
 
   if (speech.thumbnailProcessStatus === "finished") {
@@ -95,13 +94,23 @@ export async function runSpeechThumbnail(
     return;
   }
 
+  let thumbnailR2ObjectKey = speech.thumbnailR2ObjectKey;
+
   if (speech.thumbnailProcessStatus === "pending") {
+    thumbnailR2ObjectKey = speechThumbnailObjectKey(speechId);
     await prisma.speech.update({
       where: { id: speechId },
       data: {
         thumbnailProcessStatus: "processing",
+        thumbnailR2ObjectKey,
         thumbnailErrorMessage: null,
       },
+    });
+  } else if (!thumbnailR2ObjectKey) {
+    thumbnailR2ObjectKey = speechThumbnailObjectKey(speechId);
+    await prisma.speech.update({
+      where: { id: speechId },
+      data: { thumbnailR2ObjectKey },
     });
   }
 
@@ -110,7 +119,7 @@ export async function runSpeechThumbnail(
     const webp = await generateThumbnail({ prompt });
 
     await uploadObject(
-      speech.thumbnailR2ObjectKey,
+      thumbnailR2ObjectKey,
       webp,
       SPEECH_THUMBNAIL_CONTENT_TYPE
     );
