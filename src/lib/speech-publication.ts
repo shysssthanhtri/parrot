@@ -22,6 +22,7 @@ export type SpeechForPublicationSnapshot = {
   script: {
     title: string;
     content: string;
+    length: string;
     topics: { id: string }[];
   };
   voice: {
@@ -33,6 +34,7 @@ export type PublicationSnapshot = {
   title: string;
   content: string;
   language: string;
+  length: string;
   alignment: SpeechScriptAlignment;
   r2ObjectKey: string;
   thumbnailR2ObjectKey: string;
@@ -86,6 +88,7 @@ export async function buildPublicationSnapshot(
     title: speech.script.title,
     content: speech.script.content,
     language: speech.language,
+    length: speech.script.length,
     alignment: alignmentResult.data,
     r2ObjectKey: speech.r2ObjectKey,
     thumbnailR2ObjectKey: speech.thumbnailR2ObjectKey,

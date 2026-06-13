@@ -20,7 +20,10 @@ const speechIdInputSchema = z.object({
 
 const speechForPublishInclude = {
   script: {
-    include: {
+    select: {
+      title: true,
+      content: true,
+      length: true,
       topics: { select: { id: true } },
     },
   },
@@ -117,37 +120,46 @@ export const speechPublicationsRouter = createTRPCRouter({
       })
     )
     .query(async ({ input }) => {
-      const publications = await prisma.speechPublication.findMany({
-        where: {
-          status: SpeechPublicationStatus.published,
-          ...(input.language ? { language: input.language } : {}),
-          ...(input.topicId ? { topicIds: { has: input.topicId } } : {}),
-        },
-        orderBy: { publishedAt: "desc" },
-        select: {
-          id: true,
-          title: true,
-          language: true,
-          voiceName: true,
-          publishedAt: true,
-          topicIds: true,
-          thumbnailR2ObjectKey: true,
-        },
-      });
+      try {
+        const publications = await prisma.speechPublication.findMany({
+          where: {
+            status: SpeechPublicationStatus.published,
+            ...(input.language ? { language: input.language } : {}),
+            ...(input.topicId ? { topicIds: { has: input.topicId } } : {}),
+          },
+          orderBy: { publishedAt: "desc" },
+          select: {
+            id: true,
+            title: true,
+            language: true,
+            length: true,
+            voiceName: true,
+            publishedAt: true,
+            topicIds: true,
+            thumbnailR2ObjectKey: true,
+          },
+        });
 
-      return Promise.all(
-        publications.map(async ({ thumbnailR2ObjectKey, ...publication }) => {
-          const thumbnailUrl =
-            thumbnailR2ObjectKey && (await objectExists(thumbnailR2ObjectKey))
-              ? await getAudioUrl(thumbnailR2ObjectKey)
-              : null;
+        return Promise.all(
+          publications.map(async ({ thumbnailR2ObjectKey, ...publication }) => {
+            const thumbnailUrl =
+              thumbnailR2ObjectKey && (await objectExists(thumbnailR2ObjectKey))
+                ? await getAudioUrl(thumbnailR2ObjectKey)
+                : null;
 
-          return {
-            ...publication,
-            thumbnailUrl,
-          };
-        })
-      );
+            return {
+              ...publication,
+              thumbnailUrl,
+            };
+          })
+        );
+      } catch (error) {
+        console.error(error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to load published speeches.",
+        });
+      }
     }),
 
   getById: authProcedure

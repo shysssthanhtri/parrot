@@ -170,6 +170,7 @@ model SpeechPublication {
   title       String
   content     String   @db.Text
   language    String
+  length      String   @default("medium")
   alignment   Json
   r2ObjectKey String
   thumbnailR2ObjectKey String?
