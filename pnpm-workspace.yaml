@@ -1,6 +1,14 @@
 packages:
   - "."
 
+supportedArchitectures:
+  os:
+    - current
+    - linux
+  cpu:
+    - current
+    - x64
+
 allowBuilds:
   "@prisma/engines": true
   "@sentry/cli": true

@@ -1,33 +1,4 @@
-# speech-thumbnail-jobs Specification
-
-## Purpose
-
-TBD - created by archiving change speech-thumbnails. Update Purpose after archive.
-
-## Requirements
-
-### Requirement: Speech thumbnail queue topic
-
-The system SHALL use `@vercel/queue` with a push-mode topic `speech-thumbnail` and a dedicated Next.js route handler at `src/app/api/queues/speech-thumbnail/route.ts` registered in `vercel.json` with `experimentalTriggers` of type `queue/v2beta` and `maxConcurrency` 1.
-
-#### Scenario: Thumbnail job invokes handler
-
-- **WHEN** a message is sent to `speech-thumbnail`
-- **THEN** the route handler processes exactly one job at a time app-wide per configured concurrency
-
-### Requirement: Thumbnail generation on speech create
-
-When `speeches.create` succeeds, the system SHALL enqueue a `speech-thumbnail` message with the new speech id in addition to the existing TTS start job. The system SHALL NOT auto-enqueue thumbnail jobs from TTS finalize, `speeches.retry`, or `speeches.regenerate`.
-
-#### Scenario: Create enqueues thumbnail job
-
-- **WHEN** an authenticated CMS client creates a speech
-- **THEN** a thumbnail queue message is enqueued for that speech id
-
-#### Scenario: Audio regenerate does not enqueue thumbnail
-
-- **WHEN** `speeches.regenerate` succeeds for a speech
-- **THEN** no thumbnail queue message is enqueued
+## MODIFIED Requirements
 
 ### Requirement: Thumbnail queue worker processing
 

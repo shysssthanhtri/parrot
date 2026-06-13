@@ -153,14 +153,14 @@ class ThumbnailInference:
 def test(
     prompt: str = "Abstract editorial cover art, soft gradients, no text or lettering.",
     seed: int | None = None,
-    output_path: str = "/tmp/speech-thumbnail/output.png",
+    output_path: str = "/tmp/speech-thumbnail/output.webp",
 ):
     import pathlib
 
     inference = ThumbnailInference()
-    png_bytes = inference.generate.remote(prompt=prompt, seed=seed)
+    webp_bytes = inference.generate.remote(prompt=prompt, seed=seed)
 
     output_file = pathlib.Path(output_path)
     output_file.parent.mkdir(parents=True, exist_ok=True)
-    output_file.write_bytes(png_bytes)
+    output_file.write_bytes(webp_bytes)
     print(f"Thumbnail saved to {output_file}")
