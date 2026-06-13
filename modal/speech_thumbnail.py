@@ -35,6 +35,7 @@ image = modal.Image.debian_slim(python_version="3.10").uv_pip_install(
     "fastapi[standard]==0.124.4",
     "pillow==11.1.0",
     "safetensors==0.5.3",
+    "sentencepiece==0.2.0",
     "torch==2.6.0",
     "transformers==4.51.3",
 )
