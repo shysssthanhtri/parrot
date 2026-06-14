@@ -127,6 +127,7 @@ export function LearnerSpeechCatalog() {
   const speeches = speechesQuery.data ?? [];
   const prefetchedThumbnailUrls = useRef(new Set<string>());
   const swipeStartY = useRef<number | null>(null);
+  const swipeCurrentY = useRef<number | null>(null);
 
   const activeIndex = useMemo(() => {
     if (speeches.length === 0) {
@@ -144,23 +145,19 @@ export function LearnerSpeechCatalog() {
     });
   };
 
-  const handleSwipePointerDown = (
-    event: React.PointerEvent<HTMLDivElement>
-  ) => {
-    if (!isMobile) {
-      return;
-    }
-
-    swipeStartY.current = event.clientY;
+  const resetSwipeTracking = () => {
+    swipeStartY.current = null;
+    swipeCurrentY.current = null;
   };
 
-  const handleSwipePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+  const finishSwipe = () => {
     if (!isMobile || swipeStartY.current === null) {
       return;
     }
 
-    const deltaY = event.clientY - swipeStartY.current;
-    swipeStartY.current = null;
+    const endY = swipeCurrentY.current ?? swipeStartY.current;
+    const deltaY = endY - swipeStartY.current;
+    resetSwipeTracking();
 
     if (deltaY < -SWIPE_THRESHOLD_PX) {
       navigateSpeech(1);
@@ -169,8 +166,34 @@ export function LearnerSpeechCatalog() {
     }
   };
 
+  const handleSwipePointerDown = (
+    event: React.PointerEvent<HTMLDivElement>
+  ) => {
+    if (!isMobile) {
+      return;
+    }
+
+    swipeStartY.current = event.clientY;
+    swipeCurrentY.current = event.clientY;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleSwipePointerMove = (
+    event: React.PointerEvent<HTMLDivElement>
+  ) => {
+    if (!isMobile || swipeStartY.current === null) {
+      return;
+    }
+
+    swipeCurrentY.current = event.clientY;
+  };
+
+  const handleSwipePointerUp = () => {
+    finishSwipe();
+  };
+
   const handleSwipePointerCancel = () => {
-    swipeStartY.current = null;
+    finishSwipe();
   };
 
   useEffect(() => {
@@ -285,9 +308,10 @@ export function LearnerSpeechCatalog() {
     <div
       className={cn(
         "relative w-full overflow-hidden",
-        isMobile && "touch-pan-y"
+        isMobile && "touch-none select-none"
       )}
       onPointerDown={isMobile ? handleSwipePointerDown : undefined}
+      onPointerMove={isMobile ? handleSwipePointerMove : undefined}
       onPointerUp={isMobile ? handleSwipePointerUp : undefined}
       onPointerCancel={isMobile ? handleSwipePointerCancel : undefined}
     >
