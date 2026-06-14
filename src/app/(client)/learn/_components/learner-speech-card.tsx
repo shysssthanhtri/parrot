@@ -54,11 +54,11 @@ export function LearnerSpeechCard({
     >
       <Card
         className={cn(
-          "mx-auto w-full max-w-sm overflow-hidden pt-0",
+          "mx-auto w-full max-w-sm overflow-hidden rounded-xl pt-0 ring-0",
           className
         )}
       >
-        <div className="relative aspect-13/17 w-full overflow-hidden bg-muted">
+        <div className="relative aspect-13/17 w-full overflow-hidden rounded-t-xl">
           {speech.thumbnailUrl ? (
             <Image
               src={speech.thumbnailUrl}
@@ -75,7 +75,7 @@ export function LearnerSpeechCard({
             </div>
           )}
         </div>
-        <CardHeader className="text-center">
+        <CardHeader className="rounded-b-xl text-center">
           <CardTitle className="text-xl font-semibold tracking-tight">
             {speech.title}
           </CardTitle>

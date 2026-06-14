@@ -8,6 +8,7 @@ export const BackgroundGradient = ({
   className,
   containerClassName,
   roundedClassName = "rounded-[calc(var(--radius-xl)+4px)]",
+  contentRoundedClassName = "rounded-xl",
   animate = true,
 }: {
   children?: React.ReactNode;
@@ -15,6 +16,8 @@ export const BackgroundGradient = ({
   containerClassName?: string;
   /** Outer radius; defaults to card `rounded-xl` + 4px padding. */
   roundedClassName?: string;
+  /** Inner content radius; defaults to `rounded-xl` to match the outer padding inset. */
+  contentRoundedClassName?: string;
   animate?: boolean;
 }) => {
   const variants = {
@@ -26,7 +29,13 @@ export const BackgroundGradient = ({
     },
   };
   return (
-    <div className={cn("relative p-[4px] group", containerClassName)}>
+    <div
+      className={cn(
+        "relative overflow-hidden p-[4px] group",
+        roundedClassName,
+        containerClassName
+      )}
+    >
       <motion.div
         variants={animate ? variants : undefined}
         initial={animate ? "initial" : undefined}
@@ -72,7 +81,15 @@ export const BackgroundGradient = ({
         )}
       />
 
-      <div className={cn("relative z-10", className)}>{children}</div>
+      <div
+        className={cn(
+          "relative z-10 overflow-hidden",
+          contentRoundedClassName,
+          className
+        )}
+      >
+        {children}
+      </div>
     </div>
   );
 };
