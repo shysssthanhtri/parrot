@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useEffect, useMemo, useReducer } from "react";
+import { useEffect, useMemo, useReducer, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -67,6 +67,32 @@ function catalogNavigationReducer(
   };
 }
 
+type SpeechWithThumbnail = {
+  thumbnailUrl: string | null;
+};
+
+function getUpcomingThumbnailUrls(
+  speeches: SpeechWithThumbnail[],
+  activeIndex: number,
+  count = 2
+): string[] {
+  const urls: string[] = [];
+
+  for (let offset = 1; offset <= count; offset += 1) {
+    const index = activeIndex + offset;
+    if (index >= speeches.length) {
+      break;
+    }
+
+    const thumbnailUrl = speeches[index]?.thumbnailUrl;
+    if (thumbnailUrl) {
+      urls.push(thumbnailUrl);
+    }
+  }
+
+  return urls;
+}
+
 export function LearnerSpeechCatalog() {
   const trpc = useTRPC();
   const prefersReducedMotion = useReducedMotion();
@@ -95,6 +121,7 @@ export function LearnerSpeechCatalog() {
 
   const speechesQuery = useQuery(trpc.speechPublications.list.queryOptions({}));
   const speeches = speechesQuery.data ?? [];
+  const prefetchedThumbnailUrls = useRef(new Set<string>());
 
   const activeIndex = useMemo(() => {
     if (speeches.length === 0) {
@@ -111,6 +138,23 @@ export function LearnerSpeechCatalog() {
       speechCount: speeches.length,
     });
   };
+
+  useEffect(() => {
+    const list = speechesQuery.data;
+    if (!list || list.length === 0) {
+      return;
+    }
+
+    for (const url of getUpcomingThumbnailUrls(list, activeIndex)) {
+      if (prefetchedThumbnailUrls.current.has(url)) {
+        continue;
+      }
+
+      prefetchedThumbnailUrls.current.add(url);
+      const image = new Image();
+      image.src = url;
+    }
+  }, [speechesQuery.data, activeIndex]);
 
   useEffect(() => {
     if (speeches.length === 0) {
