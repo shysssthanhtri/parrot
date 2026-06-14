@@ -5,6 +5,7 @@ import { BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardHeader } from "@/components/ui/card";
 import {
   Empty,
   EmptyDescription,
@@ -20,14 +21,13 @@ import { LearnerSpeechCard } from "./learner-speech-card";
 
 function LearnerSpeechCatalogSkeleton() {
   return (
-    <div className="mx-auto flex w-full max-w-sm flex-col gap-4">
-      <Skeleton className="aspect-13/17 w-full rounded-xl" />
-      <div className="space-y-2">
+    <Card className="mx-auto w-full max-w-sm overflow-hidden pt-0">
+      <Skeleton className="aspect-13/17 w-full rounded-none" />
+      <CardHeader className="text-center">
         <Skeleton className="mx-auto h-7 w-3/4" />
         <Skeleton className="mx-auto h-4 w-1/2" />
-      </div>
-      <Skeleton className="mx-auto h-4 w-16" />
-    </div>
+      </CardHeader>
+    </Card>
   );
 }
 

@@ -2,18 +2,21 @@ import { ImageIcon } from "lucide-react";
 import Image from "next/image";
 
 import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
   getScriptLengthLabel,
   SCRIPT_GENERATION_LENGTHS,
   type ScriptGenerationLength,
 } from "@/lib/script-generation-prompt";
-import { getScriptLanguageLabel } from "@/lib/script-languages";
 import { cn } from "@/lib/utils";
 
 export type LearnerSpeechCardSpeech = {
   title: string;
-  language: string;
   length: string;
-  voiceName: string;
   thumbnailUrl: string | null;
 };
 
@@ -34,17 +37,13 @@ export function LearnerSpeechCard({
   speech,
   className,
 }: LearnerSpeechCardProps) {
-  const metadata = [
-    formatLengthLabel(speech.length),
-    getScriptLanguageLabel(speech.language),
-    speech.voiceName,
-  ].join(" · ");
+  const metadata = formatLengthLabel(speech.length);
 
   return (
-    <article
-      className={cn("mx-auto flex w-full max-w-sm flex-col gap-4", className)}
+    <Card
+      className={cn("mx-auto w-full max-w-sm overflow-hidden pt-0", className)}
     >
-      <div className="relative aspect-13/17 w-full overflow-hidden rounded-xl border bg-muted shadow-sm">
+      <div className="relative aspect-13/17 w-full overflow-hidden bg-muted">
         {speech.thumbnailUrl ? (
           <Image
             src={speech.thumbnailUrl}
@@ -61,10 +60,12 @@ export function LearnerSpeechCard({
           </div>
         )}
       </div>
-      <div className="space-y-1 text-center">
-        <h2 className="text-xl font-semibold tracking-tight">{speech.title}</h2>
-        <p className="text-sm text-muted-foreground">{metadata}</p>
-      </div>
-    </article>
+      <CardHeader className="text-center">
+        <CardTitle className="text-xl font-semibold tracking-tight">
+          {speech.title}
+        </CardTitle>
+        <CardDescription>{metadata}</CardDescription>
+      </CardHeader>
+    </Card>
   );
 }
