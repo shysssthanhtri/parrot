@@ -29,6 +29,7 @@ type LearnerSpeechCardProps = {
   className?: string;
   gradientContainerClassName?: string;
   gradientRoundedClassName?: string;
+  gradientAnimate?: boolean;
 };
 
 function formatLengthLabel(length: string): string {
@@ -44,6 +45,7 @@ export function LearnerSpeechCard({
   className,
   gradientContainerClassName = GRADIENT_BORDER_CONTAINER_CLASS,
   gradientRoundedClassName = GRADIENT_BORDER_RADIUS_CLASS,
+  gradientAnimate = true,
 }: LearnerSpeechCardProps) {
   const metadata = formatLengthLabel(speech.length);
 
@@ -51,6 +53,7 @@ export function LearnerSpeechCard({
     <BackgroundGradient
       containerClassName={gradientContainerClassName}
       roundedClassName={gradientRoundedClassName}
+      animate={gradientAnimate}
     >
       <Card
         className={cn(

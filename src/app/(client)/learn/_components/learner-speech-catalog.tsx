@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 
 import { LearnerSpeechCard } from "./learner-speech-card";
+import { LearnerSpeechSwipeStack } from "./learner-speech-swipe-stack";
 
 function LearnerSpeechCatalogSkeleton() {
   return (
@@ -109,8 +110,9 @@ export function LearnerSpeechCatalog() {
     hasNavigated: false,
   });
 
+  const useInteractiveMobileSwipe = isMobile && !prefersReducedMotion;
   const slideOffset = prefersReducedMotion ? 0 : "100%";
-  const transitionDuration = prefersReducedMotion ? 0 : 0.5;
+  const desktopTransitionDuration = prefersReducedMotion ? 0 : 0.5;
   const cardVariants = {
     enter: (direction: NavigationDirection) => ({
       y: direction > 0 ? slideOffset : direction < 0 ? `-${slideOffset}` : 0,
@@ -151,7 +153,7 @@ export function LearnerSpeechCatalog() {
   };
 
   const finishSwipe = () => {
-    if (!isMobile || swipeStartY.current === null) {
+    if (!isMobile || prefersReducedMotion || swipeStartY.current === null) {
       return;
     }
 
@@ -169,7 +171,7 @@ export function LearnerSpeechCatalog() {
   const handleSwipePointerDown = (
     event: React.PointerEvent<HTMLDivElement>
   ) => {
-    if (!isMobile) {
+    if (!isMobile || prefersReducedMotion) {
       return;
     }
 
@@ -181,7 +183,7 @@ export function LearnerSpeechCatalog() {
   const handleSwipePointerMove = (
     event: React.PointerEvent<HTMLDivElement>
   ) => {
-    if (!isMobile || swipeStartY.current === null) {
+    if (!isMobile || prefersReducedMotion || swipeStartY.current === null) {
       return;
     }
 
@@ -304,16 +306,35 @@ export function LearnerSpeechCatalog() {
     </div>
   );
 
-  const speechCardElement = (
+  const speechCardElement = useInteractiveMobileSwipe ? (
+    <LearnerSpeechSwipeStack
+      speechKey={focusedSpeech.id}
+      speech={focusedSpeech}
+      prevSpeech={canGoUp ? speeches[activeIndex - 1] : null}
+      nextSpeech={canGoDown ? speeches[activeIndex + 1] : null}
+      canGoUp={canGoUp}
+      canGoDown={canGoDown}
+      navigationDirection={navigationDirection}
+      onNavigate={navigateSpeech}
+    />
+  ) : (
     <div
       className={cn(
         "relative w-full overflow-hidden",
         isMobile && "touch-none select-none"
       )}
-      onPointerDown={isMobile ? handleSwipePointerDown : undefined}
-      onPointerMove={isMobile ? handleSwipePointerMove : undefined}
-      onPointerUp={isMobile ? handleSwipePointerUp : undefined}
-      onPointerCancel={isMobile ? handleSwipePointerCancel : undefined}
+      onPointerDown={
+        isMobile && prefersReducedMotion ? handleSwipePointerDown : undefined
+      }
+      onPointerMove={
+        isMobile && prefersReducedMotion ? handleSwipePointerMove : undefined
+      }
+      onPointerUp={
+        isMobile && prefersReducedMotion ? handleSwipePointerUp : undefined
+      }
+      onPointerCancel={
+        isMobile && prefersReducedMotion ? handleSwipePointerCancel : undefined
+      }
     >
       <div className="invisible" aria-hidden>
         <LearnerSpeechCard speech={focusedSpeech} className="mx-0 w-full" />
@@ -321,14 +342,14 @@ export function LearnerSpeechCatalog() {
       <AnimatePresence mode="sync" initial={false} custom={navigationDirection}>
         <motion.div
           key={focusedSpeech.id}
-          className="absolute inset-x-0 top-0 w-full"
+          className="absolute inset-x-0 top-0 w-full will-change-transform transform-gpu"
           custom={navigationDirection}
           variants={cardVariants}
           initial="enter"
           animate="center"
           exit="exit"
           transition={{
-            duration: transitionDuration,
+            duration: desktopTransitionDuration,
             ease: [0.22, 1, 0.36, 1],
           }}
         >
