@@ -15,6 +15,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 
@@ -93,8 +94,11 @@ function getUpcomingThumbnailUrls(
   return urls;
 }
 
+const SWIPE_THRESHOLD_PX = 50;
+
 export function LearnerSpeechCatalog() {
   const trpc = useTRPC();
+  const isMobile = useIsMobile();
   const prefersReducedMotion = useReducedMotion();
   const [
     { focusedIndex, navigationDirection, hasNavigated },
@@ -122,6 +126,7 @@ export function LearnerSpeechCatalog() {
   const speechesQuery = useQuery(trpc.speechPublications.list.queryOptions({}));
   const speeches = speechesQuery.data ?? [];
   const prefetchedThumbnailUrls = useRef(new Set<string>());
+  const swipeStartY = useRef<number | null>(null);
 
   const activeIndex = useMemo(() => {
     if (speeches.length === 0) {
@@ -137,6 +142,35 @@ export function LearnerSpeechCatalog() {
       direction,
       speechCount: speeches.length,
     });
+  };
+
+  const handleSwipePointerDown = (
+    event: React.PointerEvent<HTMLDivElement>
+  ) => {
+    if (!isMobile) {
+      return;
+    }
+
+    swipeStartY.current = event.clientY;
+  };
+
+  const handleSwipePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isMobile || swipeStartY.current === null) {
+      return;
+    }
+
+    const deltaY = event.clientY - swipeStartY.current;
+    swipeStartY.current = null;
+
+    if (deltaY < -SWIPE_THRESHOLD_PX) {
+      navigateSpeech(1);
+    } else if (deltaY > SWIPE_THRESHOLD_PX) {
+      navigateSpeech(-1);
+    }
+  };
+
+  const handleSwipePointerCancel = () => {
+    swipeStartY.current = null;
   };
 
   useEffect(() => {
@@ -221,6 +255,64 @@ export function LearnerSpeechCatalog() {
   const focusedSpeech = speeches[activeIndex];
   const canGoUp = activeIndex > 0;
   const canGoDown = activeIndex < speeches.length - 1;
+  const navigationHint = isMobile
+    ? "Swipe up or down to browse speeches"
+    : "Use ↑ ↓ to browse speeches";
+
+  const navigationHintElement = (
+    <div
+      aria-hidden={hasNavigated}
+      className={cn(
+        "grid overflow-hidden transition-[grid-template-rows] duration-300 ease-in-out",
+        hasNavigated ? "grid-rows-[0fr]" : "grid-rows-[1fr]"
+      )}
+    >
+      <div className="min-h-0 overflow-hidden">
+        <p
+          className={cn(
+            "text-xs text-muted-foreground transition-opacity duration-300 ease-in-out",
+            hasNavigated ? "opacity-0" : "opacity-100",
+            isMobile ? "pb-3 text-center" : "pb-3"
+          )}
+        >
+          {navigationHint}
+        </p>
+      </div>
+    </div>
+  );
+
+  const speechCardElement = (
+    <div
+      className={cn(
+        "relative w-full overflow-hidden",
+        isMobile && "touch-pan-y"
+      )}
+      onPointerDown={isMobile ? handleSwipePointerDown : undefined}
+      onPointerUp={isMobile ? handleSwipePointerUp : undefined}
+      onPointerCancel={isMobile ? handleSwipePointerCancel : undefined}
+    >
+      <div className="invisible" aria-hidden>
+        <LearnerSpeechCard speech={focusedSpeech} className="mx-0 w-full" />
+      </div>
+      <AnimatePresence mode="sync" initial={false} custom={navigationDirection}>
+        <motion.div
+          key={focusedSpeech.id}
+          className="absolute inset-x-0 top-0 w-full"
+          custom={navigationDirection}
+          variants={cardVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{
+            duration: transitionDuration,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+        >
+          <LearnerSpeechCard speech={focusedSpeech} className="mx-0 w-full" />
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-4 py-8">
@@ -229,56 +321,19 @@ export function LearnerSpeechCatalog() {
         aria-atomic="true"
         className="sr-only"
       >{`Speech ${activeIndex + 1} of ${speeches.length}: ${focusedSpeech.title}`}</div>
-      <div className="grid w-full max-w-3xl grid-cols-[1fr_minmax(0,24rem)_1fr] items-center gap-x-6">
-        <div aria-hidden />
-        <div className="relative w-full overflow-hidden">
-          <div className="invisible" aria-hidden>
-            <LearnerSpeechCard speech={focusedSpeech} className="mx-0 w-full" />
-          </div>
-          <AnimatePresence
-            mode="sync"
-            initial={false}
-            custom={navigationDirection}
-          >
-            <motion.div
-              key={focusedSpeech.id}
-              className="absolute inset-x-0 top-0 w-full"
-              custom={navigationDirection}
-              variants={cardVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{
-                duration: transitionDuration,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-            >
-              <LearnerSpeechCard
-                speech={focusedSpeech}
-                className="mx-0 w-full"
-              />
-            </motion.div>
-          </AnimatePresence>
+      <div
+        className={cn(
+          "grid w-full items-center gap-x-6",
+          "max-w-sm grid-cols-1 md:max-w-3xl md:grid-cols-[1fr_minmax(0,24rem)_1fr]"
+        )}
+      >
+        <div className="hidden md:block" aria-hidden />
+        <div className="flex w-full flex-col items-center">
+          {isMobile ? navigationHintElement : null}
+          {speechCardElement}
         </div>
-        <div className="flex flex-col items-start">
-          <div
-            aria-hidden={hasNavigated}
-            className={cn(
-              "grid overflow-hidden transition-[grid-template-rows] duration-300 ease-in-out",
-              hasNavigated ? "grid-rows-[0fr]" : "grid-rows-[1fr]"
-            )}
-          >
-            <div className="min-h-0 overflow-hidden">
-              <p
-                className={cn(
-                  "pb-3 text-xs text-muted-foreground transition-opacity duration-300 ease-in-out",
-                  hasNavigated ? "opacity-0" : "opacity-100"
-                )}
-              >
-                Use ↑ ↓ to browse speeches
-              </p>
-            </div>
-          </div>
+        <div className="hidden flex-col items-start md:flex">
+          {navigationHintElement}
           <div className="flex flex-col gap-1">
             <Button
               type="button"
