@@ -1,6 +1,7 @@
 import { ImageIcon } from "lucide-react";
 import Image from "next/image";
 
+import { BackgroundGradient } from "@/components/ui/background-gradient";
 import {
   Card,
   CardDescription,
@@ -20,9 +21,14 @@ export type LearnerSpeechCardSpeech = {
   thumbnailUrl: string | null;
 };
 
+const GRADIENT_BORDER_CONTAINER_CLASS = "!p-[2px]";
+const GRADIENT_BORDER_RADIUS_CLASS = "rounded-[calc(var(--radius-xl)+2px)]";
+
 type LearnerSpeechCardProps = {
   speech: LearnerSpeechCardSpeech;
   className?: string;
+  gradientContainerClassName?: string;
+  gradientRoundedClassName?: string;
 };
 
 function formatLengthLabel(length: string): string {
@@ -36,36 +42,46 @@ function formatLengthLabel(length: string): string {
 export function LearnerSpeechCard({
   speech,
   className,
+  gradientContainerClassName = GRADIENT_BORDER_CONTAINER_CLASS,
+  gradientRoundedClassName = GRADIENT_BORDER_RADIUS_CLASS,
 }: LearnerSpeechCardProps) {
   const metadata = formatLengthLabel(speech.length);
 
   return (
-    <Card
-      className={cn("mx-auto w-full max-w-sm overflow-hidden pt-0", className)}
+    <BackgroundGradient
+      containerClassName={gradientContainerClassName}
+      roundedClassName={gradientRoundedClassName}
     >
-      <div className="relative aspect-13/17 w-full overflow-hidden bg-muted">
-        {speech.thumbnailUrl ? (
-          <Image
-            src={speech.thumbnailUrl}
-            alt={`Cover for ${speech.title}`}
-            fill
-            className="object-cover"
-            unoptimized
-            priority
-          />
-        ) : (
-          <div className="flex size-full flex-col items-center justify-center gap-2 text-muted-foreground">
-            <ImageIcon className="size-8" aria-hidden />
-            <span className="text-sm">No cover image</span>
-          </div>
+      <Card
+        className={cn(
+          "mx-auto w-full max-w-sm overflow-hidden pt-0",
+          className
         )}
-      </div>
-      <CardHeader className="text-center">
-        <CardTitle className="text-xl font-semibold tracking-tight">
-          {speech.title}
-        </CardTitle>
-        <CardDescription>{metadata}</CardDescription>
-      </CardHeader>
-    </Card>
+      >
+        <div className="relative aspect-13/17 w-full overflow-hidden bg-muted">
+          {speech.thumbnailUrl ? (
+            <Image
+              src={speech.thumbnailUrl}
+              alt={`Cover for ${speech.title}`}
+              fill
+              className="object-cover"
+              unoptimized
+              priority
+            />
+          ) : (
+            <div className="flex size-full flex-col items-center justify-center gap-2 text-muted-foreground">
+              <ImageIcon className="size-8" aria-hidden />
+              <span className="text-sm">No cover image</span>
+            </div>
+          )}
+        </div>
+        <CardHeader className="text-center">
+          <CardTitle className="text-xl font-semibold tracking-tight">
+            {speech.title}
+          </CardTitle>
+          <CardDescription>{metadata}</CardDescription>
+        </CardHeader>
+      </Card>
+    </BackgroundGradient>
   );
 }

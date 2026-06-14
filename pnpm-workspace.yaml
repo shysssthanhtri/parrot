@@ -1,13 +1,15 @@
 packages:
   - "."
 
+# Install optional platform binaries for the host only. Vercel build runners are
+# linux/x64, so `current` there still resolves the production SWC/sharp deps.
+# Avoid listing linux/x64 here: on macOS that pulls ~200MB of @next/swc-* tarballs
+# and commonly times out during local `pnpm add` / `pnpm install`.
 supportedArchitectures:
   os:
     - current
-    - linux
   cpu:
     - current
-    - x64
 
 allowBuilds:
   "@prisma/engines": true
