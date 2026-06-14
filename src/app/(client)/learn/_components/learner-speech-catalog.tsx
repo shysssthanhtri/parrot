@@ -96,6 +96,7 @@ function getUpcomingThumbnailUrls(
 }
 
 const SWIPE_THRESHOLD_PX = 50;
+const SPEECH_CARD_STACK_GAP_PX = 16;
 
 export function LearnerSpeechCatalog() {
   const trpc = useTRPC();
@@ -111,17 +112,32 @@ export function LearnerSpeechCatalog() {
   });
 
   const useInteractiveMobileSwipe = isMobile && !prefersReducedMotion;
-  const slideOffset = prefersReducedMotion ? 0 : "100%";
+  const stackedSlideOffset = (sign: 1 | -1) =>
+    prefersReducedMotion
+      ? 0
+      : sign > 0
+        ? `calc(100% + ${SPEECH_CARD_STACK_GAP_PX}px)`
+        : `calc(-100% - ${SPEECH_CARD_STACK_GAP_PX}px)`;
   const desktopTransitionDuration = prefersReducedMotion ? 0 : 0.5;
   const cardVariants = {
     enter: (direction: NavigationDirection) => ({
-      y: direction > 0 ? slideOffset : direction < 0 ? `-${slideOffset}` : 0,
+      y:
+        direction > 0
+          ? stackedSlideOffset(1)
+          : direction < 0
+            ? stackedSlideOffset(-1)
+            : 0,
     }),
     center: {
       y: 0,
     },
     exit: (direction: NavigationDirection) => ({
-      y: direction > 0 ? `-${slideOffset}` : direction < 0 ? slideOffset : 0,
+      y:
+        direction > 0
+          ? stackedSlideOffset(-1)
+          : direction < 0
+            ? stackedSlideOffset(1)
+            : 0,
     }),
   };
 

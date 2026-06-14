@@ -19,11 +19,11 @@ import {
 
 const SWIPE_THRESHOLD_PX = 50;
 const SWIPE_VELOCITY_THRESHOLD = 500;
+const SPEECH_CARD_STACK_GAP_PX = 16;
 
-const MOBILE_SPRING_TRANSITION = {
-  type: "spring" as const,
-  stiffness: 350,
-  damping: 32,
+const SPEECH_CARD_TRANSITION = {
+  duration: 0.5,
+  ease: [0.22, 1, 0.36, 1] as const,
 };
 
 const SNAP_BACK_SPRING = {
@@ -63,8 +63,14 @@ export function LearnerSpeechSwipeStack({
 
   const gradientAnimate = !isDragging && !isTransitioning;
 
-  const prevY = useTransform(dragY, (latest) => -containerHeight + latest);
-  const nextY = useTransform(dragY, (latest) => containerHeight + latest);
+  const prevY = useTransform(
+    dragY,
+    (latest) => -containerHeight - SPEECH_CARD_STACK_GAP_PX + latest
+  );
+  const nextY = useTransform(
+    dragY,
+    (latest) => containerHeight + SPEECH_CARD_STACK_GAP_PX + latest
+  );
 
   useEffect(() => {
     const container = containerRef.current;
@@ -88,13 +94,23 @@ export function LearnerSpeechSwipeStack({
 
   const cardVariants = {
     enter: (direction: NavigationDirection) => ({
-      y: direction > 0 ? "100%" : direction < 0 ? "-100%" : 0,
+      y:
+        direction > 0
+          ? `calc(100% + ${SPEECH_CARD_STACK_GAP_PX}px)`
+          : direction < 0
+            ? `calc(-100% - ${SPEECH_CARD_STACK_GAP_PX}px)`
+            : 0,
     }),
     center: {
       y: 0,
     },
     exit: (direction: NavigationDirection) => ({
-      y: direction > 0 ? "-100%" : direction < 0 ? "100%" : 0,
+      y:
+        direction > 0
+          ? `calc(-100% - ${SPEECH_CARD_STACK_GAP_PX}px)`
+          : direction < 0
+            ? `calc(100% + ${SPEECH_CARD_STACK_GAP_PX}px)`
+            : 0,
     }),
   };
 
@@ -204,13 +220,15 @@ export function LearnerSpeechSwipeStack({
           initial="enter"
           animate="center"
           exit="exit"
-          transition={MOBILE_SPRING_TRANSITION}
+          transition={SPEECH_CARD_TRANSITION}
         >
           <motion.div
             drag={isTransitioning ? false : "y"}
             dragConstraints={{
-              top: canGoDown ? -containerHeight : 0,
-              bottom: canGoUp ? containerHeight : 0,
+              top: canGoDown
+                ? -(containerHeight + SPEECH_CARD_STACK_GAP_PX)
+                : 0,
+              bottom: canGoUp ? containerHeight + SPEECH_CARD_STACK_GAP_PX : 0,
             }}
             dragElastic={{
               top: canGoDown ? 0.15 : 0.25,
