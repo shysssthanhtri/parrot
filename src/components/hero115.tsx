@@ -4,6 +4,7 @@ import { ArrowRight, Wifi } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSyncExternalStore } from "react";
 
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 import { HoverBorderGradient } from "./ui/hover-border-gradient";
@@ -81,8 +82,10 @@ const Hero115 = (props: Props) => {
   );
 
   const isDark = resolvedTheme === "dark";
+  const isMobile = useIsMobile();
   const backgroundFill = isDark ? "oklch(0.145 0 0)" : "oklch(1 0 0)";
   const themeReady = mounted && resolvedTheme !== undefined;
+  const waveYPosition = isMobile ? 0.4 : 0.58;
 
   const desktopImageClassName =
     "mx-auto aspect-3/4 h-full max-h-[524px] w-full max-w-5xl rounded-lg border border-border object-cover object-top-left md:aspect-video md:object-top";
@@ -186,7 +189,7 @@ const Hero115 = (props: Props) => {
           containerClassName="relative !h-auto min-h-0 w-full !flex-none !justify-start py-32"
           speed="slow"
           waveOpacity={isDark ? 0.45 : 0.35}
-          waveYPosition={0.58}
+          waveYPosition={waveYPosition}
         >
           {heroContent}
         </WavyBackground>
