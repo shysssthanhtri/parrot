@@ -16,7 +16,7 @@ const CMSLayout = async ({ children }: { children: React.ReactNode }) => {
     : true;
 
   return (
-    <SessionProvider session={session}>
+    <SessionProvider session={session} refetchOnWindowFocus={false}>
       <SidebarProvider defaultOpen={defaultOpen}>
         <TooltipProvider delayDuration={0}>
           <CMSSidebar />
