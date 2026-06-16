@@ -21,8 +21,8 @@ export type LearnerSpeechCardSpeech = {
   thumbnailUrl: string | null;
 };
 
-const GRADIENT_BORDER_CONTAINER_CLASS = "!p-[2px]";
-const GRADIENT_BORDER_RADIUS_CLASS = "rounded-[calc(var(--radius-xl)+2px)]";
+const GRADIENT_BORDER_CONTAINER_CLASS = "!p-[1.5px]";
+const GRADIENT_BORDER_RADIUS_CLASS = "rounded-[calc(var(--radius-xl)+1.5px)]";
 
 type LearnerSpeechCardProps = {
   speech: LearnerSpeechCardSpeech;

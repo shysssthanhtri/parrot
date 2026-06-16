@@ -20,14 +20,17 @@ export const BackgroundGradient = ({
   contentRoundedClassName?: string;
   animate?: boolean;
 }) => {
-  const variants = {
-    initial: {
-      backgroundPosition: "0 50%",
-    },
-    animate: {
-      backgroundPosition: ["0, 50%", "100% 50%", "0 50%"],
-    },
-  };
+  const rgbConicGradient =
+    "conic-gradient(from 0deg, #ff0033, #ff6600, #ffff00, #00ff66, #00ccff, #0066ff, #8800ff, #ff0033)";
+
+  const spinTransition = animate
+    ? {
+        duration: 2,
+        repeat: Infinity,
+        ease: "linear" as const,
+      }
+    : undefined;
+
   return (
     <div
       className={cn(
@@ -37,47 +40,21 @@ export const BackgroundGradient = ({
       )}
     >
       <motion.div
-        variants={animate ? variants : undefined}
-        initial={animate ? "initial" : undefined}
-        animate={animate ? "animate" : undefined}
-        transition={
-          animate
-            ? {
-                duration: 5,
-                repeat: Infinity,
-                repeatType: "reverse",
-              }
-            : undefined
-        }
-        style={{
-          backgroundSize: animate ? "400% 400%" : undefined,
-        }}
+        animate={animate ? { rotate: 360 } : { rotate: 0 }}
+        transition={spinTransition}
+        style={{ backgroundImage: rgbConicGradient }}
         className={cn(
-          "absolute inset-0 z-[1] opacity-60 group-hover:opacity-100 blur-xl transition duration-500 will-change-transform",
-          roundedClassName,
-          "bg-[radial-gradient(circle_farthest-side_at_0_100%,#00ccb1,transparent),radial-gradient(circle_farthest-side_at_100%_0,#7b61ff,transparent),radial-gradient(circle_farthest-side_at_100%_100%,#ffc414,transparent),radial-gradient(circle_farthest-side_at_0_0,#1ca0fb,#141316)]"
+          "absolute -inset-full z-[1] opacity-75 group-hover:opacity-100 blur-xl transition-opacity duration-500 will-change-transform",
+          roundedClassName
         )}
       />
       <motion.div
-        variants={animate ? variants : undefined}
-        initial={animate ? "initial" : undefined}
-        animate={animate ? "animate" : undefined}
-        transition={
-          animate
-            ? {
-                duration: 5,
-                repeat: Infinity,
-                repeatType: "reverse",
-              }
-            : undefined
-        }
-        style={{
-          backgroundSize: animate ? "400% 400%" : undefined,
-        }}
+        animate={animate ? { rotate: 360 } : { rotate: 0 }}
+        transition={spinTransition}
+        style={{ backgroundImage: rgbConicGradient }}
         className={cn(
-          "absolute inset-0 z-[1] will-change-transform",
-          roundedClassName,
-          "bg-[radial-gradient(circle_farthest-side_at_0_100%,#00ccb1,transparent),radial-gradient(circle_farthest-side_at_100%_0,#7b61ff,transparent),radial-gradient(circle_farthest-side_at_100%_100%,#ffc414,transparent),radial-gradient(circle_farthest-side_at_0_0,#1ca0fb,#141316)]"
+          "absolute -inset-full z-[1] will-change-transform",
+          roundedClassName
         )}
       />
 
