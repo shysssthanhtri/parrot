@@ -2,7 +2,6 @@
 
 import {
   animate,
-  AnimatePresence,
   motion,
   type PanInfo,
   useMotionValue,
@@ -21,15 +20,16 @@ const SWIPE_THRESHOLD_PX = 50;
 const SWIPE_VELOCITY_THRESHOLD = 500;
 const SPEECH_CARD_STACK_GAP_PX = 16;
 
-const SPEECH_CARD_TRANSITION = {
-  duration: 0.5,
-  ease: [0.22, 1, 0.36, 1] as const,
-};
-
 const SNAP_BACK_SPRING = {
   type: "spring" as const,
   stiffness: 400,
   damping: 35,
+};
+
+const SETTLE_SPRING = {
+  type: "spring" as const,
+  stiffness: 350,
+  damping: 40,
 };
 
 type NavigationDirection = -1 | 0 | 1;
@@ -52,25 +52,25 @@ export function LearnerSpeechSwipeStack({
   nextSpeech,
   canGoUp,
   canGoDown,
-  navigationDirection,
   onNavigate,
 }: LearnerSpeechSwipeStackProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const settleAnimationRef = useRef<ReturnType<typeof animate> | null>(null);
   const [containerHeight, setContainerHeight] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [settleDirection, setSettleDirection] = useState<-1 | 1 | null>(null);
   const dragY = useMotionValue(0);
 
-  const gradientAnimate = !isDragging && !isTransitioning;
+  const isGesturing = isDragging || isTransitioning;
+  const gradientAnimate = !isGesturing;
+  const slotOffset = containerHeight + SPEECH_CARD_STACK_GAP_PX;
+  const gpuLayerClass = isGesturing
+    ? "will-change-transform transform-gpu"
+    : undefined;
 
-  const prevY = useTransform(
-    dragY,
-    (latest) => -containerHeight - SPEECH_CARD_STACK_GAP_PX + latest
-  );
-  const nextY = useTransform(
-    dragY,
-    (latest) => containerHeight + SPEECH_CARD_STACK_GAP_PX + latest
-  );
+  const prevY = useTransform(dragY, (latest) => -slotOffset + latest);
+  const nextY = useTransform(dragY, (latest) => slotOffset + latest);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -89,36 +89,20 @@ export function LearnerSpeechSwipeStack({
   }, [speechKey]);
 
   useEffect(() => {
-    dragY.set(0);
-  }, [speechKey, dragY]);
+    return () => {
+      settleAnimationRef.current?.stop();
+    };
+  }, []);
 
-  const cardVariants = {
-    enter: (direction: NavigationDirection) => ({
-      y:
-        direction > 0
-          ? `calc(100% + ${SPEECH_CARD_STACK_GAP_PX}px)`
-          : direction < 0
-            ? `calc(-100% - ${SPEECH_CARD_STACK_GAP_PX}px)`
-            : 0,
-    }),
-    center: {
-      y: 0,
-    },
-    exit: (direction: NavigationDirection) => ({
-      y:
-        direction > 0
-          ? `calc(-100% - ${SPEECH_CARD_STACK_GAP_PX}px)`
-          : direction < 0
-            ? `calc(100% + ${SPEECH_CARD_STACK_GAP_PX}px)`
-            : 0,
-    }),
+  const stopSettleAnimation = () => {
+    settleAnimationRef.current?.stop();
+    settleAnimationRef.current = null;
+    setSettleDirection(null);
+    setIsTransitioning(false);
   };
 
   const handleDragStart = () => {
-    if (isTransitioning) {
-      return;
-    }
-
+    stopSettleAnimation();
     setIsDragging(true);
   };
 
@@ -127,10 +111,6 @@ export function LearnerSpeechSwipeStack({
     info: PanInfo
   ) => {
     setIsDragging(false);
-
-    if (isTransitioning) {
-      return;
-    }
 
     const { offset, velocity } = info;
     let direction: -1 | 1 | null = null;
@@ -149,18 +129,46 @@ export function LearnerSpeechSwipeStack({
       direction = -1;
     }
 
-    if (direction !== null) {
-      dragY.set(0);
+    if (direction !== null && slotOffset > 0) {
+      const target = direction === 1 ? -slotOffset : slotOffset;
+
+      setSettleDirection(direction);
       setIsTransitioning(true);
-      onNavigate(direction);
+
+      settleAnimationRef.current = animate(dragY, target, {
+        ...SETTLE_SPRING,
+        velocity: velocity.y,
+        onComplete: () => {
+          settleAnimationRef.current = null;
+          onNavigate(direction);
+          dragY.set(0);
+          setSettleDirection(null);
+          setIsTransitioning(false);
+        },
+      });
       return;
     }
 
-    void animate(dragY, 0, SNAP_BACK_SPRING);
+    if (direction !== null && slotOffset === 0) {
+      onNavigate(direction);
+      dragY.set(0);
+      return;
+    }
+
+    void animate(dragY, 0, {
+      ...SNAP_BACK_SPRING,
+      velocity: velocity.y,
+    });
   };
 
-  const showPrevPreview = isDragging && canGoUp && prevSpeech !== null;
-  const showNextPreview = isDragging && canGoDown && nextSpeech !== null;
+  const showPrevPreview =
+    canGoUp &&
+    prevSpeech !== null &&
+    (isDragging || (isTransitioning && settleDirection === -1));
+  const showNextPreview =
+    canGoDown &&
+    nextSpeech !== null &&
+    (isDragging || (isTransitioning && settleDirection === 1));
 
   return (
     <div
@@ -178,7 +186,10 @@ export function LearnerSpeechSwipeStack({
       {showPrevPreview ? (
         <motion.div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 w-full will-change-transform transform-gpu"
+          className={cn(
+            "pointer-events-none absolute inset-x-0 top-0 w-full",
+            gpuLayerClass
+          )}
           style={{ y: prevY }}
         >
           <LearnerSpeechCard
@@ -192,7 +203,10 @@ export function LearnerSpeechSwipeStack({
       {showNextPreview ? (
         <motion.div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 w-full will-change-transform transform-gpu"
+          className={cn(
+            "pointer-events-none absolute inset-x-0 top-0 w-full",
+            gpuLayerClass
+          )}
           style={{ y: nextY }}
         >
           <LearnerSpeechCard
@@ -203,51 +217,28 @@ export function LearnerSpeechSwipeStack({
         </motion.div>
       ) : null}
 
-      <AnimatePresence
-        mode="sync"
-        initial={false}
-        custom={navigationDirection}
-        onExitComplete={() => setIsTransitioning(false)}
+      <motion.div
+        drag="y"
+        dragConstraints={{
+          top: canGoDown ? -slotOffset : 0,
+          bottom: canGoUp ? slotOffset : 0,
+        }}
+        dragElastic={{
+          top: canGoDown ? 0.15 : 0.25,
+          bottom: canGoUp ? 0.15 : 0.25,
+        }}
+        dragMomentum={false}
+        style={{ y: dragY }}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        className={cn("absolute inset-x-0 top-0 w-full", gpuLayerClass)}
       >
-        <motion.div
-          key={speechKey}
-          className={cn(
-            "absolute inset-x-0 top-0 w-full will-change-transform transform-gpu",
-            isTransitioning && "pointer-events-none"
-          )}
-          custom={navigationDirection}
-          variants={cardVariants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={SPEECH_CARD_TRANSITION}
-        >
-          <motion.div
-            drag={isTransitioning ? false : "y"}
-            dragConstraints={{
-              top: canGoDown
-                ? -(containerHeight + SPEECH_CARD_STACK_GAP_PX)
-                : 0,
-              bottom: canGoUp ? containerHeight + SPEECH_CARD_STACK_GAP_PX : 0,
-            }}
-            dragElastic={{
-              top: canGoDown ? 0.15 : 0.25,
-              bottom: canGoUp ? 0.15 : 0.25,
-            }}
-            dragMomentum={false}
-            style={{ y: dragY }}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            className="w-full will-change-transform transform-gpu"
-          >
-            <LearnerSpeechCard
-              speech={speech}
-              className="mx-0 w-full"
-              gradientAnimate={gradientAnimate}
-            />
-          </motion.div>
-        </motion.div>
-      </AnimatePresence>
+        <LearnerSpeechCard
+          speech={speech}
+          className="mx-0 w-full"
+          gradientAnimate={gradientAnimate}
+        />
+      </motion.div>
     </div>
   );
 }
