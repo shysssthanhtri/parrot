@@ -1,4 +1,3 @@
-import { motion } from "motion/react";
 import React from "react";
 
 import { cn } from "@/lib/utils";
@@ -23,13 +22,11 @@ export const BackgroundGradient = ({
   const rgbConicGradient =
     "conic-gradient(from 0deg, #ff0033, #ff6600, #ffff00, #00ff66, #00ccff, #0066ff, #8800ff, #ff0033)";
 
-  const spinTransition = animate
-    ? {
-        duration: 2,
-        repeat: Infinity,
-        ease: "linear" as const,
-      }
-    : undefined;
+  const spinLayerClassName = cn(
+    "absolute -inset-full z-[1] will-change-transform",
+    animate && "animate-gradient-border-spin",
+    roundedClassName
+  );
 
   return (
     <div
@@ -39,23 +36,16 @@ export const BackgroundGradient = ({
         containerClassName
       )}
     >
-      <motion.div
-        animate={animate ? { rotate: 360 } : { rotate: 0 }}
-        transition={spinTransition}
+      <div
         style={{ backgroundImage: rgbConicGradient }}
         className={cn(
-          "absolute -inset-full z-[1] opacity-75 group-hover:opacity-100 blur-xl transition-opacity duration-500 will-change-transform",
-          roundedClassName
+          spinLayerClassName,
+          "opacity-75 group-hover:opacity-100 blur-xl transition-opacity duration-500"
         )}
       />
-      <motion.div
-        animate={animate ? { rotate: 360 } : { rotate: 0 }}
-        transition={spinTransition}
+      <div
         style={{ backgroundImage: rgbConicGradient }}
-        className={cn(
-          "absolute -inset-full z-[1] will-change-transform",
-          roundedClassName
-        )}
+        className={spinLayerClassName}
       />
 
       <div
