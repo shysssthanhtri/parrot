@@ -29,16 +29,6 @@
           "maxConcurrency": 1
         }
       ]
-    },
-    "src/app/api/queues/speech-thumbnail/route.ts": {
-      "maxDuration": 300,
-      "experimentalTriggers": [
-        {
-          "type": "queue/v2beta",
-          "topic": "speech-thumbnail",
-          "maxConcurrency": 1
-        }
-      ]
     }
   }
 }

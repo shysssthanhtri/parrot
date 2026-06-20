@@ -11,17 +11,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  isSpeechInProgress,
-  speechProcessStatusSchema,
-} from "@/lib/speech-process-status";
 
 import { SpeechRegenerateThumbnailButton } from "./speech-regenerate-thumbnail-button";
 
+type ThumbnailGenerationSummary = {
+  status: "processing" | "finished" | "failed";
+  errorMessage: string | null;
+};
+
 type SpeechThumbnailCardProps = {
   scriptTitle: string;
-  thumbnailProcessStatus: string;
-  thumbnailErrorMessage: string | null;
+  thumbnailGeneration: ThumbnailGenerationSummary | null;
   thumbnailUrl: string | null;
   isPublished: boolean;
   onRegenerateThumbnail?: () => void;
@@ -30,18 +30,14 @@ type SpeechThumbnailCardProps = {
 
 export function SpeechThumbnailCard({
   scriptTitle,
-  thumbnailProcessStatus,
-  thumbnailErrorMessage,
+  thumbnailGeneration,
   thumbnailUrl,
   isPublished,
   onRegenerateThumbnail,
   isRegeneratingThumbnail = false,
 }: SpeechThumbnailCardProps) {
-  const parsedStatus = speechProcessStatusSchema.safeParse(
-    thumbnailProcessStatus
-  );
-  const status = parsedStatus.success ? parsedStatus.data : "pending";
-  const isGenerating = isSpeechInProgress(status);
+  const status = thumbnailGeneration?.status ?? "processing";
+  const isGenerating = status === "processing";
 
   return (
     <Card>
@@ -61,13 +57,13 @@ export function SpeechThumbnailCard({
         ) : null}
       </CardHeader>
       <CardContent className="grid gap-4">
-        <SpeechProcessStatusBadge status={thumbnailProcessStatus} />
+        <SpeechProcessStatusBadge status={status} />
 
         {status === "failed" ? (
           <div className="flex items-start gap-2 text-sm text-destructive">
             <AlertCircleIcon className="mt-0.5 size-4 shrink-0" />
             <p>
-              {thumbnailErrorMessage ??
+              {thumbnailGeneration?.errorMessage ??
                 "Thumbnail generation failed. Please try again."}
             </p>
           </div>
@@ -76,11 +72,7 @@ export function SpeechThumbnailCard({
         {isGenerating ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2Icon className="size-4 animate-spin" />
-            <span>
-              {status === "pending"
-                ? "Thumbnail generation is queued."
-                : "Generating thumbnail in the background."}
-            </span>
+            <span>Generating thumbnail in the background.</span>
           </div>
         ) : null}
 

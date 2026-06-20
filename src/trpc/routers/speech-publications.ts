@@ -33,7 +33,10 @@ const speechForPublishInclude = {
 async function loadSpeechForPublish(speechId: string) {
   const speech = await prisma.speech.findUnique({
     where: { id: speechId },
-    include: speechForPublishInclude,
+    include: {
+      ...speechForPublishInclude,
+      thumbnailGeneration: { select: { status: true } },
+    },
   });
 
   if (!speech) {

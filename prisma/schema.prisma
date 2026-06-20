@@ -137,10 +137,8 @@ model Speech {
   alignment         Json?
   processStatus     String  @default("pending")
   errorMessage      String?
-  thumbnailR2ObjectKey   String?
-  thumbnailProcessStatus String  @default("pending")
-  thumbnailErrorMessage  String?
-  totalChunks           Int       @default(0)
+  thumbnailR2ObjectKey String?
+  totalChunks          Int       @default(0)
   settledChunks         Int       @default(0)
   processingStartedAt   DateTime?
   userId                String
@@ -151,8 +149,26 @@ model Speech {
   voice  Voice         @relation(fields: [voiceId], references: [id], onDelete: Restrict)
   script Script        @relation(fields: [scriptId], references: [id], onDelete: Restrict)
   user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  chunks      SpeechChunk[]
-  publication SpeechPublication?
+  chunks              SpeechChunk[]
+  publication         SpeechPublication?
+  thumbnailGeneration SpeechThumbnailGeneration?
+}
+
+enum SpeechThumbnailGenerationStatus {
+  processing
+  finished
+  failed
+}
+
+model SpeechThumbnailGeneration {
+  id            String                          @id @default(cuid())
+  speechId      String                          @unique
+  status        SpeechThumbnailGenerationStatus
+  errorMessage  String?
+  workflowRunId String?
+  createdAt     DateTime                        @default(now())
+  updatedAt     DateTime                        @updatedAt
+  speech        Speech                          @relation(fields: [speechId], references: [id], onDelete: Cascade)
 }
 
 enum SpeechPublicationStatus {

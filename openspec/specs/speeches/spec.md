@@ -8,7 +8,7 @@ TBD - created by archiving change speeches. Update Purpose after archive.
 
 ### Requirement: Speech metadata model
 
-The system SHALL persist speech metadata in PostgreSQL using a Prisma `Speech` model with fields: `id`, `voiceId` (required FK to `Voice`), `scriptId` (required FK to `Script`), `language`, `contentLength` (integer, non-null, character count of the script content at speech creation time), TTS parameters (`temperature`, `topP`, `topK`, `repetitionPenalty`, `normLoudness`), `r2ObjectKey` (storage key for the final generated WAV, pre-assigned at create as `speeches/{id}.wav`), `alignment` (JSON, nullable, chunk-level audio–text timing set when processing finishes), `processStatus` (non-null string: `pending`, `processing`, `finished`, or `failed`, default `pending`), optional `errorMessage`, `totalChunks` (integer, non-null, default 0), `settledChunks` (integer, non-null, default 0; counts chunks that reached `done` or `failed`), `thumbnailR2ObjectKey` (nullable string, pre-assigned at create), `thumbnailProcessStatus` (non-null string: `pending`, `processing`, `finished`, or `failed`, default `pending`), optional `thumbnailErrorMessage`, required `userId` (FK to `User`), `createdAt`, and `updatedAt`. The system SHALL also persist `SpeechChunk` rows linked to each speech with `chunkIndex`, `text`, `status` (`pending`, `done`, or `failed`), `tempR2Key`, and optional `durationMs` (set only when `done`). There SHALL be no system-generated speeches; every speech row MUST have a `userId`.
+The system SHALL persist speech metadata in PostgreSQL using a Prisma `Speech` model with fields: `id`, `voiceId` (required FK to `Voice`), `scriptId` (required FK to `Script`), `language`, `contentLength` (integer, non-null, character count of the script content at speech creation time), TTS parameters (`temperature`, `topP`, `topK`, `repetitionPenalty`, `normLoudness`), `r2ObjectKey` (storage key for the final generated WAV, pre-assigned at create as `speeches/{id}.wav`), `alignment` (JSON, nullable, chunk-level audio–text timing set when processing finishes), `processStatus` (non-null string: `pending`, `processing`, `finished`, or `failed`, default `pending`), optional `errorMessage`, `totalChunks` (integer, non-null, default 0), `settledChunks` (integer, non-null, default 0; counts chunks that reached `done` or `failed`), `thumbnailR2ObjectKey` (nullable string, assigned when thumbnail processing starts), required `userId` (FK to `User`), `createdAt`, and `updatedAt`. The system SHALL also persist `SpeechChunk` rows linked to each speech with `chunkIndex`, `text`, `status` (`pending`, `done`, or `failed`), `tempR2Key`, and optional `durationMs` (set only when `done`). The system SHALL persist an optional one-to-one `SpeechThumbnailGeneration` relation for thumbnail job state. There SHALL be no system-generated speeches; every speech row MUST have a `userId`.
 
 #### Scenario: Speech with voice and script links
 
@@ -41,7 +41,7 @@ The system SHALL expose a tRPC `speeches.list` query that returns all speeches o
 
 ### Requirement: Speech detail API
 
-The system SHALL expose a tRPC `speeches.getById` query that returns a single speech by `id` with voice and script relations (including script `content`), `processStatus`, optional `errorMessage`, `totalChunks`, `settledChunks`, stored `alignment` when present, `thumbnailProcessStatus`, optional `thumbnailErrorMessage`, a resolved thumbnail preview URL when `thumbnailProcessStatus` is `finished` and the thumbnail object exists, publication summary (`not_published`, or `published` / `unpublished` with optional `publishedAt`), `canRegenerate` reflecting publication guard rules, and a resolved audio preview URL from storage only when `processStatus` is `finished` and the final object exists, or reports not found.
+The system SHALL expose a tRPC `speeches.getById` query that returns a single speech by `id` with voice and script relations (including script `content`), `processStatus`, optional `errorMessage`, `totalChunks`, `settledChunks`, stored `alignment` when present, linked `thumbnailGeneration` (`status`, optional `errorMessage`) when a generation row exists, a resolved thumbnail preview URL when `thumbnailGeneration.status` is `finished` and the thumbnail object exists at `thumbnailR2ObjectKey`, publication summary (`not_published`, or `published` / `unpublished` with optional `publishedAt`), `canRegenerate` reflecting publication guard rules, and a resolved audio preview URL from storage only when `processStatus` is `finished` and the final object exists, or reports not found.
 
 #### Scenario: Unknown speech id
 
@@ -80,17 +80,17 @@ The system SHALL expose a tRPC `speeches.getById` query that returns a single sp
 
 #### Scenario: Detail includes thumbnail URL when finished
 
-- **WHEN** `speeches.getById` is called for a speech with `thumbnailProcessStatus` `finished` and a thumbnail at `thumbnailR2ObjectKey`
+- **WHEN** `speeches.getById` is called for a speech whose `thumbnailGeneration.status` is `finished` and a thumbnail exists at `thumbnailR2ObjectKey`
 - **THEN** the response includes a resolved thumbnail preview URL
 
 ### Requirement: Speech create API
 
-The system SHALL expose a tRPC `speeches.create` mutation that accepts `voiceId`, `scriptId`, `language`, and TTS parameters with the same voice/script/language validation used for TTS generation. The server SHALL generate a new speech `id`, set `r2ObjectKey` to `speeches/{id}.wav`, compute `contentLength` from the linked script's `content.length`, persist the row with `processStatus` `pending`, `thumbnailProcessStatus` `pending`, and null `thumbnailR2ObjectKey`, `userId` from the authenticated session, enqueue a `speech-tts-start` message, and enqueue a `speech-thumbnail` message. It SHALL return the created speech immediately without waiting for TTS or thumbnail generation to complete. The procedure SHALL NOT accept client-provided `id`, `r2ObjectKey`, `alignment`, or audio data.
+The system SHALL expose a tRPC `speeches.create` mutation that accepts `voiceId`, `scriptId`, `language`, and TTS parameters with the same voice/script/language validation used for TTS generation. The server SHALL generate a new speech `id`, set `r2ObjectKey` to `speeches/{id}.wav`, compute `contentLength` from the linked script's `content.length`, persist the row with `processStatus` `pending` and null `thumbnailR2ObjectKey`, `userId` from the authenticated session, enqueue a `speech-tts-start` message, start a thumbnail workflow, and upsert `SpeechThumbnailGeneration` with `status` `processing` and the run's `workflowRunId`. It SHALL return the created speech immediately without waiting for TTS or thumbnail generation to complete. The procedure SHALL NOT accept client-provided `id`, `r2ObjectKey`, `alignment`, or audio data.
 
 #### Scenario: Successful async create
 
 - **WHEN** an authenticated client calls `speeches.create` with valid matching voice, script, language, and TTS parameters
-- **THEN** a speech row is created with `processStatus` `pending`, pre-assigned `r2ObjectKey`, null `thumbnailR2ObjectKey`, the caller's `userId`, computed `contentLength`, TTS and thumbnail jobs are enqueued, and the created row is returned
+- **THEN** a speech row is created with `processStatus` `pending`, pre-assigned `r2ObjectKey`, null `thumbnailR2ObjectKey`, the caller's `userId`, computed `contentLength`, a TTS start job is enqueued, a thumbnail workflow is started with a generation row in `processing`, and the created row is returned
 
 #### Scenario: Create rejects voice without audio
 
@@ -219,27 +219,13 @@ On success it SHALL delete every temp chunk object referenced by existing `Speec
 - **WHEN** `speeches.regenerate` is called for a speech with publication `status` `published`
 - **THEN** the procedure returns a validation error and no jobs are enqueued
 
-### Requirement: Speech thumbnail metadata
-
-The `Speech` model SHALL include `thumbnailR2ObjectKey` (nullable string), `thumbnailProcessStatus` (non-null string: `pending`, `processing`, `finished`, or `failed`, default `pending`), and optional `thumbnailErrorMessage`. On create `thumbnailR2ObjectKey` SHALL be null. The thumbnail queue worker SHALL assign `thumbnailR2ObjectKey` to `speeches/{id}/thumbnail.webp` when thumbnail processing starts.
-
-#### Scenario: Create leaves thumbnail key null
-
-- **WHEN** a speech row is created
-- **THEN** `thumbnailR2ObjectKey` is null and `thumbnailProcessStatus` is `pending`
-
-#### Scenario: Worker assigns key on process start
-
-- **WHEN** the thumbnail queue worker begins processing a speech with null `thumbnailR2ObjectKey`
-- **THEN** `thumbnailR2ObjectKey` is set to `speeches/{id}/thumbnail.webp` and `thumbnailProcessStatus` becomes `processing`
-
 ### Requirement: Speech publish readiness API
 
-The system SHALL expose a tRPC `speeches.getPublishReadiness` query that accepts a speech `id` and returns a list of `{ code, message }` issues from an extensible server-side checker list. Checkers SHALL include at minimum: audio finished, alignment present and valid, final audio object exists, and thumbnail finished with object in storage.
+The system SHALL expose a tRPC `speeches.getPublishReadiness` query that accepts a speech `id` and returns a list of `{ code, message }` issues from an extensible server-side checker list. Checkers SHALL include at minimum: audio finished, alignment present and valid, final audio object exists, and thumbnail generation `finished` with object in storage at `thumbnailR2ObjectKey`.
 
 #### Scenario: Readiness lists multiple blockers
 
-- **WHEN** `getPublishReadiness` is called for a speech with unfinished audio and pending thumbnail
+- **WHEN** `getPublishReadiness` is called for a speech with unfinished audio and thumbnail generation `processing`
 - **THEN** the response includes separate issues for each failed checker
 
 #### Scenario: Readiness empty when publishable
@@ -249,12 +235,12 @@ The system SHALL expose a tRPC `speeches.getPublishReadiness` query that accepts
 
 ### Requirement: Speech regenerate thumbnail API
 
-The system SHALL expose a tRPC `speeches.regenerateThumbnail` mutation that accepts a speech `id`. It SHALL succeed only when the speech exists and publication `status` is not `published`. It SHALL delete any existing thumbnail object at `thumbnailR2ObjectKey` when present, set `thumbnailR2ObjectKey` to null, reset `thumbnailProcessStatus` to `pending`, clear `thumbnailErrorMessage`, and enqueue a `speech-thumbnail` message. It SHALL NOT modify TTS state or enqueue TTS jobs.
+The system SHALL expose a tRPC `speeches.regenerateThumbnail` mutation that accepts a speech `id`. It SHALL succeed only when the speech exists and publication `status` is not `published`. It SHALL best-effort cancel any in-flight thumbnail workflow using the stored `workflowRunId`, delete any existing thumbnail object at `thumbnailR2ObjectKey` when present, set `thumbnailR2ObjectKey` to null, upsert `SpeechThumbnailGeneration` to `status` `processing` with a new `workflowRunId` and cleared `errorMessage`, and start a new thumbnail workflow. It SHALL NOT modify TTS state or enqueue TTS jobs.
 
 #### Scenario: Manual thumbnail regenerate
 
 - **WHEN** an authenticated CMS client calls `regenerateThumbnail` for an unpublished speech
-- **THEN** `thumbnailR2ObjectKey` is null, a thumbnail job is enqueued, and `thumbnailProcessStatus` becomes `pending`
+- **THEN** `thumbnailR2ObjectKey` is null, a new thumbnail workflow is started, and `SpeechThumbnailGeneration.status` is `processing`
 
 #### Scenario: Thumbnail regenerate rejected when published
 

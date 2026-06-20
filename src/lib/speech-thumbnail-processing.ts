@@ -3,7 +3,6 @@ import "server-only";
 import { generateThumbnail } from "@/lib/thumbnail/generateThumbnail";
 import { prisma } from "@/prisma";
 
-import { markSpeechThumbnailFailed } from "./speech-thumbnail-jobs";
 import { buildSpeechThumbnailPrompt } from "./speech-thumbnail-prompt";
 import {
   SPEECH_THUMBNAIL_CONTENT_TYPE,
@@ -11,21 +10,16 @@ import {
   uploadObject,
 } from "./storage";
 
-export const SPEECH_THUMBNAIL_MAX_QUEUE_ATTEMPTS = 3;
 export {
   buildSpeechThumbnailPrompt,
   SPEECH_THUMBNAIL_PROMPT_MAX_LENGTH,
   truncateForThumbnailPrompt,
 } from "./speech-thumbnail-prompt";
 
-const THUMBNAIL_FAILURE_MESSAGE =
-  "Thumbnail generation failed. Please try again.";
-
-type SpeechThumbnailContext = {
+export type SpeechThumbnailContext = {
   id: string;
   language: string;
   thumbnailR2ObjectKey: string | null;
-  thumbnailProcessStatus: string;
   script: {
     title: string;
     content: string;
@@ -36,7 +30,15 @@ type SpeechThumbnailContext = {
   };
 };
 
-async function loadSpeechThumbnailContext(
+export function getUserSafeThumbnailError(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return "Thumbnail generation failed. Please try again.";
+}
+
+export async function loadSpeechThumbnailContext(
   speechId: string
 ): Promise<SpeechThumbnailContext> {
   const speech = await prisma.speech.findUnique({
@@ -45,7 +47,6 @@ async function loadSpeechThumbnailContext(
       id: true,
       language: true,
       thumbnailR2ObjectKey: true,
-      thumbnailProcessStatus: true,
       script: {
         select: {
           title: true,
@@ -68,67 +69,40 @@ async function loadSpeechThumbnailContext(
   return speech;
 }
 
-export async function runSpeechThumbnail(
-  speechId: string,
-  deliveryCount: number
+export async function ensureSpeechThumbnailObjectKey(
+  speechId: string
+): Promise<string> {
+  const speech = await prisma.speech.findUnique({
+    where: { id: speechId },
+    select: { thumbnailR2ObjectKey: true },
+  });
+
+  if (!speech) {
+    throw new Error(`Speech not found: ${speechId}`);
+  }
+
+  if (speech.thumbnailR2ObjectKey) {
+    return speech.thumbnailR2ObjectKey;
+  }
+
+  const thumbnailR2ObjectKey = speechThumbnailObjectKey(speechId);
+
+  await prisma.speech.update({
+    where: { id: speechId },
+    data: { thumbnailR2ObjectKey },
+  });
+
+  return thumbnailR2ObjectKey;
+}
+
+export async function generateAndUploadSpeechThumbnail(
+  speech: SpeechThumbnailContext
 ): Promise<void> {
-  console.log(`[speech-thumbnail] ${speechId}`, deliveryCount);
+  const thumbnailR2ObjectKey =
+    speech.thumbnailR2ObjectKey ?? speechThumbnailObjectKey(speech.id);
 
-  const speech = await loadSpeechThumbnailContext(speechId);
+  const prompt = buildSpeechThumbnailPrompt(speech);
+  const webp = await generateThumbnail({ prompt });
 
-  if (speech.thumbnailProcessStatus === "finished") {
-    return;
-  }
-
-  if (speech.thumbnailProcessStatus === "failed") {
-    return;
-  }
-
-  let thumbnailR2ObjectKey = speech.thumbnailR2ObjectKey;
-
-  if (speech.thumbnailProcessStatus === "pending") {
-    thumbnailR2ObjectKey = speechThumbnailObjectKey(speechId);
-    await prisma.speech.update({
-      where: { id: speechId },
-      data: {
-        thumbnailProcessStatus: "processing",
-        thumbnailR2ObjectKey,
-        thumbnailErrorMessage: null,
-      },
-    });
-  } else if (!thumbnailR2ObjectKey) {
-    thumbnailR2ObjectKey = speechThumbnailObjectKey(speechId);
-    await prisma.speech.update({
-      where: { id: speechId },
-      data: { thumbnailR2ObjectKey },
-    });
-  }
-
-  try {
-    const prompt = buildSpeechThumbnailPrompt(speech);
-    const webp = await generateThumbnail({ prompt });
-
-    await uploadObject(
-      thumbnailR2ObjectKey,
-      webp,
-      SPEECH_THUMBNAIL_CONTENT_TYPE
-    );
-
-    await prisma.speech.update({
-      where: { id: speechId },
-      data: {
-        thumbnailProcessStatus: "finished",
-        thumbnailErrorMessage: null,
-      },
-    });
-  } catch (error) {
-    console.error(`[speech-thumbnail] ${speechId}`, error);
-
-    if (deliveryCount >= SPEECH_THUMBNAIL_MAX_QUEUE_ATTEMPTS) {
-      await markSpeechThumbnailFailed(speechId, THUMBNAIL_FAILURE_MESSAGE);
-      return;
-    }
-
-    throw error;
-  }
+  await uploadObject(thumbnailR2ObjectKey, webp, SPEECH_THUMBNAIL_CONTENT_TYPE);
 }

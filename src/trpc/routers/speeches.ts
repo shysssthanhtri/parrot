@@ -16,7 +16,10 @@ import {
 } from "@/lib/speech-regenerate";
 import type { SpeechScriptAlignment } from "@/lib/speech-script-alignment";
 import { SPEECH_SLIDERS } from "@/lib/speech-sliders";
-import { enqueueSpeechThumbnail } from "@/lib/speech-thumbnail-jobs";
+import {
+  cancelSpeechThumbnailWorkflow,
+  startSpeechThumbnailWorkflow,
+} from "@/lib/speech-thumbnail-workflow";
 import { enqueueSpeechTtsStart } from "@/lib/speech-tts-jobs";
 import {
   deleteObjects,
@@ -139,6 +142,9 @@ export const speechesRouter = createTRPCRouter({
           voice: true,
           script: true,
           publication: { select: { status: true, publishedAt: true } },
+          thumbnailGeneration: {
+            select: { status: true, errorMessage: true },
+          },
         },
       });
 
@@ -156,7 +162,7 @@ export const speechesRouter = createTRPCRouter({
           : null;
 
       const thumbnailUrl =
-        speech.thumbnailProcessStatus === "finished" &&
+        speech.thumbnailGeneration?.status === "finished" &&
         speech.thumbnailR2ObjectKey &&
         (await objectExists(speech.thumbnailR2ObjectKey))
           ? await getAudioUrl(speech.thumbnailR2ObjectKey)
@@ -186,8 +192,8 @@ export const speechesRouter = createTRPCRouter({
           processStatus: true,
           alignment: true,
           r2ObjectKey: true,
-          thumbnailProcessStatus: true,
           thumbnailR2ObjectKey: true,
+          thumbnailGeneration: { select: { status: true } },
         },
       });
 
@@ -231,7 +237,7 @@ export const speechesRouter = createTRPCRouter({
 
       await Promise.all([
         enqueueSpeechTtsStart(id),
-        enqueueSpeechThumbnail(id),
+        startSpeechThumbnailWorkflow(id),
       ]);
 
       return speech;
@@ -314,7 +320,12 @@ export const speechesRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const speech = await prisma.speech.findUnique({
         where: { id: input.id },
-        select: { thumbnailR2ObjectKey: true },
+        select: {
+          thumbnailR2ObjectKey: true,
+          thumbnailGeneration: {
+            select: { status: true, workflowRunId: true },
+          },
+        },
       });
 
       if (!speech) {
@@ -326,20 +337,22 @@ export const speechesRouter = createTRPCRouter({
 
       await assertSpeechNotPublished(input.id);
 
+      const generation = speech.thumbnailGeneration;
+
+      if (generation?.status === "processing" && generation.workflowRunId) {
+        await cancelSpeechThumbnailWorkflow(generation.workflowRunId);
+      }
+
       if (speech.thumbnailR2ObjectKey) {
         await deleteObjects([speech.thumbnailR2ObjectKey]);
       }
 
       await prisma.speech.update({
         where: { id: input.id },
-        data: {
-          thumbnailR2ObjectKey: null,
-          thumbnailProcessStatus: "pending",
-          thumbnailErrorMessage: null,
-        },
+        data: { thumbnailR2ObjectKey: null },
       });
 
-      await enqueueSpeechThumbnail(input.id);
+      await startSpeechThumbnailWorkflow(input.id);
 
       return prisma.speech.findUniqueOrThrow({
         where: { id: input.id },

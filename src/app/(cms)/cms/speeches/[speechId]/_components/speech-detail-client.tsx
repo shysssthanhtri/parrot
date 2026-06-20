@@ -18,9 +18,10 @@ import { SpeechDetail } from "./speech-detail";
 
 const POLL_INTERVAL_MS = 10_000;
 
-function isThumbnailInProgress(status: string) {
-  const parsed = speechProcessStatusSchema.safeParse(status);
-  return parsed.success && isSpeechInProgress(parsed.data);
+function isThumbnailInProgress(
+  generation: { status: string } | null | undefined
+) {
+  return generation?.status === "processing";
 }
 
 type SpeechDetailClientProps = {
@@ -44,7 +45,7 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
       const parsed = speechProcessStatusSchema.safeParse(speech.processStatus);
       const audioInProgress = parsed.success && isSpeechInProgress(parsed.data);
       const thumbnailInProgress = isThumbnailInProgress(
-        speech.thumbnailProcessStatus
+        speech.thumbnailGeneration
       );
 
       return audioInProgress || thumbnailInProgress ? POLL_INTERVAL_MS : false;
@@ -57,7 +58,7 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
 
       return (
         speech.processStatus !== "finished" ||
-        isThumbnailInProgress(speech.thumbnailProcessStatus)
+        isThumbnailInProgress(speech.thumbnailGeneration)
       );
     },
   });

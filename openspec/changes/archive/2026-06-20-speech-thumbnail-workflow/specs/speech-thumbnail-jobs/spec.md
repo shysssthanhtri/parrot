@@ -1,10 +1,12 @@
-# speech-thumbnail-jobs Specification
+## REMOVED Requirements
 
-## Purpose
+### Requirement: Speech thumbnail queue topic
 
-TBD - created by archiving change speech-thumbnails. Update Purpose after archive.
+**Reason**: Thumbnail orchestration moves to Vercel Workflow; the dedicated queue topic and route handler are no longer used.
 
-## Requirements
+**Migration**: Remove `speech-thumbnail` from `vercel.json` and delete `src/app/api/queues/speech-thumbnail/route.ts`. Producers call `start(speechThumbnailWorkflow, …)` instead of `send('speech-thumbnail', …)`.
+
+## MODIFIED Requirements
 
 ### Requirement: Thumbnail generation on speech create
 
@@ -59,24 +61,7 @@ The system SHALL implement thumbnail generation as a Vercel Workflow (`workflow@
 - **WHEN** a cancelled or superseded workflow run reaches the finalize step and the generation row's `workflowRunId` does not match the run id
 - **THEN** the generation row and `Speech.thumbnailR2ObjectKey` are not updated by that run
 
-### Requirement: Modal speech thumbnail deployment
-
-The repository SHALL include `modal/speech_thumbnail.py` deploying a Modal app that runs SD 3.5 Medium Turbo on `a10g` with `max_containers` 1 and `@modal.concurrent(max_inputs=1)`. The app SHALL expose an authenticated `POST /generate` endpoint accepting a prompt and returning WebP image bytes at 832×1088 with `Content-Type: image/webp`. Deployment SHALL be performed via `.github/workflows/deploy-modal-thumbnail-image.yml` using existing `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET`. Modal secrets SHALL include `hf-token` and `thumbnail-api-key` synced by `.github/workflows/setup-modal-secrets.yml`.
-
-#### Scenario: Deploy workflow targets thumbnail app
-
-- **WHEN** the deploy thumbnail workflow is run manually
-- **THEN** `modal deploy modal/speech_thumbnail.py` is executed
-
-#### Scenario: Setup secrets includes thumbnail API key
-
-- **WHEN** the setup Modal secrets workflow is run
-- **THEN** a Modal secret `thumbnail-api-key` is created or updated from GitHub secret `THUMBNAIL_API_KEY`
-
-#### Scenario: Generate returns WebP
-
-- **WHEN** an authenticated client calls `POST /generate` with a valid prompt
-- **THEN** the response has `Content-Type: image/webp` and non-empty WebP image bytes at 832×1088
+## ADDED Requirements
 
 ### Requirement: Thumbnail workflow cancel on regenerate
 

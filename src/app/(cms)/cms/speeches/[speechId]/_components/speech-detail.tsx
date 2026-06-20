@@ -62,8 +62,10 @@ type SpeechDetailProps = {
     };
     alignment: SpeechScriptAlignment | null;
     publication: PublicationSummary;
-    thumbnailProcessStatus: string;
-    thumbnailErrorMessage: string | null;
+    thumbnailGeneration: {
+      status: "processing" | "finished" | "failed";
+      errorMessage: string | null;
+    } | null;
   };
   audioUrl: string | null;
   thumbnailUrl: string | null;
@@ -321,8 +323,7 @@ export function SpeechDetail({
 
       <SpeechThumbnailCard
         scriptTitle={speech.script.title}
-        thumbnailProcessStatus={speech.thumbnailProcessStatus}
-        thumbnailErrorMessage={speech.thumbnailErrorMessage}
+        thumbnailGeneration={speech.thumbnailGeneration}
         thumbnailUrl={thumbnailUrl}
         isPublished={isPublished}
         onRegenerateThumbnail={onRegenerateThumbnail}

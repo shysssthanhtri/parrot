@@ -2,6 +2,7 @@ import "server-only";
 
 import { TRPCError } from "@trpc/server";
 
+import type { SpeechThumbnailGenerationStatus } from "@/generated/prisma/client";
 import { speechScriptAlignmentSchema } from "@/lib/speech-script-alignment";
 import { objectExists } from "@/lib/storage";
 
@@ -14,8 +15,10 @@ export type SpeechForPublishReadiness = {
   processStatus: string;
   alignment: unknown;
   r2ObjectKey: string;
-  thumbnailProcessStatus: string;
   thumbnailR2ObjectKey: string | null;
+  thumbnailGeneration: {
+    status: SpeechThumbnailGenerationStatus;
+  } | null;
 };
 
 export type PublishReadinessChecker = (
@@ -75,8 +78,10 @@ const checkFinalAudioExists: PublishReadinessChecker = async (speech) => {
 };
 
 const checkThumbnailReady: PublishReadinessChecker = async (speech) => {
-  if (speech.thumbnailProcessStatus !== "finished") {
-    if (speech.thumbnailProcessStatus === "failed") {
+  const thumbnailStatus = speech.thumbnailGeneration?.status;
+
+  if (thumbnailStatus !== "finished") {
+    if (thumbnailStatus === "failed") {
       return {
         code: "thumbnail_not_ready",
         message: "Speech thumbnail generation failed.",
