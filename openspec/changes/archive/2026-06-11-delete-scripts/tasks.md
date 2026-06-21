@@ -14,9 +14,3 @@
 - [x] 3.1 Create `script-delete-button.tsx` modeled on `speech-delete-button.tsx` (AlertDialog, destructive button, toast, redirect to scripts list)
 - [x] 3.2 Show speech-aware confirmation copy when `_count.speeches > 0` (warn about deleting speeches and audio)
 - [x] 3.3 Wire delete button into script detail page (`/cms/scripts/[scriptId]`) with script id, title, and speech count
-
-## 4. Verification
-
-- [x] 4.1 Manually verify deleting a script with no speeches removes the row and topic associations
-- [x] 4.2 Manually verify deleting a script with speeches removes speech rows, chunk rows, storage objects, and the script row
-- [x] 4.3 Manually verify canceling the dialog does not call the API and successful delete redirects to `/cms/scripts`

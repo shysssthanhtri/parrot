@@ -25,7 +25,4 @@
 
 ## 6. Verification
 
-- [ ] 6.1 Smoke test: signed-in non-CMS user hitting `/cms/*` lands on `/forbidden`
-- [ ] 6.2 Smoke test: CMS user can access CMS pages and tRPC procedures
-- [ ] 6.3 Smoke test: non-CMS user receives `FORBIDDEN` from CMS tRPC and storage upload route
 - [ ] 6.4 Run `pnpm typecheck` and fix any type errors

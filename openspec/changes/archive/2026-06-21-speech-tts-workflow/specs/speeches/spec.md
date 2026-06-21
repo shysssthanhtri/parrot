@@ -1,10 +1,4 @@
-# speeches Specification
-
-## Purpose
-
-TBD - created by archiving change speeches. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Speech metadata model
 
@@ -96,15 +90,6 @@ The system SHALL expose a tRPC `speeches.create` mutation that accepts `voiceId`
 
 - **WHEN** `speeches.create` is called with a language that does not match the selected voice or script
 - **THEN** the procedure returns a validation error and no speech row is created
-
-### Requirement: Speech TTS parameter validation
-
-`speeches.create` and `speeches.retry` SHALL validate TTS parameters against the shared slider bounds: `temperature` 0–2, `topP` 0–1, `topK` 1–10000, `repetitionPenalty` 1–2, and `normLoudness` boolean.
-
-#### Scenario: Out-of-range temperature rejected
-
-- **WHEN** `speeches.create` is called with `temperature` outside 0–2
-- **THEN** the procedure returns a validation error
 
 ### Requirement: Speech retry API
 
@@ -213,16 +198,10 @@ The system SHALL expose a tRPC `speeches.getPublishReadiness` query that accepts
 - **WHEN** `getPublishReadiness` is called for a speech that passes all checkers
 - **THEN** the response includes an empty issues list
 
-### Requirement: Speech regenerate thumbnail API
+## REMOVED Requirements
 
-The system SHALL expose a tRPC `speeches.regenerateThumbnail` mutation that accepts a speech `id`. It SHALL succeed only when the speech exists and publication `status` is not `published`. It SHALL best-effort cancel any in-flight thumbnail workflow using the stored `workflowRunId`, delete any existing thumbnail object at `thumbnailR2ObjectKey` when present, set `thumbnailR2ObjectKey` to null, upsert `SpeechThumbnailGeneration` to `status` `processing` with a new `workflowRunId` and cleared `errorMessage`, and start a new thumbnail workflow. It SHALL NOT modify TTS state or enqueue TTS jobs.
+### Requirement: Speech processing start timestamp
 
-#### Scenario: Manual thumbnail regenerate
+**Reason**: `processingStartedAt` moves to `SpeechTtsGeneration` for the stuck-regenerate gate.
 
-- **WHEN** an authenticated CMS client calls `regenerateThumbnail` for an unpublished speech
-- **THEN** `thumbnailR2ObjectKey` is null, a new thumbnail workflow is started, and `SpeechThumbnailGeneration.status` is `processing`
-
-#### Scenario: Thumbnail regenerate rejected when published
-
-- **WHEN** `regenerateThumbnail` is called for a speech with publication `status` `published`
-- **THEN** the procedure returns a validation error
+**Migration**: Read and write `processingStartedAt` on `Speech.ttsGeneration`; drop column from `Speech`.

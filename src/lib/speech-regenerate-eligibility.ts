@@ -1,28 +1,28 @@
+import type { SpeechTtsGenerationStatus } from "@/generated/prisma/client";
+
 export const REGENERATE_STUCK_THRESHOLD_MS = 30 * 60 * 1000;
 
 type SpeechRegenerateEligibilityInput = {
-  processStatus: string;
-  processingStartedAt: Date | null;
+  ttsGeneration: {
+    status: SpeechTtsGenerationStatus;
+    processingStartedAt: Date | null;
+  } | null;
 };
 
 export function canRegenerateSpeech(speech: SpeechRegenerateEligibilityInput) {
-  const { processStatus } = speech;
+  const status = speech.ttsGeneration?.status;
 
-  if (
-    processStatus === "finished" ||
-    processStatus === "pending" ||
-    processStatus === "failed"
-  ) {
+  if (!status || status === "finished" || status === "failed") {
     return true;
   }
 
-  if (processStatus === "processing") {
-    if (!speech.processingStartedAt) {
+  if (status === "processing") {
+    if (!speech.ttsGeneration?.processingStartedAt) {
       return true;
     }
 
     return (
-      Date.now() - speech.processingStartedAt.getTime() >=
+      Date.now() - speech.ttsGeneration.processingStartedAt.getTime() >=
       REGENERATE_STUCK_THRESHOLD_MS
     );
   }

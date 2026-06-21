@@ -35,6 +35,7 @@ async function loadSpeechForPublish(speechId: string) {
     where: { id: speechId },
     include: {
       ...speechForPublishInclude,
+      ttsGeneration: { select: { status: true } },
       thumbnailGeneration: { select: { status: true } },
     },
   });

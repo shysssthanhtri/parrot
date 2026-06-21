@@ -15,5 +15,4 @@
 
 ## 4. Verification
 
-- [x] 4.1 Manually verify light, dark, and system modes apply correct tokens across CMS pages
 - [x] 4.2 Verify theme persists after page refresh and toasts match the active theme

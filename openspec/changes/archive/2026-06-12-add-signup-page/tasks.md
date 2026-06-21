@@ -20,10 +20,3 @@
 ## 4. Public Entry Points
 
 - [x] 4.1 Update `src/app/page.tsx` to show both Sign in and Sign up links/buttons
-
-## 5. Verification
-
-- [x] 5.1 Smoke test: credentials signup creates user, signs in, redirects to `/`
-- [x] 5.2 Smoke test: duplicate email, password mismatch, and short password show errors
-- [x] 5.3 Smoke test: new signup user has `isCmsUser === false` and `/cms/*` redirects to `/forbidden`
-- [x] 5.4 Smoke test: Google signup from `/signup` works for new users

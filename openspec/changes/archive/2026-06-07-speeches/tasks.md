@@ -43,5 +43,4 @@
 
 ## 8. Verification
 
-- [x] 8.1 Manual test: create speech locally with matching voice/script, preview, save, confirm audio in `.local-storage/speeches/` and detail playback
 - [x] 8.2 Run `pnpm lint` and `pnpm typecheck`

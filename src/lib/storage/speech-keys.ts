@@ -18,6 +18,9 @@ export const speechThumbnailObjectKey = (id: string) =>
 export const speechChunkObjectKey = (speechId: string, chunkIndex: number) =>
   `speeches/${speechId}/chunks/${chunkIndex}.wav`;
 
+export const speechChunkPrefix = (speechId: string) =>
+  `speeches/${speechId}/chunks/`;
+
 export const isSpeechObjectKey = (key: string) =>
   SPEECH_OBJECT_KEY_PATTERN.test(key);
 

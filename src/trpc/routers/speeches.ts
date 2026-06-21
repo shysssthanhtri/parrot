@@ -20,9 +20,13 @@ import {
   cancelSpeechThumbnailWorkflow,
   startSpeechThumbnailWorkflow,
 } from "@/lib/speech-thumbnail-workflow";
-import { enqueueSpeechTtsStart } from "@/lib/speech-tts-jobs";
+import {
+  cancelSpeechTtsWorkflow,
+  startSpeechTtsWorkflow,
+} from "@/lib/speech-tts-workflow";
 import {
   deleteObjects,
+  deleteSpeechChunkObjects,
   getAudioUrl,
   objectExists,
   speechObjectKeyForId,
@@ -104,6 +108,9 @@ const speechListInclude = {
   voice: { select: { name: true } },
   script: { select: { title: true } },
   publication: { select: { status: true, publishedAt: true } },
+  ttsGeneration: {
+    select: { status: true, errorMessage: true },
+  },
 } as const;
 
 function toPublicationSummary(
@@ -118,6 +125,17 @@ function toPublicationSummary(
         publishedAt: publication.publishedAt,
       }
     : { status: "not_published" as const };
+}
+
+async function cancelInFlightTtsWorkflow(
+  generation:
+    | { status: string; workflowRunId: string | null }
+    | null
+    | undefined
+) {
+  if (generation?.status === "processing" && generation.workflowRunId) {
+    await cancelSpeechTtsWorkflow(generation.workflowRunId);
+  }
 }
 
 export const speechesRouter = createTRPCRouter({
@@ -142,6 +160,13 @@ export const speechesRouter = createTRPCRouter({
           voice: true,
           script: true,
           publication: { select: { status: true, publishedAt: true } },
+          ttsGeneration: {
+            select: {
+              status: true,
+              errorMessage: true,
+              processingStartedAt: true,
+            },
+          },
           thumbnailGeneration: {
             select: { status: true, errorMessage: true },
           },
@@ -156,7 +181,7 @@ export const speechesRouter = createTRPCRouter({
       }
 
       const audioUrl =
-        speech.processStatus === "finished" &&
+        speech.ttsGeneration?.status === "finished" &&
         (await objectExists(speech.r2ObjectKey))
           ? await getAudioUrl(speech.r2ObjectKey)
           : null;
@@ -189,10 +214,10 @@ export const speechesRouter = createTRPCRouter({
       const speech = await prisma.speech.findUnique({
         where: { id: input.id },
         select: {
-          processStatus: true,
           alignment: true,
           r2ObjectKey: true,
           thumbnailR2ObjectKey: true,
+          ttsGeneration: { select: { status: true } },
           thumbnailGeneration: { select: { status: true } },
         },
       });
@@ -216,7 +241,7 @@ export const speechesRouter = createTRPCRouter({
       const id = randomUUID();
       const r2ObjectKey = speechObjectKeyForId(id);
 
-      const speech = await prisma.speech.create({
+      await prisma.speech.create({
         data: {
           id,
           voiceId: input.voiceId,
@@ -229,18 +254,19 @@ export const speechesRouter = createTRPCRouter({
           repetitionPenalty: input.repetitionPenalty,
           normLoudness: input.normLoudness,
           r2ObjectKey,
-          processStatus: "pending",
           userId: ctx.userId,
         },
-        include: speechListInclude,
       });
 
       await Promise.all([
-        enqueueSpeechTtsStart(id),
+        startSpeechTtsWorkflow(id),
         startSpeechThumbnailWorkflow(id),
       ]);
 
-      return speech;
+      return prisma.speech.findUniqueOrThrow({
+        where: { id },
+        include: speechListInclude,
+      });
     }),
 
   retry: cmsProcedure
@@ -248,7 +274,11 @@ export const speechesRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const speech = await prisma.speech.findUnique({
         where: { id: input.id },
-        include: { chunks: true },
+        include: {
+          ttsGeneration: {
+            select: { status: true, workflowRunId: true },
+          },
+        },
       });
 
       if (!speech) {
@@ -258,22 +288,25 @@ export const speechesRouter = createTRPCRouter({
         });
       }
 
-      if (speech.processStatus !== "failed") {
+      const status = speech.ttsGeneration?.status;
+
+      if (status !== "failed" && status !== "processing") {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Only failed speeches can be retried",
+          message: "Only failed or processing speeches can be retried",
         });
       }
 
+      await cancelInFlightTtsWorkflow(speech.ttsGeneration);
+
       await resetSpeechForTtsRestart({
         speechId: input.id,
-        chunks: speech.chunks,
         r2ObjectKey: speech.r2ObjectKey,
         deleteFinalWav: false,
         clearAlignment: false,
       });
 
-      await enqueueSpeechTtsStart(input.id);
+      await startSpeechTtsWorkflow(input.id);
 
       return prisma.speech.findUniqueOrThrow({
         where: { id: input.id },
@@ -286,7 +319,15 @@ export const speechesRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const speech = await prisma.speech.findUnique({
         where: { id: input.id },
-        include: { chunks: true },
+        include: {
+          ttsGeneration: {
+            select: {
+              status: true,
+              workflowRunId: true,
+              processingStartedAt: true,
+            },
+          },
+        },
       });
 
       if (!speech) {
@@ -299,15 +340,16 @@ export const speechesRouter = createTRPCRouter({
       assertSpeechCanRegenerate(speech);
       await assertSpeechNotPublished(input.id);
 
+      await cancelInFlightTtsWorkflow(speech.ttsGeneration);
+
       await resetSpeechForTtsRestart({
         speechId: input.id,
-        chunks: speech.chunks,
         r2ObjectKey: speech.r2ObjectKey,
         deleteFinalWav: true,
         clearAlignment: true,
       });
 
-      await enqueueSpeechTtsStart(input.id);
+      await startSpeechTtsWorkflow(input.id);
 
       return prisma.speech.findUniqueOrThrow({
         where: { id: input.id },
@@ -365,7 +407,10 @@ export const speechesRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const speech = await prisma.speech.findUnique({
         where: { id: input.id },
-        include: { chunks: true },
+        select: {
+          r2ObjectKey: true,
+          thumbnailR2ObjectKey: true,
+        },
       });
 
       if (!speech) {
@@ -377,10 +422,11 @@ export const speechesRouter = createTRPCRouter({
 
       await assertSpeechNotPublished(input.id);
 
+      await deleteSpeechChunkObjects(input.id);
+
       const storageKeys = [
         speech.r2ObjectKey,
         ...(speech.thumbnailR2ObjectKey ? [speech.thumbnailR2ObjectKey] : []),
-        ...speech.chunks.map((chunk) => chunk.tempR2Key),
       ];
 
       await deleteObjects(storageKeys);

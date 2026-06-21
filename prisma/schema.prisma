@@ -133,25 +133,38 @@ model Speech {
   topK              Int     @default(1000)
   repetitionPenalty Float   @default(1.2)
   normLoudness      Boolean @default(true)
-  r2ObjectKey       String
-  alignment         Json?
-  processStatus     String  @default("pending")
-  errorMessage      String?
+  r2ObjectKey          String
+  alignment            Json?
   thumbnailR2ObjectKey String?
-  totalChunks          Int       @default(0)
-  settledChunks         Int       @default(0)
-  processingStartedAt   DateTime?
-  userId                String
+  userId               String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  voice  Voice         @relation(fields: [voiceId], references: [id], onDelete: Restrict)
-  script Script        @relation(fields: [scriptId], references: [id], onDelete: Restrict)
-  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  chunks              SpeechChunk[]
-  publication         SpeechPublication?
+  voice           Voice                    @relation(fields: [voiceId], references: [id], onDelete: Restrict)
+  script          Script                   @relation(fields: [scriptId], references: [id], onDelete: Restrict)
+  user            User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publication     SpeechPublication?
+  ttsGeneration   SpeechTtsGeneration?
   thumbnailGeneration SpeechThumbnailGeneration?
+}
+
+enum SpeechTtsGenerationStatus {
+  processing
+  finished
+  failed
+}
+
+model SpeechTtsGeneration {
+  id                  String                    @id @default(cuid())
+  speechId            String                    @unique
+  status              SpeechTtsGenerationStatus
+  errorMessage        String?
+  workflowRunId       String?
+  processingStartedAt DateTime?
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+  speech              Speech                    @relation(fields: [speechId], references: [id], onDelete: Cascade)
 }
 
 enum SpeechThumbnailGenerationStatus {
@@ -201,20 +214,6 @@ model SpeechPublication {
   @@index([status])
   @@index([language])
   @@index([topicIds], type: Gin)
-}
-
-model SpeechChunk {
-  speechId   String
-  chunkIndex Int
-  text       String @db.Text
-  status     String @default("pending")
-  tempR2Key  String
-  durationMs Int?
-
-  speech Speech @relation(fields: [speechId], references: [id], onDelete: Cascade)
-
-  @@id([speechId, chunkIndex])
-  @@index([speechId])
 }
 
 model Topic {

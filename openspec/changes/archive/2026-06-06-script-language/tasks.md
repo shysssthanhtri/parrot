@@ -24,5 +24,4 @@
 
 ## 6. Verification
 
-- [x] 6.1 Manually verify: create script with each language option, edit language, confirm list shows labels and API stores codes
 - [x] 6.2 Confirm existing scripts show English after migration

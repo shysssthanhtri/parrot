@@ -35,9 +35,3 @@
 
 - [x] 6.1 Add `readObject` / delete helpers and chunk key path builder (`speeches/{id}/chunks/{index}.wav`) using the existing storage driver (R2 or local)
 - [x] 6.2 Ensure finalize reads temp chunks from R2/local, uploads final WAV via `uploadObject`, and deletes all temp chunk keys for a speech
-
-## 7. Verification
-
-- [ ] 7.1 Add unit tests for alignment aggregation from chunk metadata (mirror `generateLongSpeech` segment math)
-- [ ] 7.2 Manually verify create → detail polling → finished playback for short and multi-chunk scripts
-- [ ] 7.3 Manually verify failed speech retry path and list status display

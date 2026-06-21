@@ -3,6 +3,7 @@ import "server-only";
 import { TRPCError } from "@trpc/server";
 
 import type { SpeechThumbnailGenerationStatus } from "@/generated/prisma/client";
+import type { SpeechTtsGenerationStatus } from "@/generated/prisma/client";
 import { SpeechPublicationStatus } from "@/generated/prisma/client";
 import { assertSpeechReadyToPublish } from "@/lib/speech-publish-readiness";
 import {
@@ -14,10 +15,12 @@ import { prisma } from "@/prisma";
 export type PublicationStatus = "not_published" | SpeechPublicationStatus;
 
 export type SpeechForPublicationSnapshot = {
-  processStatus: string;
   alignment: unknown;
   r2ObjectKey: string;
   thumbnailR2ObjectKey: string | null;
+  ttsGeneration: {
+    status: SpeechTtsGenerationStatus;
+  } | null;
   thumbnailGeneration: {
     status: SpeechThumbnailGenerationStatus;
   } | null;

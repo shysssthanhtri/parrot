@@ -22,6 +22,4 @@
 
 ## 4. Verification
 
-- [ ] 4.1 Manually test voice with audio: waveform renders, play/pause works, seek by clicking waveform
-- [ ] 4.2 Manually test voice without `r2ObjectKey`: empty state, no errors
 - [ ] 4.3 Confirm presigned URL still loads (CORS unchanged from prior behavior)

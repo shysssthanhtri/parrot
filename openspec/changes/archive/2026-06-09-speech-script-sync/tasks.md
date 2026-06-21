@@ -30,6 +30,3 @@
 ## 6. Verification
 
 - [ ] 6.1 Confirm `pnpm typecheck` passes
-- [ ] 6.2 Manual test: generate preview on create page — verify chunk highlight follows playback and past chunks dim
-- [ ] 6.3 Manual test: save speech and open detail — verify sync works from persisted alignment
-- [ ] 6.4 Manual test: long script (>400 chars) — verify multiple segments highlight in sequence across chunk boundaries

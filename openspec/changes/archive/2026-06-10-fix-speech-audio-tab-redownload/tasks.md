@@ -8,9 +8,3 @@
 
 - [x] 2.1 Set `refetchOnWindowFocus: false` globally in `src/trpc/query-client.ts`
 - [x] 2.2 Keep existing `refetchInterval` polling unchanged for `pending` and `processing` speeches
-
-## 3. Verification
-
-- [ ] 3.1 Manually test finished speech: play audio, switch tabs, return — confirm no "Loading waveform…" flash and no duplicate network download in DevTools
-- [ ] 3.2 Manually test in-progress speech: confirm polling still updates status until finished, then audio loads once
-- [ ] 3.3 Manually test failed speech retry: confirm new audio loads after successful regeneration

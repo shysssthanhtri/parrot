@@ -21,7 +21,10 @@ type SpeechRow = {
   id: string;
   language: string;
   contentLength: number;
-  processStatus: string;
+  ttsGeneration: {
+    status: "processing" | "finished" | "failed";
+    errorMessage: string | null;
+  } | null;
   updatedAt: Date;
   publication: PublicationSummary;
   voice: { name: string };
@@ -83,7 +86,7 @@ export function SpeechesTable({ speeches }: SpeechesTableProps) {
               {formatContentLength(speech.contentLength)}
             </TableCell>
             <TableCell>
-              <SpeechProcessStatusBadge status={speech.processStatus} />
+              <SpeechProcessStatusBadge status={speech.ttsGeneration?.status} />
             </TableCell>
             <TableCell>
               <SpeechPublicationStatusBadge publication={speech.publication} />

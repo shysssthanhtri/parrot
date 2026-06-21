@@ -2,6 +2,7 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -157,6 +158,34 @@ export const deleteR2Object = async (key: string) => {
   } catch (error) {
     throw toR2Error(error);
   }
+};
+
+export const listR2ObjectsWithPrefix = async (prefix: string) => {
+  const config = requireR2Config();
+  const keys: string[] = [];
+  let continuationToken: string | undefined;
+
+  do {
+    const response = await getR2Client().send(
+      new ListObjectsV2Command({
+        Bucket: config.R2_BUCKET_NAME,
+        Prefix: prefix,
+        ContinuationToken: continuationToken,
+      })
+    );
+
+    for (const object of response.Contents ?? []) {
+      if (object.Key) {
+        keys.push(object.Key);
+      }
+    }
+
+    continuationToken = response.IsTruncated
+      ? response.NextContinuationToken
+      : undefined;
+  } while (continuationToken);
+
+  return keys;
 };
 
 export const r2ObjectExists = async (key: string) => {

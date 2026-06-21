@@ -1,29 +1,32 @@
 import { Badge } from "@/components/ui/badge";
 import {
-  SPEECH_PROCESS_STATUS_LABELS,
-  type SpeechProcessStatus,
-  speechProcessStatusSchema,
+  getSpeechTtsGenerationStatusLabel,
+  speechTtsGenerationStatusSchema,
+  type SpeechTtsGenerationStatusValue,
 } from "@/lib/speech-process-status";
 
 const STATUS_VARIANTS: Record<
-  SpeechProcessStatus,
+  SpeechTtsGenerationStatusValue,
   "default" | "secondary" | "destructive" | "outline"
 > = {
-  pending: "secondary",
   processing: "default",
   finished: "outline",
   failed: "destructive",
 };
 
-export function SpeechProcessStatusBadge({ status }: { status: string }) {
-  const parsed = speechProcessStatusSchema.safeParse(status);
-  const normalized: SpeechProcessStatus = parsed.success
+export function SpeechProcessStatusBadge({
+  status,
+}: {
+  status: string | null | undefined;
+}) {
+  const parsed = speechTtsGenerationStatusSchema.safeParse(status);
+  const normalized: SpeechTtsGenerationStatusValue = parsed.success
     ? parsed.data
-    : "pending";
+    : "processing";
 
   return (
     <Badge variant={STATUS_VARIANTS[normalized]}>
-      {SPEECH_PROCESS_STATUS_LABELS[normalized]}
+      {getSpeechTtsGenerationStatusLabel(normalized)}
     </Badge>
   );
 }

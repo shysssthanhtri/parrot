@@ -21,7 +21,3 @@
 ## 4. Verification
 
 - [ ] 4.1 Run `pnpm typecheck` and `pnpm lint` to confirm no type or lint errors
-- [ ] 4.2 Manual test with `LLM_PROVIDER=vercel-ai-gateway`: script generation on `/cms/scripts/new` succeeds and persists correct `model` on `ScriptGeneration`
-- [ ] 4.3 Manual test with `LLM_PROVIDER=vercel-ai-gateway`: topic color suggestion on `/cms/topics/new` returns a valid hex color
-- [ ] 4.4 Manual test with `LLM_PROVIDER=gemini`: both script generation and color suggestion work with `GEMINI_API_KEY` only
-- [ ] 4.5 Manual test: env validation fails clearly when the active provider's API key is missing

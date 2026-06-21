@@ -23,5 +23,3 @@
 
 - [x] 4.1 Confirm `pnpm typecheck` passes with the new module
 - [x] 4.2 Confirm `pnpm generate:api` regenerates all specs and `pnpm generate:api chatterbox` regenerates only Chatterbox
-- [x] 4.3 Manual test: call `generateSpeech` from a temporary script or server route with a known `voice_key` (e.g. `system-voices/andy.wav`) and verify non-empty WAV output
-- [x] 4.4 Manual test: confirm invalid/missing API key throws a clear error

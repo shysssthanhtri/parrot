@@ -6,7 +6,7 @@ import {
   DEFAULT_SCRIPT_LANGUAGE,
   SCRIPT_LANGUAGE_CODES,
 } from "@/lib/script-languages";
-import { deleteObjects } from "@/lib/storage";
+import { deleteObjects, deleteSpeechChunkObjects } from "@/lib/storage";
 import { prisma } from "@/prisma";
 
 import { cmsProcedure, createTRPCRouter } from "../init";
@@ -168,7 +168,11 @@ export const scriptsRouter = createTRPCRouter({
         where: { id: input.id },
         include: {
           speeches: {
-            include: { chunks: true },
+            select: {
+              id: true,
+              r2ObjectKey: true,
+              thumbnailR2ObjectKey: true,
+            },
           },
         },
       });
@@ -180,9 +184,13 @@ export const scriptsRouter = createTRPCRouter({
         });
       }
 
+      await Promise.all(
+        script.speeches.map((speech) => deleteSpeechChunkObjects(speech.id))
+      );
+
       const storageKeys = script.speeches.flatMap((speech) => [
         speech.r2ObjectKey,
-        ...speech.chunks.map((chunk) => chunk.tempR2Key),
+        ...(speech.thumbnailR2ObjectKey ? [speech.thumbnailR2ObjectKey] : []),
       ]);
 
       if (storageKeys.length > 0) {

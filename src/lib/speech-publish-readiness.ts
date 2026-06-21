@@ -2,7 +2,10 @@ import "server-only";
 
 import { TRPCError } from "@trpc/server";
 
-import type { SpeechThumbnailGenerationStatus } from "@/generated/prisma/client";
+import type {
+  SpeechThumbnailGenerationStatus,
+  SpeechTtsGenerationStatus,
+} from "@/generated/prisma/client";
 import { speechScriptAlignmentSchema } from "@/lib/speech-script-alignment";
 import { objectExists } from "@/lib/storage";
 
@@ -12,10 +15,12 @@ export type PublishReadinessIssue = {
 };
 
 export type SpeechForPublishReadiness = {
-  processStatus: string;
   alignment: unknown;
   r2ObjectKey: string;
   thumbnailR2ObjectKey: string | null;
+  ttsGeneration: {
+    status: SpeechTtsGenerationStatus;
+  } | null;
   thumbnailGeneration: {
     status: SpeechThumbnailGenerationStatus;
   } | null;
@@ -26,7 +31,7 @@ export type PublishReadinessChecker = (
 ) => Promise<PublishReadinessIssue | null>;
 
 const checkAudioFinished: PublishReadinessChecker = async (speech) => {
-  if (speech.processStatus === "finished") {
+  if (speech.ttsGeneration?.status === "finished") {
     return null;
   }
 

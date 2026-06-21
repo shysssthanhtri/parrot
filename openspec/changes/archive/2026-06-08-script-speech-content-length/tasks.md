@@ -27,7 +27,3 @@
 ## 7. CMS speech create page
 
 - [x] 7.1 Show script title and formatted length in each `SelectItem` in `speech-create-form.tsx`
-
-## 8. Verification
-
-- [x] 8.1 Manually verify: create/update script updates length; create speech stores length; list tables and script picker display formatted length

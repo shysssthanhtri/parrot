@@ -89,6 +89,38 @@ export const localObjectExists = async (key: string) => {
   return filePath !== null;
 };
 
+const listLocalFilesRecursively = async (directory: string, prefix: string) => {
+  const keys: string[] = [];
+
+  try {
+    const entries = await readdir(directory, { withFileTypes: true });
+    for (const entry of entries) {
+      const entryPath = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        keys.push(...(await listLocalFilesRecursively(entryPath, prefix)));
+      } else if (entry.isFile()) {
+        keys.push(
+          path
+            .relative(path.join(localStorageRoot()), entryPath)
+            .split(path.sep)
+            .join("/")
+        );
+      }
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw error;
+    }
+  }
+
+  return keys.filter((key) => key.startsWith(prefix));
+};
+
+export const listLocalObjectsWithPrefix = async (prefix: string) => {
+  const directory = path.join(localStorageRoot(), prefix);
+  return listLocalFilesRecursively(directory, prefix);
+};
+
 export const deleteLocalObject = async (key: string) => {
   const filePath = path.join(localStorageRoot(), key);
 

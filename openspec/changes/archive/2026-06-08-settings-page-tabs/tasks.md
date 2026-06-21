@@ -13,8 +13,3 @@
 
 - [x] 3.1 Update `settings/page.tsx` to render `SettingsTabs` instead of bare `ThemeSettings`, keeping the existing page header
 - [x] 3.2 Wire CMS tab content to `CmsSettingsPlaceholder`
-
-## 4. Verification
-
-- [x] 4.1 Manually verify Personal tab is default, theme toggle still persists light/dark/system, and sign-out ends the session
-- [x] 4.2 Manually verify CMS tab shows placeholder only with no editable fields

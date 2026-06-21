@@ -4,7 +4,7 @@ import { TRPCError } from "@trpc/server";
 
 import { Prisma } from "@/generated/prisma/client";
 import { canRegenerateSpeech } from "@/lib/speech-regenerate-eligibility";
-import { deleteObjects } from "@/lib/storage";
+import { deleteObjects, deleteSpeechChunkObjects } from "@/lib/storage";
 import { prisma } from "@/prisma";
 
 export {
@@ -28,7 +28,6 @@ export function assertSpeechCanRegenerate(
 
 type ResetSpeechForTtsRestartInput = {
   speechId: string;
-  chunks: { tempR2Key: string }[];
   r2ObjectKey: string;
   deleteFinalWav: boolean;
   clearAlignment: boolean;
@@ -36,32 +35,22 @@ type ResetSpeechForTtsRestartInput = {
 
 export async function resetSpeechForTtsRestart({
   speechId,
-  chunks,
   r2ObjectKey,
   deleteFinalWav,
   clearAlignment,
 }: ResetSpeechForTtsRestartInput) {
-  const storageKeys = [
-    ...chunks.map((chunk) => chunk.tempR2Key),
-    ...(deleteFinalWav ? [r2ObjectKey] : []),
-  ];
+  await deleteSpeechChunkObjects(speechId);
 
-  if (storageKeys.length > 0) {
-    await deleteObjects(storageKeys);
+  if (deleteFinalWav) {
+    await deleteObjects([r2ObjectKey]);
   }
 
-  await prisma.$transaction(async (tx) => {
-    await tx.speechChunk.deleteMany({ where: { speechId } });
-    await tx.speech.update({
+  if (clearAlignment) {
+    await prisma.speech.update({
       where: { id: speechId },
       data: {
-        processStatus: "pending",
-        errorMessage: null,
-        totalChunks: 0,
-        settledChunks: 0,
-        processingStartedAt: null,
-        ...(clearAlignment ? { alignment: Prisma.DbNull } : {}),
+        alignment: Prisma.DbNull,
       },
     });
-  });
+  }
 }

@@ -1,10 +1,54 @@
-# speech-tts-jobs Specification
+## REMOVED Requirements
 
-## Purpose
+### Requirement: Vercel Queue topics for speech TTS
 
-TBD - created by archiving change async-speech-tts. Update Purpose after archive.
+**Reason**: TTS orchestration moves to Vercel Workflow; the three queue topics and route handlers are no longer used.
 
-## Requirements
+**Migration**: Remove `speech-tts-start`, `speech-tts-chunk`, and `speech-tts-finalize` from `vercel.json` and delete `src/app/api/queues/speech-tts-*/`. Producers call `start(speechTtsWorkflow, …)` instead of `send(...)`.
+
+### Requirement: Start job orchestrates chunk plan and warmup
+
+**Reason**: Replaced by a single TTS workflow with in-memory chunk planning and a warmup step for chunk 0.
+
+**Migration**: Logic moves to `speechTtsWorkflow` steps in `src/workflows/speech-tts.ts`.
+
+### Requirement: Chunk job synthesizes one segment
+
+**Reason**: Chunk synthesis runs inside workflow batch steps instead of a separate queue consumer.
+
+**Migration**: Parallel batch processing in `synthesizeInBatches` workflow step with batch size 10.
+
+### Requirement: Settlement gate before finalize or speech failure
+
+**Reason**: Fail-fast workflow stops on first chunk failure; finalize runs inline when all chunks succeed.
+
+**Migration**: Remove `runSettlementGate` and `enqueueSpeechTtsFinalize`.
+
+### Requirement: Finalize job aggregates chunk audio and alignment
+
+**Reason**: Finalize is a workflow step, not a queue consumer.
+
+**Migration**: `finalizeSpeechTtsStep` in workflow steps module.
+
+### Requirement: Retry re-enqueues start job
+
+**Reason**: Retry starts a TTS workflow and cancels any in-flight run; requirements move to `speeches` and workflow cancel specs.
+
+**Migration**: Replace `enqueueSpeechTtsStart` with `startSpeechTtsWorkflow`.
+
+### Requirement: Start job records processing start time
+
+**Reason**: `processingStartedAt` moves to `SpeechTtsGeneration`.
+
+**Migration**: Set on generation row when workflow processing starts.
+
+### Requirement: Regenerate restarts TTS pipeline
+
+**Reason**: Regenerate cancels workflow and starts a new run; requirements move to `speeches` and workflow cancel specs.
+
+**Migration**: Replace queue enqueue with `startSpeechTtsWorkflow` after storage cleanup.
+
+## ADDED Requirements
 
 ### Requirement: SpeechTtsGeneration persistence model
 

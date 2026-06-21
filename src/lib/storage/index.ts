@@ -2,6 +2,7 @@ import { getStorageDriver } from "./config";
 import {
   deleteLocalObject,
   getLocalAudioUrl,
+  listLocalObjectsWithPrefix,
   localObjectExists,
   readLocalObject,
   uploadLocalObject,
@@ -10,11 +11,12 @@ import {
   deleteR2Object,
   getR2PresignedGetUrl,
   getR2PresignedPutUrl,
+  listR2ObjectsWithPrefix,
   r2ObjectExists,
   readR2Object,
   uploadR2Object,
 } from "./r2";
-import { SPEECH_AUDIO_CONTENT_TYPE } from "./speech-keys";
+import { SPEECH_AUDIO_CONTENT_TYPE, speechChunkPrefix } from "./speech-keys";
 
 export { getStorageDriver } from "./config";
 export { readLocalObject } from "./local";
@@ -26,6 +28,7 @@ export {
   SPEECH_THUMBNAIL_CONTENT_TYPE,
   speechChunkObjectKey,
   speechChunkObjectKeyMatches,
+  speechChunkPrefix,
   speechObjectKeyForId,
   speechObjectKeyMatchesId,
   speechThumbnailObjectKey,
@@ -81,6 +84,22 @@ export const deleteObject = async (key: string) => {
 
 export const deleteObjects = async (keys: string[]) => {
   await Promise.all(keys.map((key) => deleteObject(key)));
+};
+
+export const listObjectsWithPrefix = async (prefix: string) => {
+  if (getStorageDriver() === "local") {
+    return listLocalObjectsWithPrefix(prefix);
+  }
+
+  return listR2ObjectsWithPrefix(prefix);
+};
+
+export const deleteSpeechChunkObjects = async (speechId: string) => {
+  const keys = await listObjectsWithPrefix(speechChunkPrefix(speechId));
+
+  if (keys.length > 0) {
+    await deleteObjects(keys);
+  }
 };
 
 export const getSpeechUploadUrl = async (key: string) => {

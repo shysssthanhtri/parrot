@@ -25,4 +25,3 @@
 ## 5. R2 CORS and verification
 
 - [x] 5.1 Document or configure R2 bucket CORS to allow `PUT` from the CMS origin
-- [x] 5.2 Manually test save flow with `STORAGE_DRIVER=local` and `STORAGE_DRIVER=r2` if available

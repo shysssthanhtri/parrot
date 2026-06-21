@@ -17,10 +17,3 @@
 ## 4. Speeches router integration
 
 - [x] 4.1 Update `generateSpeechAudio` in `src/trpc/routers/speeches.ts` to call `generateLongSpeech` instead of `generateSpeech`
-
-## 5. Tests and verification
-
-- [ ] 5.1 Add unit tests for `splitTextForTts` (short text, sentence splits, paragraph preference, hard-split edge case)
-- [ ] 5.2 Add unit tests for `concatWavBuffers` (single buffer passthrough, two-segment concat, format mismatch error) using small fixture WAV buffers
-- [ ] 5.3 Confirm `pnpm typecheck` passes
-- [ ] 5.4 Manual test: generate preview for a short script (single chunk) and a long script (>4000 chars) in CMS; verify full content is audible

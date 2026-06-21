@@ -7,10 +7,7 @@ import { notFound } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import {
-  isSpeechInProgress,
-  speechProcessStatusSchema,
-} from "@/lib/speech-process-status";
+import { isSpeechTtsGenerating } from "@/lib/speech-process-status";
 import { useTRPC } from "@/trpc/client";
 
 import { SpeechDeleteButton } from "./speech-delete-button";
@@ -42,8 +39,9 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
         return false;
       }
 
-      const parsed = speechProcessStatusSchema.safeParse(speech.processStatus);
-      const audioInProgress = parsed.success && isSpeechInProgress(parsed.data);
+      const audioInProgress = isSpeechTtsGenerating(
+        speech.ttsGeneration?.status ?? "processing"
+      );
       const thumbnailInProgress = isThumbnailInProgress(
         speech.thumbnailGeneration
       );
@@ -57,7 +55,7 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
       }
 
       return (
-        speech.processStatus !== "finished" ||
+        speech.ttsGeneration?.status !== "finished" ||
         isThumbnailInProgress(speech.thumbnailGeneration)
       );
     },
@@ -146,7 +144,7 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
 
   const speech = speechQuery.data;
 
-  if (speech.processStatus !== "finished" || !speech.audioUrl) {
+  if (speech.ttsGeneration?.status !== "finished" || !speech.audioUrl) {
     if (stableAudioUrl !== null) {
       setStableAudioUrl(null);
     }
@@ -159,7 +157,7 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
   }
 
   const audioUrl =
-    speech.processStatus === "finished"
+    speech.ttsGeneration?.status === "finished"
       ? (stableAudioUrl ?? speech.audioUrl)
       : null;
 

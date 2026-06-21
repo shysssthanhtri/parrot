@@ -19,14 +19,8 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Progress } from "@/components/ui/progress";
 import { getScriptLanguageLabel } from "@/lib/script-languages";
-import { getSpeechGenerationProgress } from "@/lib/speech-generation-progress";
-import {
-  isSpeechInProgress,
-  type SpeechProcessStatus,
-  speechProcessStatusSchema,
-} from "@/lib/speech-process-status";
+import { isSpeechTtsGenerating } from "@/lib/speech-process-status";
 import type { SpeechScriptAlignment } from "@/lib/speech-script-alignment";
 import { NORM_LOUDNESS_CONTROL, SPEECH_SLIDERS } from "@/lib/speech-sliders";
 
@@ -38,14 +32,16 @@ import {
 import { SpeechRegenerateButton } from "./speech-regenerate-button";
 import { SpeechThumbnailCard } from "./speech-thumbnail-card";
 
+type TtsGeneration = {
+  status: "processing" | "finished" | "failed";
+  errorMessage: string | null;
+};
+
 type SpeechDetailProps = {
   speech: {
     id: string;
     language: string;
-    processStatus: string;
-    errorMessage: string | null;
-    totalChunks: number;
-    settledChunks: number;
+    ttsGeneration: TtsGeneration | null;
     temperature: number;
     topP: number;
     topK: number;
@@ -97,11 +93,6 @@ function MetadataField({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
-function getProcessStatus(status: string): SpeechProcessStatus {
-  const parsed = speechProcessStatusSchema.safeParse(status);
-  return parsed.success ? parsed.data : "pending";
-}
-
 function SpeechRegenerateAction({
   speech,
   onRegenerate,
@@ -134,9 +125,9 @@ function SpeechAudioSection({
   SpeechDetailProps,
   "speech" | "audioUrl" | "canRegenerate" | "onRegenerate" | "isRegenerating"
 >) {
-  const processStatus = getProcessStatus(speech.processStatus);
+  const ttsStatus = speech.ttsGeneration?.status ?? "processing";
 
-  if (processStatus === "failed") {
+  if (ttsStatus === "failed") {
     return (
       <Card className="border-destructive/30">
         <CardHeader>
@@ -145,7 +136,7 @@ function SpeechAudioSection({
             Generation failed
           </CardTitle>
           <CardDescription>
-            {speech.errorMessage ??
+            {speech.ttsGeneration?.errorMessage ??
               "Speech generation failed. Please try again."}
           </CardDescription>
         </CardHeader>
@@ -161,19 +152,13 @@ function SpeechAudioSection({
     );
   }
 
-  if (isSpeechInProgress(processStatus)) {
-    const progress = getSpeechGenerationProgress(
-      processStatus,
-      speech.totalChunks,
-      speech.settledChunks
-    );
-
+  if (isSpeechTtsGenerating(ttsStatus)) {
     return (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Loader2Icon className="size-4 animate-spin" />
-            {progress?.label ?? "Generating audio"}
+            Generating audio…
           </CardTitle>
           <CardDescription>
             Speech audio is being generated in the background. This page
@@ -181,9 +166,6 @@ function SpeechAudioSection({
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          {progress ? (
-            <Progress value={progress.percent} aria-label={progress.label} />
-          ) : null}
           <p className="text-sm text-muted-foreground">
             Script: {speech.script.title}
           </p>
@@ -280,7 +262,11 @@ export function SpeechDetail({
             />
             <MetadataField
               label="Status"
-              value={<SpeechProcessStatusBadge status={speech.processStatus} />}
+              value={
+                <SpeechProcessStatusBadge
+                  status={speech.ttsGeneration?.status}
+                />
+              }
             />
             <MetadataField
               label="Publication"
