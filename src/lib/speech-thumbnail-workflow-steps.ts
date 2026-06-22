@@ -15,11 +15,14 @@ export async function markSpeechThumbnailProcessingStep(speechId: string) {
   await ensureSpeechThumbnailObjectKey(speechId);
 }
 
-export async function generateAndUploadSpeechThumbnailStep(speechId: string) {
+export async function generateAndUploadSpeechThumbnailStep(
+  speechId: string,
+  extraPrompt?: string
+) {
   "use step";
 
   const speech = await loadSpeechThumbnailContext(speechId);
-  await generateAndUploadSpeechThumbnail(speech);
+  await generateAndUploadSpeechThumbnail(speech, extraPrompt);
 }
 
 export async function finalizeSpeechThumbnailStep(

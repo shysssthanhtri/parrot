@@ -215,7 +215,7 @@ When a finished speech is playing or paused on the detail page, returning to the
 
 ### Requirement: CMS speech thumbnail section
 
-The CMS speech detail page SHALL include a **Thumbnail** card showing `thumbnailProcessStatus`, an image preview when `thumbnailProcessStatus` is `finished` and a thumbnail URL is available, and `thumbnailErrorMessage` when `failed`. While `thumbnailProcessStatus` is `pending` or `processing`, the card SHALL show a generating state and poll `speeches.getById` until status becomes `finished` or `failed`. When publication `status` is not `published`, the card SHALL offer **Regenerate thumbnail** calling `speeches.regenerateThumbnail` with loading/disabled state while in flight. When publication `status` is `published`, **Regenerate thumbnail** SHALL NOT be shown.
+The CMS speech detail page SHALL include a **Thumbnail** card showing `thumbnailProcessStatus`, an image preview when `thumbnailProcessStatus` is `finished` and a thumbnail URL is available, and `thumbnailErrorMessage` when `failed`. While `thumbnailProcessStatus` is `pending` or `processing`, the card SHALL show a generating state and poll `speeches.getById` until status becomes `finished` or `failed`. When publication `status` is not `published`, the card SHALL offer **Regenerate thumbnail** opening a confirmation dialog. The dialog SHALL include an optional **Extra prompt** field (textarea) for author direction on the new cover image. Confirming **Regenerate thumbnail** SHALL call `speeches.regenerateThumbnail` with the speech `id` and the trimmed extra prompt when non-empty, with loading/disabled state while in flight. When publication `status` is `published`, **Regenerate thumbnail** SHALL NOT be shown.
 
 #### Scenario: Thumbnail preview when finished
 
@@ -229,8 +229,13 @@ The CMS speech detail page SHALL include a **Thumbnail** card showing `thumbnail
 
 #### Scenario: Manual regenerate thumbnail
 
-- **WHEN** user clicks **Regenerate thumbnail** on an unpublished speech
-- **THEN** `speeches.regenerateThumbnail` is invoked and the card returns to a generating state
+- **WHEN** user confirms **Regenerate thumbnail** on an unpublished speech without entering an extra prompt
+- **THEN** `speeches.regenerateThumbnail` is invoked with the speech `id` only and the card returns to a generating state
+
+#### Scenario: Manual regenerate thumbnail with extra prompt
+
+- **WHEN** user enters text in **Extra prompt** and confirms **Regenerate thumbnail** on an unpublished speech
+- **THEN** `speeches.regenerateThumbnail` is invoked with the speech `id` and trimmed extra prompt and the card returns to a generating state
 
 #### Scenario: Thumbnail regenerate hidden while published
 

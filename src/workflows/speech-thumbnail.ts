@@ -6,7 +6,10 @@ import {
   markSpeechThumbnailProcessingStep,
 } from "@/lib/speech-thumbnail-workflow-steps";
 
-export async function speechThumbnailWorkflow(speechId: string) {
+export async function speechThumbnailWorkflow(
+  speechId: string,
+  extraPrompt?: string
+) {
   "use workflow";
 
   const { workflowRunId } = getWorkflowMetadata();
@@ -14,7 +17,7 @@ export async function speechThumbnailWorkflow(speechId: string) {
   await markSpeechThumbnailProcessingStep(speechId);
 
   try {
-    await generateAndUploadSpeechThumbnailStep(speechId);
+    await generateAndUploadSpeechThumbnailStep(speechId, extraPrompt);
     await finalizeSpeechThumbnailStep(speechId, workflowRunId, "finished");
   } catch (error) {
     await finalizeSpeechThumbnailStep(speechId, workflowRunId, "failed", error);

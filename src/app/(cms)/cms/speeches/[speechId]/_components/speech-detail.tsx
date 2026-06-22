@@ -69,7 +69,7 @@ type SpeechDetailProps = {
   canRegenerate?: boolean;
   onRegenerate?: () => void;
   isRegenerating?: boolean;
-  onRegenerateThumbnail?: () => void;
+  onRegenerateThumbnail?: (extraPrompt?: string) => void;
   isRegeneratingThumbnail?: boolean;
   onPublish?: () => void;
   onUnpublish?: () => void;

@@ -358,7 +358,17 @@ export const speechesRouter = createTRPCRouter({
     }),
 
   regenerateThumbnail: cmsProcedure
-    .input(z.object({ id: z.string() }))
+    .input(
+      z.object({
+        id: z.string(),
+        extraPrompt: z
+          .string()
+          .trim()
+          .max(500)
+          .transform((value) => value || undefined)
+          .optional(),
+      })
+    )
     .mutation(async ({ input }) => {
       const speech = await prisma.speech.findUnique({
         where: { id: input.id },
@@ -394,7 +404,7 @@ export const speechesRouter = createTRPCRouter({
         data: { thumbnailR2ObjectKey: null },
       });
 
-      await startSpeechThumbnailWorkflow(input.id);
+      await startSpeechThumbnailWorkflow(input.id, input.extraPrompt);
 
       return prisma.speech.findUniqueOrThrow({
         where: { id: input.id },

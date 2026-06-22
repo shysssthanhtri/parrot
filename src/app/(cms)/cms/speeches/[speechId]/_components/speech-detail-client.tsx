@@ -179,7 +179,11 @@ export function SpeechDetailClient({ speechId }: SpeechDetailClientProps) {
         isRegenerating={regenerateMutation.isPending}
         onRegenerateThumbnail={
           !isPublished
-            ? () => regenerateThumbnailMutation.mutate({ id: speechId })
+            ? (extraPrompt) =>
+                regenerateThumbnailMutation.mutate({
+                  id: speechId,
+                  extraPrompt,
+                })
             : undefined
         }
         isRegeneratingThumbnail={regenerateThumbnailMutation.isPending}

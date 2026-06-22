@@ -96,12 +96,13 @@ export async function ensureSpeechThumbnailObjectKey(
 }
 
 export async function generateAndUploadSpeechThumbnail(
-  speech: SpeechThumbnailContext
+  speech: SpeechThumbnailContext,
+  extraPrompt?: string
 ): Promise<void> {
   const thumbnailR2ObjectKey =
     speech.thumbnailR2ObjectKey ?? speechThumbnailObjectKey(speech.id);
 
-  const prompt = buildSpeechThumbnailPrompt(speech);
+  const prompt = buildSpeechThumbnailPrompt(speech, extraPrompt);
   const webp = await generateThumbnail({ prompt });
 
   await uploadObject(thumbnailR2ObjectKey, webp, SPEECH_THUMBNAIL_CONTENT_TYPE);

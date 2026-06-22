@@ -20,9 +20,10 @@ export async function cancelSpeechThumbnailWorkflow(
 }
 
 export async function startSpeechThumbnailWorkflow(
-  speechId: string
+  speechId: string,
+  extraPrompt?: string
 ): Promise<string> {
-  const run = await start(speechThumbnailWorkflow, [speechId]);
+  const run = await start(speechThumbnailWorkflow, [speechId, extraPrompt]);
 
   await prisma.speechThumbnailGeneration.upsert({
     where: { speechId },

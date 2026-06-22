@@ -24,7 +24,7 @@ type SpeechThumbnailCardProps = {
   thumbnailGeneration: ThumbnailGenerationSummary | null;
   thumbnailUrl: string | null;
   isPublished: boolean;
-  onRegenerateThumbnail?: () => void;
+  onRegenerateThumbnail?: (extraPrompt?: string) => void;
   isRegeneratingThumbnail?: boolean;
 };
 

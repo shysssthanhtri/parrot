@@ -1,6 +1,7 @@
 import { getScriptLanguageLabel } from "./script-languages";
 
 export const SPEECH_THUMBNAIL_PROMPT_MAX_LENGTH = 5000;
+export const SPEECH_THUMBNAIL_EXTRA_PROMPT_MAX_LENGTH = 500;
 
 export type SpeechThumbnailPromptContext = {
   language: string;
@@ -38,7 +39,8 @@ export function truncateForThumbnailPrompt(
 }
 
 export function buildSpeechThumbnailPrompt(
-  speech: SpeechThumbnailPromptContext
+  speech: SpeechThumbnailPromptContext,
+  extraPrompt?: string
 ): string {
   const languageLabel = getScriptLanguageLabel(speech.language);
   const topicHint =
@@ -53,38 +55,65 @@ export function buildSpeechThumbnailPrompt(
 
   const titleLine = `Editorial portrait cover art for a language-learning speech titled "${speech.script.title}".`;
   const languageLine = `Inspired by ${languageLabel} language learning.`;
-  const fixedSegments = [titleLine, topicHint, languageLine, styleLine].filter(
-    Boolean
-  );
-  const fixedPrompt = fixedSegments.join(" ");
-  const content = speech.script.content.trim();
-
-  if (content.length === 0) {
-    return fixedPrompt;
-  }
+  const head = [titleLine, topicHint].filter(Boolean);
+  const tail = [languageLine, styleLine];
 
   const storyPrefix = 'Story/subject: "';
   const storySuffix = '"';
-  const contentBudget =
-    SPEECH_THUMBNAIL_PROMPT_MAX_LENGTH -
-    fixedPrompt.length -
-    1 -
-    storyPrefix.length -
-    storySuffix.length;
+  const authorPrefix = 'Author direction: "';
+  const authorSuffix = '"';
 
-  if (contentBudget <= 0) {
-    return fixedPrompt;
+  const trimmedExtra = extraPrompt?.trim() ?? "";
+  const rawContent = speech.script.content.trim();
+
+  const build = (contentExcerpt: string, authorText: string): string => {
+    const parts: string[] = [...head];
+    if (contentExcerpt) {
+      parts.push(`${storyPrefix}${contentExcerpt}${storySuffix}`);
+    }
+    if (authorText) {
+      parts.push(`${authorPrefix}${authorText}${authorSuffix}`);
+    }
+    parts.push(...tail);
+    return parts.join(" ");
+  };
+
+  let contentExcerpt = "";
+  if (rawContent) {
+    const withoutStory = build("", trimmedExtra);
+    const contentBudget =
+      SPEECH_THUMBNAIL_PROMPT_MAX_LENGTH -
+      withoutStory.length -
+      storyPrefix.length -
+      storySuffix.length -
+      1;
+    contentExcerpt =
+      contentBudget > 0
+        ? truncateForThumbnailPrompt(rawContent, contentBudget)
+        : "";
   }
 
-  const excerpt = truncateForThumbnailPrompt(content, contentBudget);
-  const storySegment = `${storyPrefix}${excerpt}${storySuffix}`;
-  const segments = [
-    titleLine,
-    topicHint,
-    storySegment,
-    languageLine,
-    styleLine,
-  ].filter(Boolean);
+  let authorText = trimmedExtra;
+  if (authorText) {
+    const authorBudget =
+      SPEECH_THUMBNAIL_PROMPT_MAX_LENGTH -
+      build(contentExcerpt, "").length -
+      authorPrefix.length -
+      authorSuffix.length -
+      1;
+    authorText =
+      authorBudget > 0
+        ? truncateForThumbnailPrompt(authorText, authorBudget)
+        : "";
+  }
 
-  return segments.join(" ");
+  let prompt = build(contentExcerpt, authorText);
+  if (prompt.length > SPEECH_THUMBNAIL_PROMPT_MAX_LENGTH) {
+    prompt = truncateForThumbnailPrompt(
+      prompt,
+      SPEECH_THUMBNAIL_PROMPT_MAX_LENGTH
+    );
+  }
+
+  return prompt;
 }
