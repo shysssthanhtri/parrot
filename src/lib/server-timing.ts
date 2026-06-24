@@ -16,8 +16,15 @@ const noopTimer: ServerTimer = {
   log: () => {},
 };
 
+function isLearnTimingEnabled(): boolean {
+  return (
+    process.env.NODE_ENV === "development" ||
+    process.env.ENABLE_LEARN_TIMING === "true"
+  );
+}
+
 export function createServerTimer(scope: string): ServerTimer {
-  if (process.env.NODE_ENV !== "development") {
+  if (!isLearnTimingEnabled()) {
     return noopTimer;
   }
 
