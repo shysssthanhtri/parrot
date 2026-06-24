@@ -19,8 +19,12 @@ export default async function LearnLayout({
 
   return (
     <SessionProvider session={session} refetchOnWindowFocus={false}>
-      <LearnHeader />
-      <main className="flex flex-1 flex-col">{children}</main>
+      <div className="flex h-dvh flex-col overflow-hidden">
+        <LearnHeader />
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {children}
+        </main>
+      </div>
     </SessionProvider>
   );
 }

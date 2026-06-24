@@ -77,6 +77,17 @@ function Carousel({
 
   const handleKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (orientation === "vertical") {
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          scrollPrev();
+        } else if (event.key === "ArrowDown") {
+          event.preventDefault();
+          scrollNext();
+        }
+        return;
+      }
+
       if (event.key === "ArrowLeft") {
         event.preventDefault();
         scrollPrev();
@@ -85,7 +96,7 @@ function Carousel({
         scrollNext();
       }
     },
-    [scrollPrev, scrollNext]
+    [orientation, scrollPrev, scrollNext]
   );
 
   React.useEffect(() => {
@@ -120,8 +131,9 @@ function Carousel({
       }}
     >
       <div
+        tabIndex={0}
         onKeyDownCapture={handleKeyDown}
-        className={cn("relative", className)}
+        className={cn("relative outline-none", className)}
         role="region"
         aria-roledescription="carousel"
         data-slot="carousel"
@@ -139,7 +151,7 @@ function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       ref={carouselRef}
-      className="overflow-hidden"
+      className="size-full overflow-hidden"
       data-slot="carousel-content"
     >
       <div
