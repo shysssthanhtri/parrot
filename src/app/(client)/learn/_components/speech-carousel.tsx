@@ -14,6 +14,10 @@ import {
 import { cn } from "@/lib/utils";
 import type { AppRouter } from "@/trpc/routers/_app";
 
+import {
+  getThumbnailLoadIndices,
+  shouldLoadThumbnail,
+} from "../_lib/thumbnail-load-window";
 import { SpeechCard } from "./speech-card";
 
 type SpeechPublication =
@@ -37,8 +41,25 @@ function isEditableTarget(target: EventTarget | null) {
   );
 }
 
+function mergeLoadedIndices(
+  loadedIndices: Set<number>,
+  activeIndex: number,
+  speechCount: number
+): Set<number> {
+  const next = new Set(loadedIndices);
+
+  for (const index of getThumbnailLoadIndices(activeIndex, speechCount)) {
+    next.add(index);
+  }
+
+  return next;
+}
+
 export function SpeechCarousel({ speeches, className }: SpeechCarouselProps) {
   const [api, setApi] = React.useState<CarouselApi>();
+  const [loadedIndices, setLoadedIndices] = React.useState(
+    () => new Set(getThumbnailLoadIndices(0, speeches.length))
+  );
 
   React.useEffect(() => {
     if (!api || speeches.length === 0) {
@@ -63,6 +84,27 @@ export function SpeechCarousel({ speeches, className }: SpeechCarouselProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [api, speeches.length]);
 
+  React.useEffect(() => {
+    if (!api) {
+      return;
+    }
+
+    const handleSelect = () => {
+      const index = api.selectedScrollSnap();
+      setLoadedIndices((current) =>
+        mergeLoadedIndices(current, index, speeches.length)
+      );
+    };
+
+    api.on("select", handleSelect);
+    api.on("reInit", handleSelect);
+
+    return () => {
+      api.off("select", handleSelect);
+      api.off("reInit", handleSelect);
+    };
+  }, [api, speeches.length]);
+
   return (
     <Carousel
       orientation="vertical"
@@ -74,13 +116,17 @@ export function SpeechCarousel({ speeches, className }: SpeechCarouselProps) {
       opts={{ align: "start", containScroll: "trimSnaps" }}
     >
       <CarouselContent className="mt-0 h-full">
-        {speeches.map((speech) => (
+        {speeches.map((speech, index) => (
           <CarouselItem
             key={speech.id}
             className="flex h-full items-center justify-center px-4 pt-0"
           >
             <div className="h-full max-h-[500px] md:max-h-[560px] w-full md:max-w-[400px]">
-              <SpeechCard speech={speech} />
+              <SpeechCard
+                speech={speech}
+                loadThumbnail={shouldLoadThumbnail(index, loadedIndices)}
+                priority={index === 0}
+              />
             </div>
           </CarouselItem>
         ))}

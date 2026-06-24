@@ -105,29 +105,39 @@ When the learner advances or retreats between speeches in the catalog, the visib
 - **WHEN** an authenticated user has `prefers-reduced-motion: reduce` enabled and navigates between speeches
 - **THEN** the catalog updates the active speech without directional slide animation (instant or minimal crossfade only)
 
-### Requirement: Learner speech catalog thumbnail prefetch
+### Requirement: Learner speech catalog windowed thumbnail loading
 
-While the learner browses the speech catalog, the client SHALL prefetch thumbnail images for the next two speeches after the currently focused speech (indices _n + 1_ and _n + 2_) so those images are likely cached before the user navigates to them. Prefetch SHALL begin after the catalog speech list is available and SHALL update whenever the focused speech index changes. Speeches without a `thumbnailUrl` SHALL be skipped. Prefetch SHALL NOT block rendering of the active card or navigation transitions.
+The learner speech catalog SHALL load publication thumbnails only within a sliding window of three speeches: the focused speech at index _n_ and the next two speeches at indices _n + 1_ and _n + 2_. On initial catalog load with the first speech focused, the client SHALL load thumbnails for indices 0, 1, and 2. When the focused index changes, the client SHALL extend loading to cover the new focused speech and the next two speeches. Speeches without a `thumbnailUrl` SHALL be skipped. Speeches outside the load window SHALL NOT initiate thumbnail image requests and SHALL display the existing placeholder cover UI. Thumbnail loading SHALL NOT block rendering of the active card or navigation transitions. Only the initially visible thumbnail (index 0 on first paint) SHALL use high-priority loading.
 
-#### Scenario: Prefetch on initial catalog load
+#### Scenario: Initial load loads first three thumbnails
 
 - **WHEN** an authenticated user loads `/learn` with at least three published speeches and the first speech is focused
-- **THEN** the client initiates prefetch of thumbnail images for speeches 2 and 3 (when those speeches have `thumbnailUrl` values)
+- **THEN** the client loads thumbnail images only for speeches at indices 0, 1, and 2 (when those speeches have `thumbnailUrl` values) and does not load thumbnails for speeches at index 3 or beyond
 
-#### Scenario: Prefetch updates on navigation
+#### Scenario: Window updates on navigation
 
 - **WHEN** an authenticated user navigates from speech _n_ to speech _n + 1_ in a catalog with more than _n + 2_ speeches
-- **THEN** the client initiates prefetch of thumbnail images for speeches _n + 2_ and _n + 3_ (when those speeches have `thumbnailUrl` values)
+- **THEN** the client loads thumbnails for speeches at indices _n + 1_, _n + 2_, and _n + 3_ as needed (when those speeches have `thumbnailUrl` values) and does not load thumbnails beyond index _n + 3_ unless the focused index advances again
 
-#### Scenario: Prefetch near end of catalog
+#### Scenario: Window near end of catalog
 
 - **WHEN** an authenticated user focuses a speech where fewer than two speeches remain after the focused index
-- **THEN** the client prefetches only the remaining next speeches that have `thumbnailUrl` values and does not attempt to prefetch beyond the last speech
+- **THEN** the client loads thumbnails only for the focused speech and the remaining next speeches that have `thumbnailUrl` values and does not attempt to load beyond the last speech
 
 #### Scenario: No thumbnail URL
 
-- **WHEN** a speech in the prefetch window has no `thumbnailUrl`
-- **THEN** the client skips prefetch for that speech and continues prefetching other eligible speeches in the window
+- **WHEN** a speech in the load window has no `thumbnailUrl`
+- **THEN** the client skips loading for that speech and continues loading other eligible speeches in the window
+
+#### Scenario: Placeholder outside load window
+
+- **WHEN** a speech is rendered in the carousel but its index is outside the current load window and its thumbnail has not been loaded in the session
+- **THEN** the card displays the placeholder cover UI and does not initiate a thumbnail image request
+
+#### Scenario: Priority on first visible thumbnail only
+
+- **WHEN** an authenticated user loads `/learn` with at least one published speech that has a `thumbnailUrl`
+- **THEN** only the thumbnail for the first focused speech (index 0) is requested with high priority; other thumbnails in the initial window load without high priority
 
 ### Requirement: Learner speech catalog mobile swipe navigation
 
