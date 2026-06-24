@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { SpeechPublicationStatus } from "@/generated/prisma/client";
 import { SCRIPT_LANGUAGE_CODES } from "@/lib/script-languages";
+import { getLearnRequestTimer } from "@/lib/server-timing";
 import { buildPublicationSnapshot } from "@/lib/speech-publication";
 import type { SpeechScriptAlignment } from "@/lib/speech-script-alignment";
 import { getAudioUrl, objectExists } from "@/lib/storage";
@@ -124,39 +125,66 @@ export const speechPublicationsRouter = createTRPCRouter({
       })
     )
     .query(async ({ input }) => {
+      const timer = getLearnRequestTimer();
+
       try {
-        const publications = await prisma.speechPublication.findMany({
-          where: {
-            status: SpeechPublicationStatus.published,
-            ...(input.language ? { language: input.language } : {}),
-            ...(input.topicId ? { topicIds: { has: input.topicId } } : {}),
-          },
-          orderBy: { publishedAt: "desc" },
-          select: {
-            id: true,
-            title: true,
-            language: true,
-            length: true,
-            voiceName: true,
-            publishedAt: true,
-            topicIds: true,
-            thumbnailR2ObjectKey: true,
-          },
-        });
-
-        return Promise.all(
-          publications.map(async ({ thumbnailR2ObjectKey, ...publication }) => {
-            const thumbnailUrl =
-              thumbnailR2ObjectKey && (await objectExists(thumbnailR2ObjectKey))
-                ? await getAudioUrl(thumbnailR2ObjectKey)
-                : null;
-
-            return {
-              ...publication,
-              thumbnailUrl,
-            };
+        const publications = await timer.measure("db", () =>
+          prisma.speechPublication.findMany({
+            where: {
+              status: SpeechPublicationStatus.published,
+              ...(input.language ? { language: input.language } : {}),
+              ...(input.topicId ? { topicIds: { has: input.topicId } } : {}),
+            },
+            orderBy: { publishedAt: "desc" },
+            select: {
+              id: true,
+              title: true,
+              language: true,
+              length: true,
+              voiceName: true,
+              publishedAt: true,
+              topicIds: true,
+              thumbnailR2ObjectKey: true,
+            },
           })
         );
+
+        timer.setMeta("count", publications.length);
+
+        return timer.measure("thumbnails", async () => {
+          let existsMs = 0;
+          let presignMs = 0;
+
+          const results = await Promise.all(
+            publications.map(
+              async ({ thumbnailR2ObjectKey, ...publication }) => {
+                let thumbnailUrl: string | null = null;
+
+                if (thumbnailR2ObjectKey) {
+                  const existsStart = performance.now();
+                  const exists = await objectExists(thumbnailR2ObjectKey);
+                  existsMs += performance.now() - existsStart;
+
+                  if (exists) {
+                    const presignStart = performance.now();
+                    thumbnailUrl = await getAudioUrl(thumbnailR2ObjectKey);
+                    presignMs += performance.now() - presignStart;
+                  }
+                }
+
+                return {
+                  ...publication,
+                  thumbnailUrl,
+                };
+              }
+            )
+          );
+
+          timer.addDuration("exists", existsMs);
+          timer.addDuration("presign", presignMs);
+
+          return results;
+        });
       } catch (error) {
         console.error(error);
         throw new TRPCError({

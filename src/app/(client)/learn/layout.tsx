@@ -3,6 +3,7 @@ import { SessionProvider } from "next-auth/react";
 
 import { signInUrl } from "@/app/configs/routes";
 import { auth } from "@/auth";
+import { getLearnRequestTimer } from "@/lib/server-timing";
 
 import { LearnHeader } from "./_components/learn-header";
 
@@ -11,7 +12,8 @@ export default async function LearnLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  const timer = getLearnRequestTimer();
+  const session = await timer.measure("auth", () => auth());
 
   if (!session?.user) {
     redirect(signInUrl());
