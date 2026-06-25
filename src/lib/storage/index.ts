@@ -9,6 +9,7 @@ import {
 } from "./local";
 import {
   deleteR2Object,
+  getCachedR2PresignedGetUrl,
   getR2PresignedGetUrl,
   getR2PresignedPutUrl,
   listR2ObjectsWithPrefix,
@@ -53,6 +54,14 @@ export const getAudioUrl = async (key: string) => {
   }
 
   return getR2PresignedGetUrl(key);
+};
+
+export const getCachedAudioUrl = async (key: string) => {
+  if (getStorageDriver() === "local") {
+    return getLocalAudioUrl(key);
+  }
+
+  return getCachedR2PresignedGetUrl(key);
 };
 
 /** @deprecated Use `getAudioUrl` instead. */

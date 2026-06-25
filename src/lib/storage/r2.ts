@@ -11,6 +11,16 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getR2Endpoint, requireR2Config } from "./config";
 
 const PRESIGN_EXPIRES_IN_SECONDS = 3600;
+const PRESIGN_CACHE_BUFFER_SECONDS = 300;
+const PRESIGN_CACHE_TTL_MS =
+  (PRESIGN_EXPIRES_IN_SECONDS - PRESIGN_CACHE_BUFFER_SECONDS) * 1000;
+
+type PresignedUrlCacheEntry = {
+  url: string;
+  expiresAt: number;
+};
+
+const presignedUrlCache = new Map<string, PresignedUrlCacheEntry>();
 
 let r2Client: S3Client | undefined;
 
@@ -91,6 +101,23 @@ export const getR2PresignedGetUrl = async (
     }),
     { expiresIn }
   );
+};
+
+export const getCachedR2PresignedGetUrl = async (key: string) => {
+  const cached = presignedUrlCache.get(key);
+  const now = Date.now();
+
+  if (cached && cached.expiresAt > now) {
+    return cached.url;
+  }
+
+  const url = await getR2PresignedGetUrl(key);
+  presignedUrlCache.set(key, {
+    url,
+    expiresAt: now + PRESIGN_CACHE_TTL_MS,
+  });
+
+  return url;
 };
 
 export const getR2PresignedPutUrl = async (

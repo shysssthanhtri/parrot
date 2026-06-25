@@ -6,7 +6,7 @@ import { SCRIPT_LANGUAGE_CODES } from "@/lib/script-languages";
 import { getLearnRequestTimer } from "@/lib/server-timing";
 import { buildPublicationSnapshot } from "@/lib/speech-publication";
 import type { SpeechScriptAlignment } from "@/lib/speech-script-alignment";
-import { getAudioUrl, objectExists } from "@/lib/storage";
+import { getAudioUrl, getCachedAudioUrl, objectExists } from "@/lib/storage";
 import { prisma } from "@/prisma";
 
 import { authProcedure, cmsProcedure, createTRPCRouter } from "../init";
@@ -152,7 +152,6 @@ export const speechPublicationsRouter = createTRPCRouter({
         timer.setMeta("count", publications.length);
 
         return timer.measure("thumbnails", async () => {
-          let existsMs = 0;
           let presignMs = 0;
 
           const results = await Promise.all(
@@ -161,15 +160,9 @@ export const speechPublicationsRouter = createTRPCRouter({
                 let thumbnailUrl: string | null = null;
 
                 if (thumbnailR2ObjectKey) {
-                  const existsStart = performance.now();
-                  const exists = await objectExists(thumbnailR2ObjectKey);
-                  existsMs += performance.now() - existsStart;
-
-                  if (exists) {
-                    const presignStart = performance.now();
-                    thumbnailUrl = await getAudioUrl(thumbnailR2ObjectKey);
-                    presignMs += performance.now() - presignStart;
-                  }
+                  const presignStart = performance.now();
+                  thumbnailUrl = await getCachedAudioUrl(thumbnailR2ObjectKey);
+                  presignMs += performance.now() - presignStart;
                 }
 
                 return {
@@ -180,7 +173,6 @@ export const speechPublicationsRouter = createTRPCRouter({
             )
           );
 
-          timer.addDuration("exists", existsMs);
           timer.addDuration("presign", presignMs);
 
           return results;
