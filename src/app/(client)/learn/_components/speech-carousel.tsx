@@ -119,9 +119,9 @@ export function SpeechCarousel({ speeches, className }: SpeechCarouselProps) {
         {speeches.map((speech, index) => (
           <CarouselItem
             key={speech.id}
-            className="flex h-full items-center justify-center px-4 pt-0"
+            className="flex h-full items-center justify-center px-4 pt-0 md:px-0"
           >
-            <div className="h-full max-h-[500px] md:max-h-[560px] w-full md:max-w-[400px]">
+            <div className="h-full max-h-[520px] md:max-h-[560px] w-full md:max-w-[400px]">
               <SpeechCard
                 speech={speech}
                 loadThumbnail={shouldLoadThumbnail(index, loadedIndices)}
