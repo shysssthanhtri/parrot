@@ -20,7 +20,7 @@ export default function VoicesLoading() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
+              <TableHead>Name:</TableHead>
               <TableHead>Language</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Updated</TableHead>
